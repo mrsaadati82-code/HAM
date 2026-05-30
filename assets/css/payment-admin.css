@@ -1,0 +1,87 @@
+/* CPTT Payment Admin — v5.5.0 */
+.cptt-pay-wrap{max-width:1200px;margin:20px auto;font-family:Tahoma,sans-serif}
+.cptt-pay-hero{background:linear-gradient(135deg,#0f172a,#4f46e5,#7c3aed);color:#fff;border-radius:22px;padding:24px 26px;margin:16px 0 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;box-shadow:0 24px 60px -20px rgba(79,70,229,.4)}
+.cptt-pay-hero__title h1{margin:0 0 6px;font-size:24px;color:#fff}
+.cptt-pay-hero__title p{margin:0;opacity:.85;font-size:13px;line-height:1.8;max-width:520px}
+.cptt-pay-hero__kpis{display:flex;gap:10px;flex-wrap:wrap}
+.cptt-pay-kpi{background:rgba(255,255,255,.12);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:12px 18px;text-align:center;min-width:90px}
+.cptt-pay-kpi span{display:block;font-size:24px;font-weight:900}
+.cptt-pay-kpi small{display:block;font-size:11px;opacity:.85;margin-top:2px}
+/* tabs */
+.cptt-pay-tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:2px solid #e5e7eb;margin-bottom:16px}
+.cptt-pay-tab{background:transparent;border:0;padding:10px 18px;font-weight:700;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:inherit;font-size:14px;transition:.15s}
+.cptt-pay-tab:hover{color:#4f46e5}
+.cptt-pay-tab.is-active{color:#4f46e5;border-bottom-color:#4f46e5}
+.cptt-pay-panel{display:none;background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:20px;box-shadow:0 4px 12px rgba(15,23,42,.04)}
+.cptt-pay-panel.is-active{display:block}
+.cptt-pay-panel__head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.cptt-pay-panel__head h2{margin:0;font-size:18px}
+/* grids */
+.cptt-pay-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.cptt-pay-empty{padding:30px;text-align:center;color:#64748b;background:#f8fafc;border-radius:14px;border:1px dashed #cbd5e1;grid-column:1/-1}
+/* gateway card */
+.cptt-pay-card{background:#fff;border:2px solid #e5e7eb;border-radius:16px;padding:14px;transition:.2s}
+.cptt-pay-card.is-active{border-color:#16a34a;box-shadow:0 8px 22px -8px rgba(22,163,74,.3)}
+.cptt-pay-card.is-off{opacity:.7}
+.cptt-pay-card__head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.cptt-pay-card__icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#eef2ff,#fdf2f8);display:flex;align-items:center;justify-content:center;font-size:20px}
+.cptt-pay-card__title{flex:1}
+.cptt-pay-card__title b{display:block;font-size:14px}
+.cptt-pay-card__title small{color:#64748b;font-size:11px}
+.cptt-pay-card__body label{display:block;margin-bottom:8px;font-size:12px}
+.cptt-pay-card__body label span{display:block;color:#475569;font-weight:600;margin-bottom:3px}
+.cptt-pay-card__body input[type=text]{width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;font-family:inherit}
+.cptt-pay-checkbox{display:flex !important;align-items:center;gap:6px}
+.cptt-pay-checkbox input{margin:0}
+.cptt-pay-checkbox span{margin:0 !important;font-weight:500 !important}
+.cptt-pay-card__foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid #f1f5f9}
+/* switch */
+.cptt-pay-switch{position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0}
+.cptt-pay-switch input{opacity:0;width:0;height:0}
+.cptt-pay-switch span{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;border-radius:99px;transition:.2s}
+.cptt-pay-switch span:before{content:"";position:absolute;height:18px;width:18px;right:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 2px 4px rgba(0,0,0,.2)}
+.cptt-pay-switch input:checked + span{background:#16a34a}
+.cptt-pay-switch input:checked + span:before{right:21px}
+/* bank card */
+.cptt-pay-bankcard{background:linear-gradient(135deg,#0f172a,#4f46e5);color:#fff;border-radius:18px;padding:18px;position:relative;overflow:hidden;box-shadow:0 14px 30px -10px rgba(15,23,42,.4);transition:.2s}
+.cptt-pay-bankcard.is-off{opacity:.6;filter:grayscale(40%)}
+.cptt-pay-bankcard:before{content:"";position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,255,255,.15),transparent);border-radius:50%}
+.cptt-pay-bankcard__top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;position:relative;z-index:1}
+.cptt-pay-bankcard__bank{font-weight:700;font-size:14px;opacity:.9}
+.cptt-pay-bankcard__number{font-size:18px;font-weight:900;letter-spacing:3px;direction:ltr;text-align:left;font-family:'Courier New',monospace;margin-bottom:10px}
+.cptt-pay-bankcard__owner{font-size:13px;opacity:.9;margin-bottom:6px}
+.cptt-pay-bankcard__sheba{font-size:11px;opacity:.7;direction:ltr;text-align:left;font-family:monospace}
+.cptt-pay-bankcard__fields{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.18);display:grid;gap:8px}
+.cptt-pay-bankcard__fields label{display:block;font-size:11px}
+.cptt-pay-bankcard__fields span{display:block;opacity:.8;margin-bottom:3px}
+.cptt-pay-bankcard__fields input{width:100%;padding:7px 9px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;border-radius:8px;font-size:12px;font-family:inherit}
+.cptt-pay-bankcard__fields input::placeholder{color:rgba(255,255,255,.5)}
+.cptt-pay-bankcard__foot{display:flex;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.18)}
+.cptt-pay-bankcard__foot .button{background:rgba(255,255,255,.15);color:#fff;border-color:transparent;font-size:11px}
+.cptt-pay-bankcard__foot .button:hover{background:rgba(255,255,255,.25);color:#fff}
+.cptt-pay-bankcard__foot .button-link-delete{background:rgba(220,38,38,.3);color:#fecaca}
+/* receipts table */
+.cptt-pay-receipts{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden}
+.cptt-pay-receipts thead th{background:#f8fafc;padding:12px;text-align:right;font-weight:800;color:#0f172a;font-size:12.5px;border-bottom:2px solid #e5e7eb}
+.cptt-pay-receipts tbody td{padding:12px;border-bottom:1px solid #f1f5f9;font-size:12.5px}
+.cptt-pay-receipts tbody tr:hover{background:#fafbff}
+.cptt-rcpt-st{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700}
+.cptt-rcpt-st--p{background:#fef3c7;color:#92400e}
+.cptt-rcpt-st--a{background:#d1fae5;color:#065f46}
+.cptt-rcpt-st--r{background:#fee2e2;color:#991b1b}
+/* modal for adding gateway */
+.cptt-pay-modal{position:fixed;inset:0;background:rgba(15,23,42,.6);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
+.cptt-pay-modal.is-open{display:flex}
+.cptt-pay-modal__box{background:#fff;border-radius:18px;padding:20px;max-width:560px;width:100%;max-height:80vh;overflow:auto}
+.cptt-pay-modal__title{font-size:18px;font-weight:900;margin:0 0 14px}
+.cptt-pay-modal__list{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.cptt-pay-modal__item{background:#f8fafc;border:2px solid transparent;border-radius:12px;padding:14px;cursor:pointer;text-align:center;transition:.2s}
+.cptt-pay-modal__item:hover{border-color:#4f46e5;background:#fff;transform:translateY(-2px)}
+.cptt-pay-modal__item .ic{font-size:30px;margin-bottom:4px}
+.cptt-pay-modal__item b{display:block;font-size:13px}
+.cptt-pay-modal__item small{display:block;color:#64748b;font-size:10px;margin-top:2px}
+.cptt-pay-modal__close{float:left;background:transparent;border:0;font-size:22px;cursor:pointer;color:#64748b}
+@media (max-width:700px){
+	.cptt-pay-hero{padding:18px;flex-direction:column;align-items:stretch}
+	.cptt-pay-hero__kpis{justify-content:center}
+}

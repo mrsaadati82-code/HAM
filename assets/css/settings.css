@@ -1,0 +1,290 @@
+/* =====================================================================
+   CPTT Modern Settings UI (v2.2.3)
+   ===================================================================== */
+
+.cptt-settings-wrap {
+    margin: 20px 20px 0 0;
+    font-family: 'Vazirmatn', Tahoma, sans-serif !important;
+}
+
+.cptt-set-header {
+    background: #fff;
+    padding: 20px 30px;
+    border-radius: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+}
+
+.cptt-set-logo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.cptt-set-logo .dashicons {
+    font-size: 40px;
+    width: 40px;
+    height: 40px;
+    color: #6366f1;
+}
+
+.cptt-set-logo h1 {
+    font-size: 22px;
+    font-weight: 900;
+    margin: 0;
+    color: #1e293b;
+}
+
+.cptt-set-logo p {
+    margin: 5px 0 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.cptt-btn-primary {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);
+    transition: all 0.3s;
+}
+
+.cptt-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(99, 102, 241, 0.3);
+}
+
+.cptt-set-body {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 25px;
+    align-items: start;
+}
+
+/* Sidebar */
+.cptt-set-sidebar {
+    background: #fff;
+    border-radius: 20px;
+    padding: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+}
+
+.cptt-set-sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    color: #64748b;
+    text-decoration: none;
+    font-weight: 700;
+    transition: all 0.2s;
+    margin-bottom: 5px;
+}
+
+.cptt-set-sidebar a:hover {
+    background: #f8fbff;
+    color: #6366f1;
+}
+
+.cptt-set-sidebar a.is-active {
+    background: #eef2ff;
+    color: #6366f1;
+}
+
+.cptt-set-sidebar a .dashicons {
+    font-size: 18px;
+}
+
+/* Main Content */
+.cptt-set-main {
+    background: #fff;
+    border-radius: 25px;
+    padding: 35px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+    min-height: 500px;
+}
+
+.cptt-set-section h2 {
+    font-size: 20px;
+    font-weight: 900;
+    margin: 0 0 25px;
+    color: #1e293b;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 15px;
+}
+
+.cptt-set-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+}
+
+.cptt-set-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cptt-set-field.full {
+    grid-column: span 2;
+}
+
+.cptt-set-field label {
+    font-weight: 800;
+    color: #475569;
+    font-size: 14px;
+}
+
+.cptt-set-field input[type="text"],
+.cptt-set-field input[type="url"],
+.cptt-set-field input[type="number"],
+.cptt-set-field textarea {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 12px 15px;
+    border-radius: 12px;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.cptt-set-field input:focus, .cptt-set-field textarea:focus {
+    background: #fff;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    outline: none;
+}
+
+/* Media Box */
+.cptt-media-box {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 15px;
+    border: 1px dashed #cbd5e1;
+}
+
+.cptt-media-preview {
+    width: 70px;
+    height: 70px;
+    background: #fff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.cptt-media-preview img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.cptt-media-preview .dashicons {
+    font-size: 30px;
+    color: #cbd5e1;
+}
+
+.cptt-btn-sm {
+    padding: 8px 15px;
+    font-size: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 800;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+}
+
+.cptt-btn-danger {
+    color: #ef4444;
+}
+
+/* Color Picker Fix */
+.wp-picker-container {
+    display: flex;
+    align-items: center;
+}
+
+@media (max-width: 900px) {
+    .cptt-set-body {
+        grid-template-columns: 1fr;
+    }
+    .cptt-set-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =====================================================================
+   CPTT Switch Toggle (Shared across Settings tabs incl. Bale)  v5.4.3
+   ===================================================================== */
+.cptt-switch-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+    margin-top: 15px;
+}
+.cptt-switch-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 12px 16px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    gap: 12px;
+}
+.cptt-switch-item > label:first-child {
+    font-weight: 700;
+    color: #334155;
+    margin: 0;
+    flex: 1;
+}
+.cptt-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+    flex-shrink: 0;
+}
+.cptt-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.cptt-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #cbd5e1;
+    transition: .3s;
+    border-radius: 34px;
+}
+.cptt-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #fff;
+    transition: .3s;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.cptt-switch input:checked + .cptt-slider {
+    background-color: #6366f1;
+}
+.cptt-switch input:checked + .cptt-slider:before {
+    transform: translateX(24px);
+}

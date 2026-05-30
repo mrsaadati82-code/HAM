@@ -1,0 +1,57 @@
+/* CPTT Form Builder — v5.5.0 */
+.cptt-fb-wrap{max-width:1200px;margin:20px auto;font-family:Tahoma,sans-serif}
+.cptt-fb-hero{background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;border-radius:22px;padding:22px 24px;margin:16px 0 20px;box-shadow:0 24px 60px -20px rgba(124,58,237,.4)}
+.cptt-fb-hero h1{margin:0 0 6px;color:#fff;font-size:22px}
+.cptt-fb-hero p{margin:0;opacity:.9;font-size:13px;line-height:1.8}
+.cptt-fb-layout{display:grid;grid-template-columns:260px 1fr;gap:18px}
+@media (max-width:900px){.cptt-fb-layout{grid-template-columns:1fr}}
+.cptt-fb-sidebar{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:14px;box-shadow:0 4px 12px rgba(15,23,42,.04);height:fit-content;position:sticky;top:50px}
+.cptt-fb-side-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f1f5f9}
+.cptt-fb-side-head h3{margin:0;font-size:14px}
+.cptt-fb-list{margin:0;padding:0;list-style:none;display:grid;gap:4px}
+.cptt-fb-list li{border-radius:10px;overflow:hidden;transition:.15s}
+.cptt-fb-list li.is-editing{background:linear-gradient(135deg,#eef2ff,#fdf2f8);box-shadow:0 4px 10px -4px rgba(124,58,237,.3)}
+.cptt-fb-list-link{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;color:#0f172a;text-decoration:none;font-weight:600;font-size:13px}
+.cptt-fb-list-link:hover{background:#fafbff}
+.cptt-fb-badge{background:#16a34a;color:#fff;font-size:10px;padding:2px 8px;border-radius:99px;font-weight:700}
+.cptt-fb-list li.empty{padding:14px;color:#64748b;font-size:12px;text-align:center}
+.cptt-fb-builder{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:18px;box-shadow:0 4px 12px rgba(15,23,42,.04)}
+.cptt-fb-builder-head{display:flex;gap:10px;align-items:center;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #f1f5f9;flex-wrap:wrap}
+#cptt-fb-form-title{flex:1;min-width:200px;padding:10px 14px;border:2px solid #e5e7eb;border-radius:10px;font-size:15px;font-weight:700;font-family:inherit}
+#cptt-fb-form-title:focus{outline:0;border-color:#7c3aed}
+.cptt-fb-builder-actions{display:flex;gap:6px;flex-wrap:wrap}
+.cptt-fb-active-tag{background:#16a34a;color:#fff;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700}
+.cptt-fb-stage{display:grid;grid-template-columns:240px 1fr;gap:14px}
+@media (max-width:800px){.cptt-fb-stage{grid-template-columns:1fr}}
+.cptt-fb-palette{background:#fafbff;border:1px solid #e5e7eb;border-radius:14px;padding:12px;height:fit-content}
+.cptt-fb-palette h4{margin:0 0 8px;font-size:12.5px;color:#475569}
+.cptt-fb-palette-grid{display:grid;gap:6px}
+.cptt-fb-add-field{background:#fff;border:1.5px solid #e5e7eb;border-radius:10px;padding:8px 10px;text-align:right;cursor:pointer;transition:.15s;font-family:inherit}
+.cptt-fb-add-field:hover{border-color:#7c3aed;transform:translateX(-3px);box-shadow:0 4px 8px -2px rgba(124,58,237,.2)}
+.cptt-fb-add-field b{display:block;font-size:12px;color:#0f172a}
+.cptt-fb-add-field small{display:block;color:#64748b;font-size:10px;margin-top:1px}
+.cptt-fb-canvas{min-height:300px}
+.cptt-fb-canvas-head{font-size:12.5px;font-weight:700;color:#475569;margin-bottom:10px}
+.cptt-fb-fields{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.cptt-fb-field{background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:10px;transition:.15s}
+.cptt-fb-field:hover{border-color:#cbd5e1}
+.cptt-fb-field.ui-sortable-helper{box-shadow:0 14px 30px -8px rgba(124,58,237,.3);transform:rotate(1deg)}
+.cptt-fb-field-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cptt-fb-handle{cursor:grab;color:#94a3b8;font-size:20px;user-select:none;padding:0 4px}
+.cptt-fb-handle:active{cursor:grabbing}
+.cptt-fb-field-type{background:linear-gradient(135deg,#eef2ff,#fdf2f8);color:#7c3aed;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap}
+.cptt-fb-field-label{flex:1;min-width:150px;padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;font-family:inherit;font-weight:600}
+.cptt-fb-field-label:focus{outline:0;border-color:#7c3aed}
+.cptt-fb-required{display:flex !important;align-items:center;gap:4px;margin:0 !important}
+.cptt-fb-required input{margin:0}
+.cptt-fb-required span{font-size:11px;color:#475569}
+.cptt-fb-field-remove{background:transparent;border:0;color:#dc2626;cursor:pointer;font-size:18px;padding:0 4px}
+.cptt-fb-field-remove:hover{transform:scale(1.2)}
+.cptt-fb-field-body{display:grid;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9}
+.cptt-fb-mini{display:block}
+.cptt-fb-mini span{display:block;font-size:10.5px;color:#64748b;margin-bottom:3px;font-weight:600}
+.cptt-fb-mini input,.cptt-fb-mini textarea{width:100%;padding:6px 9px;border:1px solid #e5e7eb;border-radius:7px;font-size:12px;font-family:inherit}
+.cptt-fb-mini textarea{resize:vertical;min-height:60px}
+.cptt-fb-empty{padding:30px;text-align:center;color:#64748b;background:#fafbff;border-radius:12px;border:1px dashed #cbd5e1}
+.cptt-fb-empty-big{padding:60px 30px;text-align:center;color:#64748b}
+.cptt-fb-empty-big h2{margin:0 0 8px}

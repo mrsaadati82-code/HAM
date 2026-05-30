@@ -1,0 +1,4911 @@
+/* =====================================================================
+   CPTT Expert Dashboard - Modern UI (v1.5.0)
+   - Inspired by the modern project management dashboard mockup
+   - Full-width responsive layout, RTL
+   - Soft tinted colors, accordion, popup modals
+   ===================================================================== */
+
+/* ---------- Page & shell ---------- */
+.cptt-shell-page,
+.cptt-shell-page--hub {
+	background: #f4f6fb;
+	min-height: 100vh;
+	padding: 0;
+	margin: 0;
+}
+
+body.cptt-expert-dashboard-page,
+body.cptt-expert-hub-page {
+	background: #f4f6fb;
+	margin: 0;
+}
+
+/* Hide WP admin bar overlap if needed */
+body.cptt-expert-dashboard-page #wpadminbar {
+	background: #1e293b;
+}
+
+/* ---------- Override: full width wrapper ---------- */
+.cptt-shell-page .cptt-wrap.cptt-expertWrap,
+.cptt-shell-page--hub .cptt-wrap.cptt-expertsHub {
+	max-width: 100% !important;
+	width: 100% !important;
+	padding: 18px 22px !important;
+	box-sizing: border-box;
+}
+
+@media (max-width: 720px) {
+	.cptt-shell-page .cptt-wrap.cptt-expertWrap,
+	.cptt-shell-page--hub .cptt-wrap.cptt-expertsHub {
+		padding: 12px !important;
+	}
+}
+
+/* =====================================================================
+   1. LAYOUT - Sidebar + Main
+   ===================================================================== */
+
+.cptt-expertLayout {
+	display: grid;
+	grid-template-columns: 280px minmax(0, 1fr);
+	gap: 22px;
+	align-items: start;
+	width: 100%;
+}
+
+@media (max-width: 1180px) {
+	.cptt-expertLayout {
+		grid-template-columns: 240px minmax(0, 1fr);
+		gap: 16px;
+	}
+}
+
+
+@media (max-width: 980px) {
+	.cptt-expertLayout {
+		grid-template-columns: 240px minmax(0, 1fr) !important;
+		gap: 12px !important;
+	}
+}
+@media (max-width: 820px) {
+	.cptt-expertLayout {
+		grid-template-columns: 1fr !important;
+	}
+}
+
+
+.cptt-expertSidebar {
+	position: sticky;
+	top: 50px;
+	display: grid;
+	gap: 14px;
+    z-index: 1000;
+}
+
+@media (max-width: 980px) {
+	.cptt-expertSidebar {
+		position: static;
+	}
+}
+
+.cptt-expertMain {
+	display: grid;
+	gap: 16px;
+	min-width: 0;
+}
+
+/* =====================================================================
+   2. SIDEBAR BOXES
+   ===================================================================== */
+
+.cptt-sideBox {
+	background: #ffffff;
+	border: 1px solid #e6ebf2;
+	border-radius: 20px;
+	padding: 16px;
+	box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+}
+
+.cptt-sideBox__title {
+	
+	font-weight: 950;
+	color: #0f172a;
+	margin-bottom: 12px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.cptt-sideBox__title::before {
+	content: '';
+	width: 4px;
+	height: 16px;
+	background: linear-gradient(180deg, #6366f1, #8b5cf6);
+	border-radius: 2px;
+}
+
+.cptt-sideBox--profile {
+	background: linear-gradient(140deg, #eef2ff, #f5f3ff);
+	border-color: #e0e7ff;
+}
+
+.cptt-expertProfile {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 8px 0;
+}
+
+.cptt-expertProfile strong {
+	
+	font-weight: 950;
+	color: #0f172a;
+}
+
+.cptt-expertProfile span {
+	
+	color: #64748b;
+	word-break: break-all;
+}
+
+.cptt-sideList {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: grid;
+	gap: 6px;
+}
+
+.cptt-sideList li {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px 12px;
+	
+	color: #475569;
+	background: #f8fafc;
+	border-radius: 12px;
+	border: 1px solid #f1f5f9;
+}
+
+.cptt-sideList li strong {
+	color: #0f172a;
+	font-weight: 950;
+	
+}
+
+/* CTA Button for "New Project" in sidebar (replaces full form) */
+.cptt-newProjectCta {
+	background: linear-gradient(135deg, #6366f1, #8b5cf6);
+	color: #fff;
+	border: 0;
+	border-radius: 16px;
+	padding: 14px 16px;
+	
+	font-weight: 950;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	width: 100%;
+	box-shadow: 0 10px 22px rgba(99, 102, 241, 0.28);
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cptt-newProjectCta:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 14px 28px rgba(99, 102, 241, 0.35);
+}
+
+.cptt-newProjectCta::before {
+	content: '+';
+	
+	line-height: 1;
+	font-weight: 700;
+}
+
+/* =====================================================================
+   3. HERO BANNER
+   ===================================================================== */
+
+.cptt-proHero--expert {
+	background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #ec4899 110%);
+	border-radius: 24px;
+	padding: 24px 28px;
+	color: #fff;
+	display: grid;
+	grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+	gap: 20px;
+	align-items: center;
+	box-shadow: 0 18px 42px rgba(79, 70, 229, 0.28);
+	overflow: hidden;
+	position: relative;
+}
+
+.cptt-proHero--expert::before {
+	content: '';
+	position: absolute;
+	width: 280px;
+	height: 280px;
+	background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%);
+	top: -100px;
+	left: -50px;
+	border-radius: 50%;
+	pointer-events: none;
+}
+
+.cptt-proHero__eyebrow {
+	display: inline-flex;
+	padding: 6px 12px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.18);
+	
+	font-weight: 950;
+	margin-bottom: 10px;
+	position: relative;
+	z-index: 2;
+}
+
+.cptt-proHero__title {
+	margin: 0 0 6px;
+	
+	font-weight: 950;
+	line-height: 1.5;
+	position: relative;
+	z-index: 2;
+}
+
+.cptt-proHero__text {
+	margin: 0;
+	color: rgba(255, 255, 255, 0.85);
+	line-height: 1.9;
+	
+	position: relative;
+	z-index: 2;
+}
+
+.cptt-proHero__actions {
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+	align-items: center;
+	margin-top: 14px;
+	position: relative;
+	z-index: 2;
+}
+
+.cptt-proHero__hint {
+	
+	color: rgba(255, 255, 255, 0.85);
+	font-weight: 700;
+}
+
+.cptt-proHero__visual {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 10px;
+	position: relative;
+	z-index: 2;
+}
+
+.cptt-proHero__metric {
+	background: rgba(255, 255, 255, 0.16);
+	backdrop-filter: blur(10px);
+	padding: 14px 12px;
+	border-radius: 16px;
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	text-align: center;
+}
+
+.cptt-proHero__metric strong {
+	display: block;
+	
+	line-height: 1.1;
+	color: #fff;
+	font-weight: 950;
+}
+
+.cptt-proHero__metric span {
+	display: block;
+	margin-top: 4px;
+	color: rgba(255, 255, 255, 0.85);
+	font-weight: 700;
+	
+}
+
+@media (max-width: 760px) {
+	.cptt-proHero--expert {
+		grid-template-columns: 1fr;
+		padding: 18px;
+	}
+	.cptt-proHero__title {  }
+	.cptt-proHero__visual { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+/* =====================================================================
+   4. KPI CARDS (4 stat boxes)
+   ===================================================================== */
+
+.cptt-kpiGrid--expert {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 12px;
+}
+
+@media (max-width: 980px) {
+	.cptt-kpiGrid--expert {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 520px) {
+	.cptt-kpiGrid--expert {
+		grid-template-columns: 1fr;
+	}
+}
+
+.cptt-kpiCard {
+	background: #fff;
+	border-radius: 18px;
+	padding: 16px;
+	border: 1px solid #e6ebf2;
+	box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+	position: relative;
+	overflow: hidden;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cptt-kpiCard:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.cptt-kpiCard::before {
+	content: '';
+	position: absolute;
+	width: 80px;
+	height: 80px;
+	border-radius: 50%;
+	top: -30px;
+	left: -30px;
+	opacity: 0.12;
+}
+
+.cptt-kpiCard:nth-child(1) {
+	background: linear-gradient(135deg, #eef2ff, #fff);
+	border-color: #c7d2fe;
+}
+.cptt-kpiCard:nth-child(1)::before { background: #6366f1; }
+
+.cptt-kpiCard:nth-child(2) {
+	background: linear-gradient(135deg, #ecfdf5, #fff);
+	border-color: #a7f3d0;
+}
+.cptt-kpiCard:nth-child(2)::before { background: #10b981; }
+
+.cptt-kpiCard:nth-child(3) {
+	background: linear-gradient(135deg, #fff7ed, #fff);
+	border-color: #fed7aa;
+}
+.cptt-kpiCard:nth-child(3)::before { background: #f97316; }
+
+.cptt-kpiCard:nth-child(4) {
+	background: linear-gradient(135deg, #fef2f2, #fff);
+	border-color: #fecaca;
+}
+.cptt-kpiCard:nth-child(4)::before { background: #ef4444; }
+
+.cptt-kpiCard__label {
+	display: block;
+	color: #475569;
+	
+	font-weight: 900;
+	position: relative;
+	z-index: 2;
+}
+
+.cptt-kpiCard__value {
+	display: block;
+	
+	font-weight: 950;
+	color: #0f172a;
+	margin-top: 8px;
+	line-height: 1.2;
+	position: relative;
+	z-index: 2;
+}
+
+/* =====================================================================
+   5. INSIGHT BOXES (Today + Overdue)
+   ===================================================================== */
+
+.cptt-expertInsights {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+}
+
+@media (max-width: 720px) {
+	.cptt-expertInsights {
+		grid-template-columns: 1fr;
+	}
+}
+
+.cptt-insightBox {
+	background: #fff;
+	border: 1px solid #e6ebf2;
+	border-radius: 18px;
+	padding: 16px;
+	box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+	background: linear-gradient(180deg, #eff6ff 0%, #fff 40%);
+	border-color: #dbeafe;
+}
+
+.cptt-insightBox--warn {
+	background: linear-gradient(180deg, #fef2f2 0%, #fff 40%);
+	border-color: #fecaca;
+}
+
+.cptt-insightBox__title {
+	
+	font-weight: 950;
+	color: #0f172a;
+	margin-bottom: 12px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.cptt-insightBox__title::before {
+	content: '';
+	width: 4px;
+	height: 14px;
+	background: #3b82f6;
+	border-radius: 2px;
+}
+
+.cptt-insightBox--warn .cptt-insightBox__title::before {
+	background: #ef4444;
+}
+
+.cptt-insightBox ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: grid;
+	gap: 8px;
+}
+
+.cptt-insightBox li {
+	display: flex;
+	justify-content: space-between;
+	gap: 10px;
+	padding: 10px 12px;
+	background: #fff;
+	border-radius: 12px;
+	border: 1px solid #f1f5f9;
+}
+
+.cptt-insightBox li strong {
+	
+	color: #0f172a;
+	font-weight: 900;
+}
+
+.cptt-insightBox li span {
+	
+	color: #64748b;
+	font-weight: 700;
+}
+
+.cptt-expert-emptyMini {
+	
+	color: #64748b;
+	line-height: 1.9;
+	padding: 12px;
+	background: #fff;
+	border-radius: 12px;
+	border: 1px dashed #e2e8f0;
+	text-align: center;
+}
+
+/* =====================================================================
+   6. FILTERS BAR
+   ===================================================================== */
+
+.cptt-expertFilters {
+	background: #fff;
+	border: 1px solid #e6ebf2;
+	border-radius: 20px;
+	padding: 16px;
+	box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+	display: grid;
+	grid-template-columns: 2fr repeat(5, minmax(0, 1fr)) auto;
+	gap: 12px;
+	align-items: end;
+}
+
+@media (max-width: 1200px) {
+	.cptt-expertFilters {
+		grid-template-columns: 2fr 1fr 1fr 1fr;
+	}
+	.cptt-expertFilters > button {
+		grid-column: 1 / -1;
+	}
+}
+
+@media (max-width: 720px) {
+	.cptt-expertFilters {
+		grid-template-columns: 1fr;
+	}
+}
+
+.cptt-expertFilters label {
+	
+	font-weight: 900;
+	color: #334155;
+	display: block;
+}
+
+.cptt-expertFilters input,
+.cptt-expertFilters select {
+	width: 100%;
+	margin-top: 6px;
+	padding: 11px 13px;
+	border: 1px solid #cbd5e1;
+	border-radius: 12px;
+	background: #f8fafc;
+	font: inherit;
+	color: #0f172a;
+	box-sizing: border-box;
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.cptt-expertFilters input:focus,
+.cptt-expertFilters select:focus {
+	background: #fff;
+	border-color: #6366f1;
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.cptt-expertFilters input[type="search"] {
+	padding-right: 40px;
+	background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='7'/><path d='M21 21l-4.3-4.3'/></svg>");
+	background-repeat: no-repeat;
+	background-position: right 12px center;
+	background-size: 18px;
+	
+	min-height: 44px;
+}
+
+.cptt-expertFilters .cptt-btn {
+	padding: 11px 18px;
+	white-space: nowrap;
+	min-height: 44px;
+	border-radius: 12px;
+}
+
+/* =====================================================================
+   7. PROJECT GRID (Cards)
+   ===================================================================== */
+
+.cptt-expertGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+	gap: 16px;
+}
+
+@media (max-width: 520px) {
+	.cptt-expertGrid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.cptt-expertCard {
+	background: #fff;
+	border: 1px solid #e6ebf2;
+	border-radius: 20px;
+	padding: 18px;
+	box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.cptt-expertCard:not(.is-expanded):hover {
+	transform: translateY(-3px);
+	box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+}
+
+.cptt-expertCard.is-expanded {
+	grid-column: 1 / -1;
+	background: linear-gradient(180deg, #f8fafc, #fff);
+	border-color: #c7d2fe;
+}
+
+.cptt-expertCard__top {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	align-items: flex-start;
+}
+
+.cptt-expertCard__top h3 {
+	margin: 0;
+	
+	font-weight: 950;
+	color: #0f172a;
+	line-height: 1.6;
+}
+
+.cptt-expertCard__meta {
+	margin-top: 4px;
+	
+	color: #64748b;
+	line-height: 1.8;
+}
+
+.cptt-expertStatusBadge {
+	display: inline-flex;
+	align-items: center;
+	padding: 6px 11px;
+	border-radius: 999px;
+	
+	font-weight: 950;
+	border: 1px solid transparent;
+	white-space: nowrap;
+}
+
+.cptt-expertStatusBadge--completed {
+	background: rgba(16, 185, 129, 0.14);
+	color: #047857;
+	border-color: rgba(16, 185, 129, 0.28);
+}
+
+.cptt-expertStatusBadge--in_progress {
+	background: rgba(99, 102, 241, 0.14);
+	color: #4338ca;
+	border-color: rgba(99, 102, 241, 0.28);
+}
+
+.cptt-expertCard__progress {
+	height: 10px;
+	background: #f1f5f9;
+	border-radius: 999px;
+	overflow: hidden;
+	position: relative;
+}
+
+.cptt-expertCard__progress span {
+	display: block;
+	height: 100%;
+	background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+	border-radius: 999px;
+	transition: width 0.4s ease;
+}
+
+.cptt-expertCard__stats {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.cptt-expertCard__stats > div {
+	padding: 12px 8px;
+	background: #f8fafc;
+	border: 1px solid #f1f5f9;
+	border-radius: 14px;
+	text-align: center;
+}
+
+.cptt-expertCard__stats strong {
+	display: block;
+	
+	font-weight: 950;
+	color: #0f172a;
+}
+
+.cptt-expertCard__stats span {
+	display: block;
+	
+	font-weight: 800;
+	color: #64748b;
+	margin-top: 4px;
+}
+
+/* Colored stat tiles */
+.cptt-expertCard__stats > div:nth-child(1) { background: #eef2ff; border-color: #e0e7ff; }
+.cptt-expertCard__stats > div:nth-child(1) strong { color: #4338ca; }
+
+.cptt-expertCard__stats > div:nth-child(2) { background: #ecfdf5; border-color: #d1fae5; }
+.cptt-expertCard__stats > div:nth-child(2) strong { color: #065f46; }
+
+.cptt-expertCard__stats > div:nth-child(3) { background: #fff7ed; border-color: #fed7aa; }
+.cptt-expertCard__stats > div:nth-child(3) strong { color: #9a3412; }
+
+.cptt-expertCard__stats > div:nth-child(4) { background: #fef2f2; border-color: #fecaca; }
+.cptt-expertCard__stats > div:nth-child(4) strong { color: #991b1b; }
+
+.cptt-expertCard__infoGrid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.cptt-expertCard__infoGrid > div {
+	padding: 10px 12px;
+	background: #f8fafc;
+	border: 1px solid #f1f5f9;
+	border-radius: 12px;
+}
+
+.cptt-expertCard__infoGrid span {
+	display: block;
+	
+	color: #64748b;
+	font-weight: 800;
+}
+
+.cptt-expertCard__infoGrid strong {
+	display: block;
+	margin-top: 4px;
+	
+	color: #0f172a;
+	line-height: 1.7;
+	font-weight: 900;
+}
+
+.cptt-expertCard__actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+/* =====================================================================
+   8. EXPANDED MANAGE PROJECT PANEL
+   ===================================================================== */
+
+.cptt-expertCard__details {
+	margin-top: 6px;
+	padding-top: 16px;
+	border-top: 1px dashed #cbd5e1;
+}
+
+.cptt-expertCard__panels {
+	display: grid;
+	grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+	gap: 16px;
+	align-items: start;
+}
+
+@media (max-width: 980px) {
+	.cptt-expertCard__panels {
+		grid-template-columns: 1fr;
+	}
+}
+
+.cptt-expertCard__mainPanel,
+.cptt-expertCard__sidePanel {
+	min-width: 0;
+	width: 100%;
+}
+
+.cptt-expertCard__sidePanel {
+	display: grid;
+	gap: 12px;
+}
+
+/* ---------- Manage Form ---------- */
+
+.cptt-expert-project-form {
+	display: grid;
+	gap: 14px;
+}
+
+.cptt-expert-projectMeta {
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 16px;
+	padding: 14px;
+}
+
+.cptt-expert-sectionTitle {
+	
+	font-weight: 950;
+	color: #0f172a;
+	margin-bottom: 10px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.cptt-expert-sectionTitle::before {
+	content: '';
+	width: 4px;
+	height: 14px;
+	background: #6366f1;
+	border-radius: 2px;
+}
+
+.cptt-createProjectGrid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px;
+}
+
+@media (max-width: 720px) {
+	.cptt-createProjectGrid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.cptt-createProjectGrid label {
+	display: block;
+}
+
+.cptt-createProjectGrid label > span {
+	display: block;
+	
+	font-weight: 900;
+	color: #475569;
+	margin-bottom: 6px;
+}
+
+.cptt-createProjectGrid input,
+.cptt-createProjectGrid select,
+.cptt-createProjectGrid textarea {
+	width: 100%;
+	padding: 11px 12px;
+	border: 1px solid #cbd5e1;
+	border-radius: 12px;
+	background: #fff;
+	font: inherit;
+	color: #0f172a;
+	box-sizing: border-box;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cptt-createProjectGrid input:focus,
+.cptt-createProjectGrid select:focus,
+.cptt-createProjectGrid textarea:focus {
+	border-color: #6366f1;
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.cptt-createProjectGrid select[multiple] {
+	min-height: 96px;
+	padding: 6px;
+}
+
+.cptt-expert-multiselect {
+	min-height: 96px !important;
+}
+
+.cptt-createProjectCheck {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 12px;
+	background: #eef2ff;
+	border: 1px solid #e0e7ff;
+	border-radius: 12px;
+	margin-top: 10px;
+}
+
+.cptt-createProjectCheck > span {
+	
+	font-weight: 900;
+	color: #475569;
+}
+
+.cptt-createProjectCheck label {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	
+	color: #0f172a;
+	font-weight: 900;
+	cursor: pointer;
+}
+
+/* ---------- Steps Accordion ---------- */
+
+.cptt-expert-steps {
+	display: grid;
+	gap: 10px;
+}
+
+.cptt-expert-step {
+	background: #fff;
+	border: 1px solid #e6ebf2;
+	border-radius: 16px;
+	overflow: hidden;
+	transition: box-shadow 0.2s ease;
+}
+
+.cptt-expert-step.is-open {
+	box-shadow: 0 12px 30px rgba(99, 102, 241, 0.12);
+	border-color: #c7d2fe;
+}
+
+.cptt-expert-step__toggle {
+	width: 100%;
+	border: 0;
+	background: linear-gradient(135deg, #f8fafc, #fff);
+	padding: 14px 16px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	text-align: right;
+	transition: background 0.15s ease;
+	font: inherit;
+}
+
+.cptt-expert-step.is-open .cptt-expert-step__toggle {
+	background: linear-gradient(135deg, #eef2ff, #f5f3ff);
+}
+
+.cptt-expert-step__toggle:hover {
+	background: linear-gradient(135deg, #f1f5f9, #fff);
+}
+
+.cptt-expert-step__toggleMain {
+	flex: 1;
+	min-width: 0;
+}
+
+.cptt-expert-step__toggleMain strong {
+	display: block;
+	
+	font-weight: 950;
+	color: #0f172a;
+	line-height: 1.6;
+}
+
+.cptt-expert-step__toggleMain span {
+	display: block;
+	
+	color: #64748b;
+	line-height: 1.6;
+	margin-top: 2px;
+}
+
+.cptt-expert-step__toggleSide {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-shrink: 0;
+}
+
+.cptt-expert-status {
+	display: inline-flex;
+	padding: 5px 10px;
+	border-radius: 999px;
+	
+	font-weight: 950;
+	border: 1px solid transparent;
+	white-space: nowrap;
+}
+
+.cptt-expert-status--done {
+	background: rgba(16, 185, 129, 0.14);
+	color: #047857;
+	border-color: rgba(16, 185, 129, 0.28);
+}
+
+.cptt-expert-status--current {
+	background: rgba(245, 158, 11, 0.14);
+	color: #b45309;
+	border-color: rgba(245, 158, 11, 0.28);
+}
+
+.cptt-expert-status--todo {
+	background: rgba(148, 163, 184, 0.16);
+	color: #475569;
+	border-color: rgba(148, 163, 184, 0.28);
+}
+
+.cptt-expert-step__chevron {
+	
+	color: #6366f1;
+	transition: transform 0.2s ease;
+	font-weight: 900;
+}
+
+.cptt-expert-step.is-open .cptt-expert-step__chevron {
+	transform: rotate(180deg);
+}
+
+.cptt-expert-step__body {
+	padding: 16px;
+	border-top: 1px solid #e6ebf2;
+	display: grid;
+	gap: 14px;
+	background: #fafbff;
+}
+
+.cptt-expert-step__metaGrid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 10px;
+}
+
+@media (max-width: 720px) {
+	.cptt-expert-step__metaGrid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.cptt-expert-step__metaGrid label,
+.cptt-expert-step__metaItem {
+	padding: 12px;
+	background: #fff;
+	border: 1px solid #e6ebf2;
+	border-radius: 12px;
+	display: block;
+}
+
+.cptt-expert-step__metaGrid label > span,
+.cptt-expert-step__metaItem > span {
+	display: block;
+	
+	font-weight: 900;
+	color: #64748b;
+	margin-bottom: 6px;
+}
+
+.cptt-expert-step__metaGrid input,
+.cptt-expert-step__metaGrid select,
+.cptt-expert-step__metaGrid textarea {
+	width: 100%;
+	padding: 9px 11px;
+	border: 1px solid #cbd5e1;
+	border-radius: 10px;
+	background: #f8fafc;
+	font: inherit;
+	color: #0f172a;
+	box-sizing: border-box;
+}
+
+.cptt-expert-step__metaGrid input:focus,
+.cptt-expert-step__metaGrid select:focus {
+	background: #fff;
+	border-color: #6366f1;
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.cptt-expert-step__metaItem strong {
+	display: block;
+	
+	color: #0f172a;
+	line-height: 1.6;
+	font-weight: 900;
+}
+
+.cptt-expert-noteField {
+	display: block;
+}
+
+.cptt-expert-noteField > span {
+	display: block;
+	
+	font-weight: 900;
+	color: #475569;
+	margin-bottom: 6px;
+}
+
+.cptt-expert-noteField textarea {
+	width: 100%;
+	padding: 11px 13px;
+	border: 1px solid #cbd5e1;
+	border-radius: 12px;
+	background: #fff;
+	font: inherit;
+	color: #0f172a;
+	box-sizing: border-box;
+	resize: vertical;
+	min-height: 80px;
+}
+
+.cptt-expert-noteField textarea:focus {
+	border-color: #6366f1;
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* ---------- Checklist (inside step) ---------- */
+
+.cptt-expert-checklist {
+	padding: 14px;
+	background: linear-gradient(180deg, #ecfdf5, #fff);
+	border: 1px solid #d1fae5;
+	border-radius: 14px;
+}
+
+.cptt-expert-checkRow {
+	display: grid;
+	grid-template-columns: auto 1.5fr 1fr;
+	gap: 8px;
+	align-items: center;
+	padding: 10px 0;
+	border-top: 1px solid #d1fae5;
+}
+
+.cptt-expert-checkRow:first-child {
+	border-top: 0;
+	padding-top: 4px;
+}
+
+.cptt-expert-checkRow.is-done {
+	opacity: 0.85;
+}
+
+.cptt-expert-checkRow.is-done input[type="text"] {
+	text-decoration: line-through;
+	color: #64748b;
+}
+
+@media (max-width: 720px) {
+	.cptt-expert-checkRow {
+		grid-template-columns: 1fr;
+	}
+}
+
+.cptt-expert-checkItem {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 12px;
+	background: #fff;
+	border: 1px solid #d1fae5;
+	border-radius: 999px;
+	cursor: pointer;
+	
+	font-weight: 800;
+	color: #047857;
+	white-space: nowrap;
+}
+
+.cptt-expert-checkItem input[type="checkbox"] {
+	margin: 0;
+	accent-color: #10b981;
+}
+
+.cptt-expert-checkItem small {
+	
+	color: #64748b;
+	font-weight: 700;
+}
+
+.cptt-expert-checkRow input[type="text"],
+.cptt-expert-checkRow input[type="url"] {
+	padding: 8px 12px;
+	border: 1px solid #cbd5e1;
+	border-radius: 10px;
+	background: #fff;
+	font: inherit;
+	color: #0f172a;
+	box-sizing: border-box;
+}
+
+.cptt-expert-checkRow input[type="text"]:focus,
+.cptt-expert-checkRow input[type="url"]:focus {
+	border-color: #10b981;
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+/* ---------- User Tasks (inside step) ---------- */
+
+.cptt-expert-userTasks {
+	padding: 14px;
+	background: linear-gradient(180deg, #fff7ed, #fff);
+	border: 1px solid #fed7aa;
+	border-radius: 14px;
+	display: grid;
+	gap: 10px;
+}
+
+.cptt-expert-userTask {
+	background: #fff;
+	border: 1px solid #fed7aa;
+	border-radius: 12px;
+	padding: 12px;
+	display: grid;
+	gap: 10px;
+	position: relative;
+}
+
+.cptt-expert-userTask.is-done {
+	background: #f0fdf4;
+	border-color: #bbf7d0;
+}
+
+.cptt-expert-userTask > label {
+	display: block;
+}
+
+.cptt-expert-userTask > label > span {
+	display: block;
+	
+	font-weight: 900;
+	color: #475569;
+	margin-bottom: 4px;
+}
+
+.cptt-expert-userTask input[type="text"],
+.cptt-expert-userTask textarea {
+	width: 100%;
+	padding: 8px 12px;
+	border: 1px solid #cbd5e1;
+	border-radius: 10px;
+	background: #f8fafc;
+	font: inherit;
+	color: #0f172a;
+	box-sizing: border-box;
+}
+
+.cptt-expert-userTask input[type="text"]:focus,
+.cptt-expert-userTask textarea:focus {
+	background: #fff;
+	border-color: #f59e0b;
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+.cptt-expert-userTask__grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+}
+
+@media (max-width: 520px) {
+	.cptt-expert-userTask__grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.cptt-expert-userTask__meta {
+	display: inline-flex;
+	align-items: center;
+	padding: 4px 10px;
+	border-radius: 999px;
+	
+	font-weight: 900;
+	background: #fef3c7;
+	color: #92400e;
+	border: 1px solid #fde68a;
+	width: fit-content;
+}
+
+.cptt-expert-userTask.is-done .cptt-expert-userTask__meta {
+	background: #d1fae5;
+	color: #047857;
+	border-color: #a7f3d0;
+}
+
+/* ---------- USER TASK RESPONSE (Customer message + files) ---------- */
+
+.cptt-expert-userTask__response {
+	margin-top: 4px;
+	background: linear-gradient(180deg, #ecfdf5, #fff);
+	border: 1px solid #a7f3d0;
+	border-radius: 12px;
+	padding: 14px;
+	display: grid;
+	gap: 10px;
+}
+
+.cptt-expert-userTask__responseHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	flex-wrap: wrap;
+	padding-bottom: 8px;
+	border-bottom: 1px dashed #a7f3d0;
+}
+
+.cptt-expert-userTask__responseHeader strong {
+	
+	color: #047857;
+	font-weight: 950;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.cptt-expert-userTask__responseHeader strong::before {
+	content: '✓';
+	width: 22px;
+	height: 22px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: #10b981;
+	color: #fff;
+	border-radius: 50%;
+	
+	font-weight: 900;
+}
+
+.cptt-expert-userTask__responseHeader small {
+	
+	color: #64748b;
+	font-weight: 700;
+}
+
+.cptt-expert-userTask__responseMsg {
+	background: #fff;
+	border: 1px solid #d1fae5;
+	border-radius: 10px;
+	padding: 12px;
+	
+	line-height: 1.9;
+	color: #1f2937;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.cptt-expert-userTask__responseMsg:empty {
+	display: none;
+}
+
+.cptt-expert-userTask__responseLink {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 12px;
+	background: #eef2ff;
+	border: 1px solid #c7d2fe;
+	border-radius: 10px;
+	color: #4338ca;
+	
+	font-weight: 900;
+	text-decoration: none;
+	width: fit-content;
+}
+
+.cptt-expert-userTask__responseLink::before {
+	content: '🔗';
+	
+}
+
+.cptt-expert-userTask__responseLink:hover {
+	background: #e0e7ff;
+}
+
+.cptt-expert-userTask__files {
+	display: grid;
+	gap: 8px;
+}
+
+.cptt-expert-userTask__filesTitle {
+	
+	color: #475569;
+	font-weight: 900;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.cptt-expert-userTask__filesTitle::before {
+	content: '📎';
+}
+
+.cptt-expert-userTask__fileList {
+	display: grid;
+	gap: 6px;
+}
+
+.cptt-expert-userTask__fileItem {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	padding: 10px 12px;
+	background: #fff;
+	border: 1px solid #e2e8f0;
+	border-radius: 10px;
+}
+
+.cptt-expert-userTask__fileInfo {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-width: 0;
+	flex: 1;
+}
+
+.cptt-expert-userTask__fileIcon {
+	width: 36px;
+	height: 36px;
+	border-radius: 8px;
+	background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	
+}
+
+.cptt-expert-userTask__fileName {
+	
+	color: #0f172a;
+	font-weight: 800;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+	flex: 1;
+}
+
+.cptt-expert-userTask__fileBtn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 7px 14px;
+	background: linear-gradient(135deg, #6366f1, #8b5cf6);
+	color: #fff;
+	border-radius: 999px;
+	
+	font-weight: 900;
+	text-decoration: none;
+	white-space: nowrap;
+	box-shadow: 0 4px 10px rgba(99, 102, 241, 0.25);
+	transition: transform 0.15s ease;
+	flex-shrink: 0;
+}
+
+.cptt-expert-userTask__fileBtn:hover {
+	transform: translateY(-1px);
+	color: #fff;
+}
+
+.cptt-expert-userTask__fileBtn::before {
+	content: '👁';
+	
+}
+
+/* ---------- Form Footer ---------- */
+
+.cptt-expert-formFooter {
+	padding: 14px;
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 16px;
+	display: grid;
+	gap: 12px;
+}
+
+.cptt-expert-formActions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.cptt-expert-formMsg {
+	
+	color: #047857;
+	font-weight: 900;
+}
+
+/* ---------- Side panels in details ---------- */
+
+.cptt-expert-noteList {
+	display: grid;
+	gap: 8px;
+}
+
+.cptt-expert-noteItem {
+	padding: 10px 12px;
+	border: 1px solid #e6ebf2;
+	border-radius: 12px;
+	background: #fff;
+}
+
+.cptt-expert-noteItem__head {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	
+	color: #64748b;
+	margin-bottom: 6px;
+}
+
+.cptt-expert-noteItem__head strong {
+	color: #0f172a;
+	font-weight: 900;
+}
+
+.cptt-expert-noteItem__body {
+	
+	line-height: 1.9;
+	color: #334155;
+}
+
+/* ---------- Chat Modal (existing) ---------- */
+
+.cptt-expert-chat-launch {
+	width: 100%;
+	margin-top: 8px;
+}
+
+.cptt-expert-chatModal {
+	position: fixed;
+	inset: 0;
+	z-index: 999999;
+}
+
+.cptt-expert-chatModal__backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(15, 23, 42, 0.55);
+	backdrop-filter: blur(4px);
+}
+
+.cptt-expert-chatModal__dialog {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: min(560px, 92vw);
+	max-height: 86vh;
+	overflow: auto;
+	background: #fff;
+	border-radius: 20px;
+	padding: 22px;
+	box-shadow: 0 30px 60px rgba(15, 23, 42, 0.35);
+}
+
+.cptt-expert-chatModal__close {
+	position: absolute;
+	top: 12px;
+	left: 12px;
+	background: #f1f5f9;
+	border: 0;
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	
+	color: #64748b;
+	cursor: pointer;
+}
+
+.cptt-expert-chatModal__close:hover {
+	background: #fef2f2;
+	color: #ef4444;
+}
+
+.cptt-expert-message-form {
+	display: grid;
+	gap: 10px;
+	margin: 12px 0;
+}
+
+.cptt-expert-message-form select,
+.cptt-expert-message-form textarea {
+	width: 100%;
+	padding: 10px 12px;
+	border: 1px solid #cbd5e1;
+	border-radius: 12px;
+	background: #f8fafc;
+	font: inherit;
+	color: #0f172a;
+	box-sizing: border-box;
+}
+
+/* =====================================================================
+   9. NEW PROJECT MODAL
+   ===================================================================== */
+
+.cptt-newProjectModal {
+	position: fixed;
+	inset: 0;
+	z-index: 9999999;
+	display: none;
+}
+
+.cptt-newProjectModal.is-open {
+	display: block;
+}
+
+.cptt-newProjectModal__backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(15, 23, 42, 0.6);
+	backdrop-filter: blur(6px);
+}
+
+.cptt-newProjectModal__dialog {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: min(780px, 94vw);
+	max-height: 90vh;
+	overflow: auto;
+	background: #fff;
+	border-radius: 24px;
+	padding: 0;
+	box-shadow: 0 40px 80px rgba(15, 23, 42, 0.4);
+}
+
+.cptt-newProjectModal__header {
+	background: #fff;
+	padding: 22px 26px;
+	color: #0f172a;
+	border-radius: 24px 24px 0 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.cptt-newProjectModal__title {
+	
+	font-weight: 950;
+	margin: 0;
+    color: inherit;
+}
+
+.cptt-newProjectModal__subtitle {
+	margin: 4px 0 0;
+	
+	color: #64748b;
+	font-weight: 700;
+}
+
+.cptt-newProjectModal__close {
+	background: #f1f5f9;
+	border: 0;
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	
+	color: #64748b;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cptt-newProjectModal__close:hover {
+	background: #fef2f2;
+    color: #ef4444;
+}
+
+.cptt-newProjectModal__body {
+	padding: 22px 26px;
+}
+
+/* =====================================================================
+   10. BUTTONS
+   ===================================================================== */
+
+.cptt-shell-page .cptt-btn,
+.cptt-shell-page--hub .cptt-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 10px 16px;
+	border-radius: 12px;
+	border: 1px solid #cbd5e1;
+	background: #fff;
+	color: #334155;
+	
+	font-weight: 900;
+	cursor: pointer;
+	text-decoration: none;
+	transition: all 0.15s ease;
+	
+}
+
+.cptt-shell-page .cptt-btn:hover,
+.cptt-shell-page--hub .cptt-btn:hover {
+	background: #f1f5f9;
+	border-color: #94a3b8;
+}
+
+.cptt-shell-page .cptt-btn--primary,
+.cptt-shell-page--hub .cptt-btn--primary {
+	background: linear-gradient(135deg, #6366f1, #8b5cf6);
+	color: #fff;
+	border-color: transparent;
+	box-shadow: 0 6px 14px rgba(99, 102, 241, 0.28);
+}
+
+.cptt-shell-page .cptt-btn--primary:hover,
+.cptt-shell-page--hub .cptt-btn--primary:hover {
+	background: linear-gradient(135deg, #4f46e5, #7c3aed);
+	transform: translateY(-1px);
+	box-shadow: 0 10px 20px rgba(99, 102, 241, 0.35);
+	color: #fff;
+}
+
+/* =====================================================================
+   11. EMPTY STATE / NOTICES
+   ===================================================================== */
+
+.cptt-shell-page .cptt-empty,
+.cptt-shell-page--hub .cptt-empty {
+	padding: 40px 20px;
+	text-align: center;
+	color: #64748b;
+	font-weight: 700;
+	background: #fff;
+	border: 1px dashed #cbd5e1;
+	border-radius: 16px;
+	grid-column: 1 / -1;
+}
+
+.cptt-dashboard__empty {
+	padding: 40px 20px;
+	text-align: center;
+	color: #64748b;
+	font-weight: 700;
+	background: #fff;
+	border: 1px dashed #cbd5e1;
+	border-radius: 16px;
+	margin-top: 12px;
+}
+
+.cptt-notice {
+	padding: 14px 18px;
+	background: #fef3c7;
+	border: 1px solid #fde68a;
+	border-radius: 14px;
+	color: #92400e;
+	font-weight: 800;
+}
+
+/* =====================================================================
+   12. JALALI DATE PICKER
+   ===================================================================== */
+
+.cptt-jdp {
+	position: absolute;
+	z-index: 9999999;
+	width: 280px;
+	background: #fff;
+	border: 1px solid #e2e8f0;
+	border-radius: 16px;
+	padding: 12px;
+	box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+	
+}
+
+.cptt-jdp__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 10px;
+	gap: 8px;
+}
+
+.cptt-jdp__head button {
+	background: #eef2ff;
+	border: 0;
+	width: 30px;
+	height: 30px;
+	border-radius: 8px;
+	
+	cursor: pointer;
+	color: #4338ca;
+	font-weight: 900;
+}
+
+.cptt-jdp__head button:hover {
+	background: #c7d2fe;
+}
+
+.cptt-jdp__head strong {
+	
+	color: #0f172a;
+	font-weight: 950;
+}
+
+.cptt-jdp__week {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 4px;
+	margin-bottom: 4px;
+}
+
+.cptt-jdp__week span {
+	
+	font-weight: 900;
+	color: #94a3b8;
+	text-align: center;
+	padding: 4px 0;
+}
+
+.cptt-jdp__days {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 3px;
+}
+
+.cptt-jdp__days button {
+	background: transparent;
+	border: 0;
+	padding: 7px 0;
+	border-radius: 8px;
+	
+	color: #334155;
+	cursor: pointer;
+	font-weight: 700;
+	
+}
+
+.cptt-jdp__days button:hover {
+	background: #eef2ff;
+	color: #4338ca;
+}
+
+.cptt-jdp__days button.is-today {
+	background: #fef3c7;
+	color: #b45309;
+}
+
+.cptt-jdp__days button.is-selected {
+	background: linear-gradient(135deg, #6366f1, #8b5cf6);
+	color: #fff !important;
+}
+
+.cptt-jdp__time {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	padding: 10px 0;
+	margin-top: 8px;
+	border-top: 1px solid #f1f5f9;
+}
+
+.cptt-jdp__time input {
+	width: 50px;
+	padding: 6px;
+	border: 1px solid #cbd5e1;
+	border-radius: 8px;
+	text-align: center;
+	font: inherit;
+}
+
+.cptt-jdp__time span {
+	font-weight: 900;
+	color: #64748b;
+}
+
+.cptt-jdp__foot {
+	display: flex;
+	gap: 6px;
+	padding-top: 10px;
+	border-top: 1px solid #f1f5f9;
+	margin-top: 8px;
+}
+
+.cptt-jdp__foot button {
+	flex: 1;
+	background: #eef2ff;
+	border: 0;
+	padding: 8px;
+	border-radius: 8px;
+	
+	color: #4338ca;
+	cursor: pointer;
+	font-weight: 900;
+	
+}
+
+.cptt-jdp__foot button:hover {
+	background: #c7d2fe;
+}
+
+/* =====================================================================
+   13. RESPONSIVE Tweaks
+   ===================================================================== */
+
+@media (max-width: 600px) {
+	.cptt-proHero--expert {
+		padding: 16px;
+	}
+	.cptt-proHero__title {
+		
+	}
+	.cptt-proHero__metric strong {
+		
+	}
+	.cptt-expertCard {
+		padding: 14px;
+	}
+	.cptt-expertCard__top h3 {
+		
+	}
+	.cptt-expertCard__stats {
+		grid-template-columns: repeat(2, 1fr);
+	}
+	.cptt-expertCard__infoGrid {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* Custom Expert List & Direct Chat */
+.cptt-experts-list-container { margin-bottom: 20px; }
+.cptt-experts-vertical-list { display: flex; flex-direction: column; gap: 10px; }
+.cptt-expert-list-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.2s ease; border: 1px solid #eee; }
+.cptt-expert-list-item:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.08); border-color: #2271b1; }
+.cptt-expert-list-item img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.cptt-expert-list-item span { font-weight: 500;  color: #1d2327; }
+
+.desktop-only { display: block; }
+.mobile-only { display: none !important; }
+
+@media (max-width: 820px) {
+    .desktop-only { display: none !important; }
+    .mobile-only { display: block !important; }
+}
+
+.cptt-experts-mobile-modal, .cptt-direct-chat-modal { position: fixed; inset: 0; z-index: 9999999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.cptt-experts-mobile-modal[hidden], .cptt-direct-chat-modal[hidden] { display: none !important; }
+.cptt-experts-mobile-modal__backdrop, .cptt-direct-chat-modal__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
+.cptt-experts-mobile-modal__dialog, .cptt-direct-chat-modal__dialog { position: relative; background: #fff; border-radius: 12px; width: 100%; max-width: 500px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-height: 90vh; display: flex; flex-direction: column; }
+.cptt-experts-mobile-modal__close, .cptt-direct-chat-modal__close { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border: none; background: #f0f0f1; border-radius: 50%; display: flex; align-items: center; justify-content: center;  cursor: pointer; color: #646970; }
+.cptt-experts-mobile-modal__close:hover, .cptt-direct-chat-modal__close:hover { background: #dcdcde; color: #d63638; }
+
+.cptt-direct-chat-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+.cptt-direct-chat-header img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
+.cptt-direct-chat-info { display: flex; flex-direction: column; gap: 5px; }
+.cptt-direct-chat-info strong {  color: #1d2327; }
+.cptt-direct-chat-info span {  color: #646970; }
+
+.cptt-direct-chat-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; min-height: 250px; max-height: 400px; padding: 10px; background: #f6f7f7; border-radius: 8px; border: 1px solid #dcdcde; }
+.cptt-direct-chat-messages .cptt-expert-noteItem { background: #fff; margin-bottom: 0; }
+.cptt-chat-file-link { display: inline-block; margin-top: 8px;  color: #2271b1; text-decoration: none; padding: 4px 8px; background: #e5f5fa; border-radius: 4px; }
+.cptt-chat-file-link:hover { background: #cce9f5; }
+
+.cptt-expert-step__body[hidden] { display: none !important; }
+
+.cptt-experts-card-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; }
+.cptt-expert-card-item { display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #ddd; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s; user-select: none; }
+.cptt-expert-card-item:hover { border-color: #2271b1; }
+.cptt-expert-card-item input:checked + img { border: 2px solid #2271b1; }
+.cptt-expert-card-item img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+.cptt-expert-card-item span {  color: #1d2327; }
+
+.cptt-notification-bell { position: relative; margin-bottom: 20px; z-index: 1000000 !important; }
+.cptt-bell-btn { background: #fff; border: 1px solid #ddd; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; color: #555; transition: 0.2s; }
+.cptt-bell-btn:hover { border-color: #2271b1; color: #2271b1; }
+.cptt-bell-badge { position: absolute; top: -5px; right: -5px; background: #d63638; color: #fff;  font-weight: bold; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.cptt-notifications-dropdown { position: absolute; top: 54px; right: 0; width: 320px; background: #fff; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-height: 400px; display: flex; flex-direction: column; overflow: hidden; z-index: 100000000 !important; }
+.cptt-notifications-dropdown[hidden] { display: none !important; }
+.cptt-notifications-header { padding: 12px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #fafafa; }
+.cptt-notifications-list { overflow-y: auto; flex: 1; }
+.cptt-notification-item { display: flex; flex-direction: column; padding: 12px 15px; border-bottom: 1px solid #f0f0f0; text-decoration: none; color: #333; transition: 0.2s; background: #ebf4fa; }
+.cptt-notification-item.is-read { background: #fff; }
+.cptt-notification-item:hover { background: #f6f7f7; }
+.cptt-notification-msg {  line-height: 1.5; margin-bottom: 5px; }
+.cptt-notification-time {  color: #888; }
+/* =====================================================================
+   CPTT Expert Dashboard Additions — Chat Bubbles, Kanban, Dark Mode, Delete
+   ===================================================================== */
+
+/* ---------- Chat Bubbles ---------- */
+.cptt-chat-bubble {
+	background: #fff;
+	border: 1px solid #e6ebf2;
+	border-radius: 16px;
+	padding: 12px 14px;
+	margin-bottom: 10px;
+	max-width: 82%;
+	box-shadow: 0 4px 10px rgba(15,23,42,0.04);
+	word-break: break-word;
+}
+.cptt-chat-bubble--me {
+	margin-right: 0;
+	margin-left: auto;
+	background: linear-gradient(135deg,#eff6ff,#ffffff);
+	border-color: #dbeafe;
+	border-top-right-radius: 4px;
+}
+.cptt-chat-bubble--other {
+	margin-left: 0;
+	margin-right: auto;
+	background: linear-gradient(135deg,#f8fafc,#ffffff);
+	border-color: #e6ebf2;
+	border-top-left-radius: 4px;
+}
+.cptt-chat-bubble__head {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 6px;
+	
+	font-weight: 900;
+	color: #64748b;
+	flex-wrap: wrap;
+}
+.cptt-chat-bubble__body {
+	
+	line-height: 1.9;
+	color: #334155;
+}
+.cptt-chat-file-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 10px;
+	background: linear-gradient(135deg,#6366f1,#8b5cf6);
+	color: #fff;
+	border-radius: 999px;
+	
+	font-weight: 900;
+	text-decoration: none;
+	margin-top: 6px;
+	box-shadow: 0 4px 10px rgba(99,102,241,0.22);
+}
+.cptt-chat-file-btn:hover { color: #fff; transform: translateY(-1px); }
+
+/* ---------- Kanban ---------- */
+.cptt-kanban { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; margin-bottom: 20px; }
+.cptt-kanban__col { background: #f8fafc; border: 1px solid #e6ebf2; border-radius: 20px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-height: 220px; }
+.cptt-kanban__head {  font-weight: 950; color: #0f172a; padding-bottom: 8px; border-bottom: 1px dashed #dbeafe; margin-bottom: 4px; }
+.cptt-kanban__dropzone { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.cptt-kanban__card { background: #fff; border: 1px solid #e6ebf2; border-radius: 14px; padding: 12px; cursor: grab; box-shadow: 0 4px 10px rgba(15,23,42,0.04); transition: transform .15s ease, box-shadow .15s ease; }
+.cptt-kanban__card:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(15,23,42,0.08); }
+.cptt-kanban__card.is-dragging { opacity: 0.6; transform: scale(0.98); }
+.cptt-kanban__cardTitle {  font-weight: 900; color: #0f172a; line-height: 1.7; }
+.cptt-kanban__cardMeta {  color: #64748b; margin-top: 4px; }
+
+/* ---------- Delete Buttons ---------- */
+.cptt-btn--danger { background: linear-gradient(135deg,#ef4444,#f87171); color: #fff; border-color: transparent; box-shadow: 0 6px 14px rgba(239,68,68,0.28); }
+.cptt-btn--danger:hover { background: linear-gradient(135deg,#dc2626,#ef4444); color: #fff; transform: translateY(-1px); }
+
+/* ---------- Dark Mode ---------- */
+body.cptt-dark,
+body.cptt-dark .cptt-shell-page,
+body.cptt-dark .cptt-shell-page--hub { background: #0f172a; }
+body.cptt-dark .cptt-expertSidebar,
+body.cptt-dark .cptt-sideBox,
+body.cptt-dark .cptt-kpiCard,
+body.cptt-dark .cptt-insightBox,
+body.cptt-dark .cptt-expertCard,
+body.cptt-dark .cptt-expert-step,
+body.cptt-dark .cptt-expertFilters,
+body.cptt-dark .cptt-expert-projectMeta,
+body.cptt-dark .cptt-newProjectModal__dialog,
+body.cptt-dark .cptt-expert-chatModal__dialog,
+body.cptt-dark .cptt-direct-chat-modal__dialog,
+body.cptt-dark .cptt-expertsDirectory,
+body.cptt-dark .cptt-hubProjects,
+body.cptt-dark .cptt-publicProject,
+body.cptt-dark .cptt-hubStep,
+body.cptt-dark .cptt-hubModal__dialog,
+body.cptt-dark .cptt-expertBadge,
+body.cptt-dark .cptt-kanban__col,
+body.cptt-dark .cptt-kanban__card { background: #1e293b; border-color: #334155; color: #e2e8f0; }
+
+/* Improved separation in Dark Mode */
+body.cptt-dark .cptt-expertCard,
+body.cptt-dark .cptt-sideBox,
+body.cptt-dark .cptt-kpiCard,
+body.cptt-dark .cptt-insightBox {
+    background: #242f42 !important;
+    border-color: #3d4b61 !important;
+}
+
+body.cptt-dark .cptt-proHero--expert { background: linear-gradient(135deg,#312e81,#4c1d95,#be185d); }
+body.cptt-dark .cptt-expertProfile strong,
+body.cptt-dark .cptt-expertCard__top h3,
+body.cptt-dark .cptt-sideBox__title,
+body.cptt-dark .cptt-kpiCard__value,
+body.cptt-dark .cptt-insightBox__title,
+body.cptt-dark .cptt-expert-step__toggleMain strong,
+body.cptt-dark .cptt-expert-step__metaGrid label > span,
+body.cptt-dark .cptt-expert-sectionTitle,
+body.cptt-dark .cptt-hubStep__head strong,
+body.cptt-dark .cptt-publicProject__top h3,
+body.cptt-dark .cptt-expertsHero__title,
+body.cptt-dark .cptt-hubModal__title,
+body.cptt-dark .cptt-direct-chat-info strong,
+body.cptt-dark .cptt-kanban__head,
+body.cptt-dark .cptt-kanban__cardTitle { color: #f8fafc; }
+body.cptt-dark .cptt-expertCard__meta,
+body.cptt-dark .cptt-expert-step__toggleMain span,
+body.cptt-dark .cptt-expert-step__metaItem > span,
+body.cptt-dark .cptt-hubStep__meta,
+body.cptt-dark .cptt-publicProject__experts,
+body.cptt-dark .cptt-hubMetaChip,
+body.cptt-dark .cptt-kanban__cardMeta { color: #94a3b8; }
+body.cptt-dark .cptt-expert-step__body,
+body.cptt-dark .cptt-expert-noteField textarea,
+body.cptt-dark .cptt-createProjectGrid input,
+body.cptt-dark .cptt-createProjectGrid select,
+body.cptt-dark .cptt-expertFilters input,
+body.cptt-dark .cptt-expertFilters select,
+body.cptt-dark .cptt-expert-step__metaGrid input,
+body.cptt-dark .cptt-expert-step__metaGrid select,
+body.cptt-dark .cptt-expert-checkRow input,
+body.cptt-dark .cptt-expert-userTask input,
+body.cptt-dark .cptt-expert-userTask textarea { background: #0f172a; color: #e2e8f0; border-color: #334155; }
+body.cptt-dark .cptt-jdp { background: #1e293b; border-color: #334155; }
+body.cptt-dark .cptt-jdp__head strong,
+body.cptt-dark .cptt-jdp__days button { color: #f1f5f9; }
+body.cptt-dark .cptt-jdp__days button:hover { background: #334155; }
+body.cptt-dark .cptt-jdp__days button.is-selected { background: linear-gradient(135deg,#6366f1,#8b5cf6); }
+body.cptt-dark .cptt-notification-item { background: #1e293b; border-bottom-color: #334155; color: #e2e8f0; }
+body.cptt-dark .cptt-notification-item.is-read { background: #0f172a; }
+body.cptt-dark .cptt-notifications-header { background: #1e293b; border-bottom-color: #334155; }
+body.cptt-dark .cptt-expert-list-item { background: #1e293b; border-color: #334155; }
+body.cptt-dark .cptt-expert-list-item span { color: #e2e8f0; }
+body.cptt-dark .cptt-empty,
+body.cptt-dark .cptt-dashboard__empty,
+body.cptt-dark .cptt-expert-emptyMini { background: #1e293b; border-color: #334155; color: #94a3b8; }
+body.cptt-dark .cptt-chat-bubble { background: #1e293b; border-color: #334155; color: #e2e8f0; }
+body.cptt-dark .cptt-chat-bubble__body { color: #e2e8f0; }
+body.cptt-dark .cptt-newProjectModal__header { background: #0f172a; border-bottom: 1px solid #334155; color: #f8fafc; }
+body.cptt-dark .cptt-hubChecklist li { background: #1e293b; border-color: #334155; }
+body.cptt-dark .cptt-hubChecklist li.is-done { background: #064e3b; border-color: #065f46; }
+body.cptt-dark .cptt-hubModal__stats div,
+body.cptt-dark .cptt-hubModal__detailsGrid div { background: #1e293b; border-color: #334155; }
+
+/* ---------- Dark toggle button ---------- */
+.cptt-dark-toggle { margin-top: 8px; width: 100%; }
+
+/* Small responsive */
+@media (max-width: 980px) {
+	.cptt-kanban { grid-template-columns: 1fr; }
+}
+
+
+/* ---------- Dark Mode Enhanced ---------- */
+body.cptt-dark .cptt-chat-bubble--me {
+    background: linear-gradient(135deg,#1e3a8a,#312e81);
+    border-color: #3730a3;
+}
+body.cptt-dark .cptt-chat-bubble--other {
+    background: linear-gradient(135deg,#334155,#1e293b);
+    border-color: #475569;
+}
+body.cptt-dark .cptt-chat-bubble__head strong {
+    color: #cbd5e1;
+}
+body.cptt-dark .cptt-expert-userTasks {
+    background: linear-gradient(180deg, #451a03, #1e293b);
+    border-color: #78350f;
+}
+body.cptt-dark .cptt-expert-checklist {
+    background: linear-gradient(180deg, #064e3b, #1e293b);
+    border-color: #065f46;
+}
+body.cptt-dark .cptt-expert-checkItem {
+    background: #022c22;
+    border-color: #065f46;
+    color: #34d399;
+}
+body.cptt-dark .cptt-expertCard__stats > div {
+    background: #0f172a;
+    border-color: #334155;
+}
+body.cptt-dark .cptt-expertCard__stats > div strong {
+    color: #f1f5f9;
+}
+body.cptt-dark .cptt-expertCard__infoGrid > div {
+    background: #0f172a;
+    border-color: #334155;
+}
+body.cptt-dark .cptt-expertCard.is-expanded {
+    background: linear-gradient(180deg, #1e293b, #0f172a);
+    border-color: #3730a3;
+}
+body.cptt-dark .cptt-expert-step__toggle {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+}
+body.cptt-dark .cptt-expert-step.is-open .cptt-expert-step__toggle {
+    background: linear-gradient(135deg, #312e81, #1e3a8a);
+}
+body.cptt-dark .cptt-expert-step__metaGrid label, 
+body.cptt-dark .cptt-expert-step__metaItem {
+    background: #0f172a;
+    border-color: #334155;
+}
+body.cptt-dark .cptt-expert-formFooter {
+    background: #0f172a;
+    border-color: #334155;
+}
+body.cptt-dark .cptt-expert-projectMeta {
+    background: #0f172a;
+    border-color: #334155;
+}
+body.cptt-dark .cptt-expert-userTask {
+    background: #0f172a;
+    border-color: #78350f;
+}
+body.cptt-dark .cptt-expert-userTask.is-done {
+    background: #022c22;
+    border-color: #065f46;
+}
+body.cptt-dark .cptt-jdp {
+    background: #1e293b;
+    border-color: #334155;
+}
+body.cptt-dark .cptt-direct-chat-messages {
+    background: #0f172a;
+    border-color: #334155;
+}
+body.cptt-dark .cptt-expert-noteItem {
+    background: #1e293b;
+    border-color: #334155;
+}
+body.cptt-dark .cptt-sideList li {
+    background: #0f172a;
+    border-color: #334155;
+}
+
+/* Fix Bell Index */
+.cptt-notification-bell {
+    z-index: 10000000 !important;
+}
+
+/* File UI for Chat input */
+.cptt-chat-file-preview {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 8px;
+    
+    color: #4338ca;
+    margin-bottom: 8px;
+}
+body.cptt-dark .cptt-chat-file-preview {
+    background: #1e3a8a;
+    border-color: #3730a3;
+    color: #c7d2fe;
+}
+.cptt-chat-file-preview button {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    
+    font-weight: 900;
+    padding: 0 4px;
+}
+
+/* Emoji picker styling */
+.cptt-emoji-picker {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+.cptt-emoji-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    
+    padding: 4px;
+    transition: transform 0.15s ease;
+}
+.cptt-emoji-btn:hover {
+    transform: scale(1.2);
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+body.cptt-dark .cptt-emoji-btn:hover {
+    border-color: #475569;
+    background: #334155;
+}
+
+
+/* ---------- Messenger Style Input ---------- */
+.cptt-expert-message-form, .cptt-direct-chat-form {
+    display: flex;
+    flex-direction: column;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    padding: 10px 14px;
+    gap: 0;
+    margin-top: auto;
+}
+.cptt-expert-message-form select, .cptt-direct-chat-form select {
+    border: none !important;
+    background: transparent !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    border-radius: 0 !important;
+    padding: 4px 0 !important;
+    margin-bottom: 8px !important;
+    box-shadow: none !important;
+    
+}
+.cptt-expert-message-form textarea, .cptt-direct-chat-form textarea {
+    border: none !important;
+    background: transparent !important;
+    padding: 8px 0 !important;
+    box-shadow: none !important;
+    min-height: 40px !important;
+    max-height: 120px !important;
+    resize: none !important;
+}
+.cptt-expert-message-form .cptt-expert-formActions, .cptt-direct-chat-form .cptt-expert-formActions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 8px;
+    margin-top: 4px;
+}
+.cptt-expert-message-form .cptt-btn, .cptt-direct-chat-form .cptt-btn {
+    border-radius: 999px;
+    padding: 6px 14px;
+}
+
+body.cptt-dark .cptt-expert-message-form, body.cptt-dark .cptt-direct-chat-form {
+    background: #0f172a;
+    border-color: #334155;
+}
+body.cptt-dark .cptt-expert-message-form select, body.cptt-dark .cptt-direct-chat-form select {
+    border-bottom-color: #334155 !important;
+    color: #e2e8f0;
+}
+body.cptt-dark .cptt-expert-message-form .cptt-expert-formActions, body.cptt-dark .cptt-direct-chat-form .cptt-expert-formActions {
+    border-top-color: #334155;
+}
+
+/* ---- Extra Dark Mode fixes ---- */
+body.cptt-dark .cptt-newProjectModal__dialog,
+body.cptt-dark .cptt-expert-chatModal__dialog,
+body.cptt-dark .cptt-direct-chat-modal__dialog,
+body.cptt-dark .cptt-mobile-menu__dialog {
+    background: #0f172a !important;
+    border: 1px solid #334155;
+    color: #e2e8f0;
+}
+body.cptt-dark .cptt-mobile-menu__header {
+    background: transparent !important;
+    border-bottom: 1px solid #334155;
+}
+body.cptt-dark .cptt-newProjectModal__subtitle {
+    color: #94a3b8;
+}
+body.cptt-dark .cptt-notification-bell button {
+    background: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
+}
+body.cptt-dark .cptt-dark-toggle-icon {
+    background: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
+}
+body.cptt-dark .cptt-mobile-fab {
+    background: #4f46e5;
+    color: #fff;
+}
+body.cptt-dark .cptt-mobile-filter-trigger {
+    background: #0f172a;
+}
+body.cptt-dark .cptt-notification-item {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+body.cptt-dark .cptt-notification-item:not(.is-read) {
+    background: #0f172a !important; 
+    border-left: 3px solid #3b82f6;
+}
+body.cptt-dark .cptt-notification-msg {
+    color: #e2e8f0;
+}
+body.cptt-dark .cptt-notification-time {
+    color: #94a3b8;
+}
+body.cptt-dark .cptt-realtime-clock {
+    background: #1e293b !important;
+    color: #38bdf8 !important;
+}
+
+/* Notification Unread */
+.cptt-notification-item { background: #fff !important; }
+.cptt-notification-item:not(.is-read) {
+    background: #f0f9ff !important;
+    border-left: 3px solid #3b82f6;
+}
+
+/* Top Bar */
+.cptt-expertTopBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px 16px;
+}
+.cptt-expertTopBar__left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.cptt-dark-toggle-icon {
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 50%;
+    width: 44px; height: 44px;
+    display: flex; justify-content: center; align-items: center;
+    cursor: pointer;
+    
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+.cptt-dark-toggle-icon:hover { border-color: #3b82f6; }
+
+.cptt-realtime-clock {
+    font-weight: 900;
+    color: #3b82f6;
+    background: #eff6ff;
+    padding: 6px 12px;
+    border-radius: 999px;
+    
+    display: inline-block;
+}
+
+/* Mobile FAB */
+.cptt-mobile-fab {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #4f46e5;
+    color: #fff;
+    border: none;
+    
+    box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+    z-index: 9999999;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.cptt-mobile-menu {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+}
+.cptt-mobile-menu__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15,23,42,0.6);
+    backdrop-filter: blur(4px);
+}
+.cptt-mobile-menu__dialog {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-radius: 24px 24px 0 0;
+    padding: 24px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+}
+.cptt-mobile-menu__close {
+    position: absolute;
+    top: 15px; left: 15px;
+    background: #f1f5f9; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; 
+}
+.cptt-mobile-menu__header {
+    display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 15px;
+}
+.cptt-mobile-menu .cptt-dark-toggle-icon { width: auto; border-radius: 12px; padding: 0 12px;  gap: 8px; }
+
+/* Mobile Filters Wrapper */
+.cptt-mobile-filter-trigger {
+    margin-bottom: 12px;
+}
+.cptt-mobile-filter-trigger .cptt-btn {
+    width: 100%;
+    justify-content: center;
+}
+
+@media (max-width: 980px) {
+    .cptt-expertFilters {
+        display: none;
+    }
+    .cptt-expertFilters.is-open {
+        display: grid;
+    }
+    .cptt-kanban {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 15px;
+        -webkit-overflow-scrolling: touch;
+    }
+    .cptt-kanban__col {
+        min-width: 85vw;
+        flex-shrink: 0;
+        scroll-snap-align: center;
+    }
+}
+
+.cptt-chat-bubble--me {
+    background: linear-gradient(135deg, #dcfce7, #f0fdf4) !important;
+    border-color: #bbf7d0 !important;
+}
+.cptt-chat-bubble--other {
+    background: linear-gradient(135deg, #f1f5f9, #ffffff) !important;
+    border-color: #e2e8f0 !important;
+}
+
+/* ---- COMPREHENSIVE DARK MODE ---- */
+body.cptt-dark,
+body.cptt-dark .cptt-shell-page {
+    background: #0f172a !important;
+    color: #f8fafc !important;
+}
+body.cptt-dark h1, body.cptt-dark h2, body.cptt-dark h3, body.cptt-dark h4, body.cptt-dark h5, body.cptt-dark h6,
+body.cptt-dark strong, body.cptt-dark label span, body.cptt-dark span, body.cptt-dark p, body.cptt-dark div {
+    color: inherit;
+}
+body.cptt-dark .cptt-expertCard, body.cptt-dark .cptt-sideBox, body.cptt-dark .cptt-kpiCard, body.cptt-dark .cptt-insightBox,
+body.cptt-dark .cptt-expertFilters, body.cptt-dark .cptt-expert-step, body.cptt-dark .cptt-expert-step__body,
+body.cptt-dark .cptt-expert-projectMeta, body.cptt-dark .cptt-expert-checklist, body.cptt-dark .cptt-expert-userTasks,
+body.cptt-dark .cptt-expert-userTask, body.cptt-dark .cptt-expertCard__stats > div, body.cptt-dark .cptt-expertCard__infoGrid > div,
+body.cptt-dark .cptt-expert-message-form, body.cptt-dark .cptt-direct-chat-form, body.cptt-dark .cptt-sidebar-controls,
+body.cptt-dark .cptt-all-notifs-modal__dialog, body.cptt-dark .cptt-notifications-dropdown, body.cptt-dark .cptt-expert-noteItem {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+}
+body.cptt-dark input, body.cptt-dark select, body.cptt-dark textarea {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+}
+body.cptt-dark input::placeholder, body.cptt-dark textarea::placeholder {
+    color: #64748b !important;
+}
+body.cptt-dark .cptt-btn {
+    background: #334155 !important;
+    border-color: #475569 !important;
+    color: #f8fafc !important;
+}
+body.cptt-dark .cptt-btn--primary {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+    color: #fff !important;
+    border-color: transparent !important;
+}
+body.cptt-dark .cptt-chat-bubble--me {
+    background: #1e3a8a !important;
+    border-color: #3730a3 !important;
+    color: #f8fafc !important;
+}
+body.cptt-dark .cptt-chat-bubble--other {
+    background: #334155 !important;
+    border-color: #475569 !important;
+    color: #f8fafc !important;
+}
+body.cptt-dark .cptt-expert-sectionTitle::before, body.cptt-dark .cptt-sideBox__title::before {
+    background: #38bdf8 !important;
+}
+body.cptt-dark .cptt-insightBox--warn {
+    background: #450a0a !important;
+    border-color: #7f1d1d !important;
+}
+body.cptt-dark .cptt-insightBox li {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+}
+body.cptt-dark .cptt-expertStatusBadge {
+    border: 1px solid #475569;
+}
+body.cptt-dark .cptt-dark-toggle-icon, body.cptt-dark .cptt-bell-btn {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #cbd5e1 !important;
+}
+body.cptt-dark .cptt-expertCard__details {
+    border-top-color: #475569 !important;
+}
+body.cptt-dark .cptt-all-notifs-modal__dialog {
+    background: #0f172a !important;
+    border: 1px solid #334155;
+}
+
+@media (max-width: 520px) {
+    .cptt-kpiGrid--expert {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+    .cptt-kpiCard {
+        padding: 12px 10px !important;
+    }
+    .cptt-kpiCard__value {
+        ;
+    }
+    .cptt-kpiCard__label {
+        ;
+    }
+}
+
+/* Hero Mobile Actions */
+@media (max-width: 600px) {
+    .cptt-proHero--expert {
+        padding: 20px 16px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    .cptt-proHero__content {
+        width: 100% !important;
+    }
+    .cptt-proHero__visual {
+        width: 100% !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 6px !important;
+    }
+    .cptt-proHero__actions {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+    .cptt-proHero__actions > * {
+        flex: 1 1 calc(50% - 4px) !important;
+        padding: 10px !important;
+        ;
+        text-align: center;
+        justify-content: center;
+        white-space: normal !important;
+        line-height: 1.3 !important;
+    }
+    .cptt-proHero__actions > .mobile-only {
+        flex: 1 1 100% !important;
+    }
+}
+
+body.cptt-dark .cptt-chat-bubble--me { background: #064e3b !important; border-color: #065f46 !important; color: #f8fafc !important; }
+body.cptt-dark .cptt-chat-bubble--other { background: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; }
+body.cptt-dark .cptt-chat-bubble__body { color: #f8fafc !important; }
+
+/* Missing Dark Mode Fixes */
+body.cptt-dark .cptt-realtime-clock { background: #0f172a !important; color: #cbd5e1 !important; }
+body.cptt-dark .cptt-sideList li { background: #0f172a !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+body.cptt-dark .cptt-sideList li span, body.cptt-dark .cptt-sideList li strong { color: #f8fafc !important; }
+body.cptt-dark .cptt-expert-list-item small { color: #94a3b8 !important; }
+body.cptt-dark .cptt-expertFilters label { color: #f8fafc !important; }
+body.cptt-dark .cptt-createProjectCheck { background: #0f172a !important; border-color: #334155 !important; }
+body.cptt-dark .cptt-createProjectCheck span, body.cptt-dark .cptt-createProjectCheck label { color: #f8fafc !important; }
+body.cptt-dark .cptt-expert-step__toggleMain span { color: #cbd5e1 !important; }
+body.cptt-dark .cptt-expert-status { color: #cbd5e1 !important; border-color: #475569 !important; background: transparent !important; }
+body.cptt-dark .cptt-createProjectGrid label > span { color: #cbd5e1 !important; }
+body.cptt-dark .cptt-expert-step__metaGrid label > span { color: #cbd5e1 !important; }
+body.cptt-dark .cptt-expert-noteField > span { color: #cbd5e1 !important; }
+body.cptt-dark .cptt-expert-sectionTitle { color: #f8fafc !important; }
+body.cptt-dark .cptt-expertCard__sidePanel .cptt-sideList li { background: #0f172a !important; border-color: #334155 !important; }
+body.cptt-dark .cptt-expertCard__sidePanel .cptt-sideList li span { color: #cbd5e1 !important; }
+body.cptt-dark .cptt-expertCard__sidePanel .cptt-sideList li strong { color: #f8fafc !important; }
+body.cptt-dark .cptt-expertCard__infoGrid > div span { color: #cbd5e1 !important; }
+body.cptt-dark .cptt-expertCard__infoGrid > div strong { color: #f8fafc !important; }
+body.cptt-dark .cptt-sideBox__title span { color: #f8fafc !important; }
+
+/* RTL Chat Layout Ensure */
+.cptt-chat-bubble--me {
+    margin-right: 0 !important;
+    margin-left: auto !important;
+    border-top-right-radius: 4px !important;
+    border-top-left-radius: 16px !important;
+}
+.cptt-chat-bubble--other {
+    margin-left: 0 !important;
+    margin-right: auto !important;
+    border-top-left-radius: 4px !important;
+    border-top-right-radius: 16px !important;
+}
+
+/* GUARANTEED RTL CHAT ALIGNMENT */
+.cptt-chat-bubble {
+    width: fit-content !important;
+    min-width: 100px;
+}
+.cptt-chat-bubble--me {
+    margin-right: 0 !important;
+    margin-left: auto !important;
+    align-self: flex-start !important;
+}
+.cptt-direct-chat-messages .cptt-chat-bubble--me, .cptt-expert-messagesWrap .cptt-chat-bubble--me {
+    align-self: flex-start !important;
+}
+.cptt-chat-bubble--other {
+    margin-left: 0 !important;
+    margin-right: auto !important;
+    align-self: flex-end !important;
+}
+.cptt-direct-chat-messages .cptt-chat-bubble--other, .cptt-expert-messagesWrap .cptt-chat-bubble--other {
+    align-self: flex-end !important;
+}
+
+.cptt-expert-messagesWrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cptt-all-notifs-modal[hidden] { display: none !important; }
+
+/* Extra compact KPI cards for mobile */
+@media (max-width: 600px) {
+    .cptt-kpiGrid--expert {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 6px !important;
+    }
+    .cptt-kpiCard {
+        padding: 10px 8px !important;
+        min-height: auto !important;
+        border-radius: 12px !important;
+    }
+    .cptt-kpiCard__value {
+        ;
+        margin-top: 4px !important;
+    }
+    .cptt-kpiCard__label {
+        ;
+    }
+    .cptt-kpiCard::before {
+        width: 50px !important;
+        height: 50px !important;
+        top: -20px !important;
+        left: -20px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    #cptt-kanban-toggle {
+        display: none !important;
+    }
+}
+
+.cptt-all-notifs-modal {
+    z-index: 1000000000 !important;
+}
+.cptt-all-notifs-modal__backdrop {
+    z-index: 999999998 !important;
+}
+.cptt-all-notifs-modal__dialog {
+    z-index: 999999999 !important;
+}
+
+/* Dark mode fixes for mobile form fields and borders */
+body.cptt-dark .cptt-newProjectModal__close {
+    background: #0f172a;
+    color: #cbd5e1;
+}
+body.cptt-dark .cptt-expert-sectionTitle, body.cptt-dark .cptt-sideBox__title {
+    color: #f8fafc !important;
+}
+body.cptt-dark .cptt-expert-step__metaGrid input, body.cptt-dark .cptt-expert-step__metaGrid select, body.cptt-dark .cptt-expert-step__metaGrid textarea {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+}
+body.cptt-dark .cptt-expertCard__details, body.cptt-dark .cptt-expert-step__body {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+body.cptt-dark .cptt-createProjectCheck label {
+    color: #f8fafc !important;
+}
+
+/* Fix mobile modal layering */
+.cptt-experts-mobile-modal {
+    z-index: 99999999 !important;
+}
+.cptt-direct-chat-modal {
+    z-index: 99999999 !important;
+}
+
+/* ---------------------------------------------------------------------
+   Additional specific fixes for mobile fields & dark mode (Items 3 & 4)
+   --------------------------------------------------------------------- */
+
+/* Mobile Field Widths & Responsiveness */
+@media (max-width: 600px) {
+    .cptt-createProjectGrid input, 
+    .cptt-createProjectGrid select, 
+    .cptt-createProjectGrid textarea,
+    .cptt-expert-step__metaGrid input,
+    .cptt-expert-step__metaGrid select {
+        ;
+        padding: 10px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    .cptt-expert-checklist, .cptt-expert-userTasks {
+        padding: 10px !important;
+        margin: 5px 0 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .cptt-expert-step__body {
+        padding: 10px !important;
+        overflow-x: hidden !important;
+    }
+
+    .cptt-expert-step__metaGrid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    .cptt-expert-checkRow {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 6px !important;
+    }
+    
+    .cptt-expert-checkRow input {
+        width: 100% !important;
+    }
+
+    .cptt-expert-userTaskRow__fields {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+    
+    .cptt-expert-userTask {
+        padding: 8px !important;
+    }
+}
+
+/* Settled Box Dark Mode Improvement */
+body.cptt-dark .cptt-createProjectCheck {
+    background: #4a5568 !important;
+    border-color: #718096 !important;
+}
+body.cptt-dark .cptt-createProjectCheck label, 
+body.cptt-dark .cptt-createProjectCheck span {
+    color: #ffffff !important;
+}
+
+/* Checklist and User Tasks Dark Mode */
+body.cptt-dark .cptt-expert-checklist {
+    background: linear-gradient(180deg, #1a365d, #171923) !important;
+    border-color: #2b6cb0 !important;
+}
+body.cptt-dark .cptt-expert-userTasks {
+    background: linear-gradient(180deg, #744210, #171923) !important;
+    border-color: #975a16 !important;
+}
+
+/* Reordering Handle Icon */
+.cptt-step-reorder-handle {
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    color: #a0aec0;
+    
+    margin-left: 8px;
+}
+.cptt-step-reorder-handle:active { cursor: grabbing; }
+
+body.cptt-dark .cptt-step-reorder-handle {
+    color: #f7fafc !important;
+}
+
+/* Profile Image Sizes */
+.cptt-expertProfile img {
+    width: 65px !important;
+    height: 65px !important;
+}
+
+.cptt-mobile-menu .cptt-expertProfile img {
+    width: 60px !important;
+    height: 60px !important;
+}
+
+/* Force dropdown visibility */
+.cptt-notification-bell {
+    position: relative !important;
+    z-index: 9999999 !important;
+}
+.cptt-notifications-dropdown {
+    z-index: 100000000 !important;
+}
+
+/* FIX: Ensure manage form inputs don't overflow */
+.cptt-expert-project-form input, 
+.cptt-expert-project-form select, 
+.cptt-expert-project-form textarea {
+    max-width: 100% !important;
+}
+
+/* Fix stages overflow on small devices */
+.cptt-expert-steps {
+    overflow-x: hidden;
+}
+
+.cptt-expert-step__toggle {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+}
+
+@media (max-width: 480px) {
+    .cptt-expert-step__toggleMain strong {
+        ;
+    }
+    .cptt-expert-status {
+        padding: 4px 6px !important;
+        ;
+    }
+}
+
+/* =========================================================
+   NEW CUSTOMER MODAL - fully isolated, no theme conflicts
+   ========================================================= */
+.cptt-v2-scope .cptt-new-customer-modal-overlay,
+.cptt-new-customer-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(15,23,42,0.65) !important;
+  z-index: 2147483647 !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 15px !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  backdrop-filter: blur(4px) !important;
+  display: none !important;
+}
+.cptt-v2-scope .cptt-new-customer-modal-overlay[style*="flex"],
+.cptt-new-customer-modal-overlay[style*="flex"] {
+  display: flex !important;
+}
+
+.cptt-v2-scope .cptt-new-customer-modal-dialog,
+.cptt-new-customer-modal-dialog {
+  background: #ffffff !important;
+  border-radius: 18px !important;
+  width: min(400px, 100%) !important;
+  padding: 24px !important;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25) !important;
+  border: 1px solid #e2e8f0 !important;
+  position: relative !important;
+  direction: rtl !important;
+  text-align: right !important;
+  animation: cpttModalIn 0.2s ease !important;
+}
+
+@keyframes cpttModalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* =========================================================
+   DELIVERY SECTION - manage form
+   ========================================================= */
+.cptt-v2-scope .cptt-delivery-section,
+.cptt-delivery-section {
+  margin-top: 6px !important;
+  padding: 14px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+}
+.cptt-v2-scope .cptt-delivery-section label,
+.cptt-delivery-section label {
+  margin: 0 !important;
+}
+
+/* =========================================================
+   FINANCE SUMMARY - manage form
+   ========================================================= */
+.cptt-v2-scope .cptt-manage-finance-summary,
+.cptt-manage-finance-summary {
+  margin-top: 6px !important;
+  padding: 14px !important;
+  background: linear-gradient(135deg,#f8fafc,#f0f4ff) !important;
+  border: 1px solid #e0e8ff !important;
+  border-radius: 12px !important;
+  grid-template-columns: repeat(auto-fit, minmax(120px,1fr)) !important;
+  gap: 10px !important;
+}
+
+.cptt-v2-scope .cptt-manage-fin-box,
+.cptt-manage-fin-box {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 10px !important;
+  padding: 10px 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  align-items: center !important;
+  text-align: center !important;
+}
+.cptt-v2-scope .cptt-manage-fin-box span,
+.cptt-manage-fin-box span {
+  font-size: 11px !important;
+  color: #64748b !important;
+  font-weight: 600 !important;
+}
+.cptt-v2-scope .cptt-manage-fin-box strong,
+.cptt-manage-fin-box strong {
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+  direction: ltr !important;
+}
+
+/* Delivery infoGrid rows */
+.cptt-v2-scope .cptt-expertCard__infoGrid > div[style*="grid-column:1/-1"],
+.cptt-expertCard__infoGrid > div[style*="grid-column:1/-1"] {
+  grid-column: 1 / -1 !important;
+}
+
+/* =========================================================
+   NEW CUSTOMER TRIGGER OPTION
+   ========================================================= */
+.cptt-v2-scope select option[value="new_customer_trigger"] {
+  font-weight: 700 !important;
+  color: #6366f1 !important;
+  background: #f0f0ff !important;
+}
+
+/* =========================================================
+   RESPONSIVE fixes for delivery/finance in manage form
+   ========================================================= */
+@media (max-width: 600px) {
+  .cptt-v2-scope .cptt-delivery-section,
+  .cptt-delivery-section {
+    grid-template-columns: 1fr !important;
+  }
+  .cptt-v2-scope .cptt-manage-finance-summary,
+  .cptt-manage-finance-summary {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* =========================================================
+   PUBLIC HUB MODAL (project detail + expert profile)
+   Fully isolated from theme
+   ========================================================= */
+.cptt-v2-scope .cptt-hubModal,
+.cptt-hubModal,
+.cptt-expertProfileModal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483646 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+}
+.cptt-v2-scope .cptt-hubModal[hidden],
+.cptt-hubModal[hidden],
+.cptt-expertProfileModal[hidden] {
+  display: none !important;
+}
+.cptt-v2-scope .cptt-hubModal__backdrop,
+.cptt-hubModal__backdrop,
+.cptt-stepExpertModal__backdrop {
+  position: absolute !important;
+  inset: 0 !important;
+  background: rgba(15,23,42,0.65) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  backdrop-filter: blur(4px) !important;
+  cursor: pointer !important;
+}
+.cptt-v2-scope .cptt-hubModal__dialog,
+.cptt-hubModal__dialog,
+.cptt-stepExpertModal__dialog {
+  position: relative !important;
+  background: #ffffff !important;
+  border-radius: 20px !important;
+  width: min(680px, 100%) !important;
+  max-height: 85vh !important;
+  overflow-y: auto !important;
+  padding: 28px !important;
+  box-shadow: 0 25px 60px -10px rgba(15,23,42,0.35) !important;
+  border: 1px solid #e5e7eb !important;
+  animation: cpttFadeIn 0.22s ease !important;
+  direction: rtl !important;
+  text-align: right !important;
+}
+@keyframes cpttFadeIn {
+  from { opacity:0; transform:scale(0.96) translateY(-12px); }
+  to   { opacity:1; transform:scale(1) translateY(0); }
+}
+.cptt-v2-scope .cptt-hubModal__close,
+.cptt-hubModal__close,
+.cptt-stepExpertModal__close {
+  position: absolute !important;
+  top: 14px !important;
+  left: 14px !important;
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 50% !important;
+  width: 36px !important;
+  height: 36px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 18px !important;
+  cursor: pointer !important;
+  color: #475569 !important;
+  line-height: 1 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+.cptt-v2-scope .cptt-hubModal__close:hover,
+.cptt-hubModal__close:hover { background:#fee2e2 !important; color:#dc2626 !important; }
+
+.cptt-v2-scope .cptt-hubModal__title,
+.cptt-hubModal__title {
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+  margin: 0 0 10px !important;
+  padding-left: 44px !important;
+}
+.cptt-v2-scope .cptt-hubModal__meta,
+.cptt-hubModal__meta {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin-bottom: 16px !important;
+}
+.cptt-v2-scope .cptt-hubModal__metaItem,
+.cptt-hubModal__metaItem {
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 20px !important;
+  padding: 4px 12px !important;
+  font-size: 12px !important;
+  color: #475569 !important;
+  font-weight: 600 !important;
+}
+
+/* Hub Modal Steps */
+.cptt-v2-scope .cptt-hubModal__steps,
+.cptt-hubModal__steps {
+  display: grid !important;
+  gap: 10px !important;
+}
+.cptt-v2-scope .cptt-hubModal__step,
+.cptt-hubModal__step {
+  background: #f8fafc !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  padding: 12px 14px !important;
+}
+.cptt-v2-scope .cptt-hubModal__step--done,
+.cptt-hubModal__step--done { border-right: 3px solid #22c55e !important; }
+.cptt-v2-scope .cptt-hubModal__step--current,
+.cptt-hubModal__step--current { border-right: 3px solid #f59e0b !important; }
+.cptt-v2-scope .cptt-hubModal__stepHead,
+.cptt-hubModal__stepHead {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+.cptt-v2-scope .cptt-hubModal__stepHead strong,
+.cptt-hubModal__stepHead strong {
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+}
+.cptt-v2-scope .cptt-hubModal__stepMeta,
+.cptt-hubModal__stepMeta {
+  font-size: 11px !important;
+  color: #64748b !important;
+  margin-top: 5px !important;
+}
+.cptt-v2-scope .cptt-hubModal__stepDesc,
+.cptt-hubModal__stepDesc {
+  font-size: 13px !important;
+  color: #334155 !important;
+  margin-top: 6px !important;
+}
+
+/* Expert Profile Modal */
+.cptt-v2-scope .cptt-expertProfile,
+.cptt-expertProfile {
+  display: flex !important;
+  gap: 20px !important;
+  align-items: flex-start !important;
+  flex-wrap: wrap !important;
+}
+.cptt-v2-scope .cptt-expertProfile__avatar img,
+.cptt-expertProfile__avatar img {
+  width: 90px !important;
+  height: 90px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  border: 3px solid #e0ecff !important;
+  box-shadow: 0 8px 20px rgba(37,99,235,.15) !important;
+}
+.cptt-v2-scope .cptt-expertProfile__info,
+.cptt-expertProfile__info { flex: 1 !important; min-width: 200px !important; }
+.cptt-v2-scope .cptt-expertProfile__name,
+.cptt-expertProfile__name {
+  font-size: 20px !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+  margin: 0 0 4px !important;
+}
+.cptt-v2-scope .cptt-expertProfile__title,
+.cptt-expertProfile__title {
+  font-size: 13px !important;
+  color: #6366f1 !important;
+  font-weight: 700 !important;
+  margin-bottom: 10px !important;
+}
+.cptt-v2-scope .cptt-expertProfile__bio,
+.cptt-expertProfile__bio {
+  font-size: 13px !important;
+  color: #334155 !important;
+  line-height: 1.8 !important;
+  margin-bottom: 12px !important;
+}
+.cptt-v2-scope .cptt-expertProfile__stats,
+.cptt-expertProfile__stats {
+  display: flex !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  margin-bottom: 12px !important;
+}
+.cptt-v2-scope .cptt-expertProfile__stats > div,
+.cptt-expertProfile__stats > div {
+  background: #f1f5f9 !important;
+  border-radius: 10px !important;
+  padding: 8px 14px !important;
+  text-align: center !important;
+}
+.cptt-v2-scope .cptt-expertProfile__stats strong,
+.cptt-expertProfile__stats strong {
+  display: block !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  color: #6366f1 !important;
+}
+.cptt-v2-scope .cptt-expertProfile__stats span,
+.cptt-expertProfile__stats span {
+  font-size: 11px !important;
+  color: #64748b !important;
+}
+.cptt-v2-scope .cptt-expertProfile__skills,
+.cptt-expertProfile__skills {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+}
+.cptt-v2-scope .cptt-expertProfile__skill,
+.cptt-expertProfile__skill {
+  background: linear-gradient(135deg,#eef2ff,#f5f3ff) !important;
+  border: 1px solid #c7d2fe !important;
+  border-radius: 20px !important;
+  padding: 3px 10px !important;
+  font-size: 12px !important;
+  color: #4338ca !important;
+  font-weight: 700 !important;
+}
+
+/* =========================================================
+   STEP EXPERT MODAL
+   ========================================================= */
+.cptt-v2-scope #cptt-step-expert-modal,
+#cptt-step-expert-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483645 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+}
+#cptt-step-expert-modal[hidden] { display: none !important; }
+.cptt-v2-scope .cptt-stepExpertModal__dialog,
+.cptt-stepExpertModal__dialog {
+  width: min(380px, 100%) !important;
+  max-height: 70vh !important;
+  overflow-y: auto !important;
+  padding: 22px !important;
+}
+.cptt-v2-scope .cptt-stepExpertModal__title,
+.cptt-stepExpertModal__title {
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+  margin-bottom: 14px !important;
+  padding-left: 36px !important;
+}
+.cptt-v2-scope .cptt-stepExpertModal__list,
+.cptt-stepExpertModal__list {
+  display: grid !important;
+  gap: 8px !important;
+}
+.cptt-v2-scope .cptt-sep-option,
+.cptt-sep-option {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  cursor: pointer !important;
+  transition: border-color 0.15s, background 0.15s !important;
+}
+.cptt-v2-scope .cptt-sep-option:hover,
+.cptt-sep-option:hover { background: #eef2ff !important; border-color: #c7d2fe !important; }
+.cptt-v2-scope .cptt-sep-option label,
+.cptt-sep-option label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
+  margin: 0 !important;
+}
+.cptt-v2-scope .cptt-sep-option input[type="radio"],
+.cptt-sep-option input[type="radio"] {
+  width: 16px !important;
+  height: 16px !important;
+  accent-color: #6366f1 !important;
+  cursor: pointer !important;
+}
+
+/* Step Expert Button in manage form */
+.cptt-v2-scope .cptt-step-expert-wrap,
+.cptt-step-expert-wrap {
+  margin-top: 8px !important;
+  padding-top: 8px !important;
+  border-top: 1px dashed #e2e8f0 !important;
+}
+.cptt-v2-scope .cptt-step-expert-btn,
+.cptt-step-expert-btn {
+  background: #f1f5f9 !important;
+  border: 1px dashed #cbd5e1 !important;
+  border-radius: 10px !important;
+  padding: 8px 14px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+  cursor: pointer !important;
+  width: 100% !important;
+  text-align: right !important;
+  transition: all 0.15s !important;
+  min-height: 0 !important;
+  box-shadow: none !important;
+  line-height: 1.4 !important;
+}
+.cptt-v2-scope .cptt-step-expert-btn:hover,
+.cptt-step-expert-btn:hover {
+  background: #eef2ff !important;
+  border-color: #6366f1 !important;
+  color: #4338ca !important;
+}
+.cptt-v2-scope .cptt-step-expert-btn.has-expert,
+.cptt-step-expert-btn.has-expert {
+  background: linear-gradient(135deg,#eef2ff,#f5f3ff) !important;
+  border-color: #c7d2fe !important;
+  border-style: solid !important;
+  color: #4338ca !important;
+}
+
+/* =========================================================
+   روزهای هفته
+   ========================================================= */
+.cptt-v2-scope .cptt-dow,
+.cptt-dow {
+  font-size: 11px !important;
+  opacity: 0.65 !important;
+  font-weight: 500 !important;
+  margin-right: 3px !important;
+}
+
+/* =========================================================
+   NEW CUSTOMER MODAL - popup fix (fields not overflowing)
+   ========================================================= */
+.cptt-new-customer-modal-dialog .cptt-createProjectGrid {
+  grid-template-columns: 1fr !important;
+  padding: 0 !important;
+}
+.cptt-new-customer-modal-dialog label {
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+.cptt-new-customer-modal-dialog input[type="text"] {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+.cptt-new-customer-modal-dialog > div:last-child {
+  display: flex !important;
+  gap: 10px !important;
+  margin-top: 14px !important;
+}
+.cptt-new-customer-modal-dialog > div:last-child .cptt-btn {
+  flex: 1 !important;
+}
+
+/* Mobile */
+@media (max-width:600px) {
+  .cptt-hubModal__dialog,
+  .cptt-stepExpertModal__dialog,
+  .cptt-new-customer-modal-dialog {
+    padding: 18px 14px !important;
+    border-radius: 16px !important;
+  }
+  .cptt-expertProfile { flex-direction: column !important; align-items: center !important; }
+  .cptt-expertProfile__info { text-align: center !important; width: 100% !important; }
+  .cptt-expertProfile__stats { justify-content: center !important; }
+  .cptt-expertProfile__skills { justify-content: center !important; }
+}
+
+/* =========================================================
+   EDIT PROFILE MODAL - داشبورد کارشناس
+   ========================================================= */
+.cptt-v2-scope .cptt-editProfileModal,
+.cptt-editProfileModal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483640 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+}
+.cptt-editProfileModal[hidden] { display: none !important; }
+
+.cptt-editProfileModal__backdrop {
+  position: absolute !important;
+  inset: 0 !important;
+  background: rgba(15,23,42,0.65) !important;
+  backdrop-filter: blur(4px) !important;
+  cursor: pointer !important;
+}
+.cptt-editProfileModal__dialog {
+  position: relative !important;
+  background: #ffffff !important;
+  border-radius: 20px !important;
+  width: min(540px, 100%) !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  box-shadow: 0 25px 60px rgba(15,23,42,0.3) !important;
+  direction: rtl !important;
+  animation: cpttFadeIn 0.2s ease !important;
+}
+.cptt-editProfileModal__header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 20px 24px 0 !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  padding-bottom: 14px !important;
+}
+.cptt-editProfileModal__header h3 {
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+}
+.cptt-editProfileModal__close {
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 50% !important;
+  width: 34px !important;
+  height: 34px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 18px !important;
+  cursor: pointer !important;
+  color: #475569 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  line-height: 1 !important;
+}
+.cptt-editProfileModal__close:hover { background: #fee2e2 !important; color: #dc2626 !important; }
+
+.cptt-editProfileForm {
+  padding: 20px 24px 24px !important;
+}
+.cptt-editProfile__avatarWrap {
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  margin-bottom: 20px !important;
+  padding: 14px !important;
+  background: #f8fafc !important;
+  border-radius: 14px !important;
+  border: 1px solid #e2e8f0 !important;
+}
+.cptt-editProfile__avatarPreview {
+  width: 72px !important;
+  height: 72px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  border: 3px solid #c7d2fe !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #eff6ff !important;
+  font-size: 28px !important;
+  font-weight: 900 !important;
+  color: #4338ca !important;
+  flex-shrink: 0 !important;
+}
+.cptt-editProfile__avatarPreview img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+.cptt-editProfile__grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 14px !important;
+}
+.cptt-editProfile__grid label {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  margin: 0 !important;
+}
+.cptt-editProfile__grid label span {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  color: #475569 !important;
+}
+.cptt-editProfile__grid input,
+.cptt-editProfile__grid textarea,
+.cptt-editProfile__grid select {
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  padding: 10px 12px !important;
+  font-size: 13px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background: #fff !important;
+  color: #0f172a !important;
+  font-family: inherit !important;
+  min-height: 42px !important;
+  box-shadow: none !important;
+}
+.cptt-editProfile__grid textarea { min-height: 80px !important; resize: vertical !important; }
+.cptt-editProfile__fullWidth { grid-column: 1 / -1 !important; }
+.cptt-editProfile__actions {
+  margin-top: 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+}
+.cptt-editProfile__msg {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+/* =========================================================
+   HUB MODAL - بخش‌های جدید (پیشرفت + مالی + چک‌لیست)
+   ========================================================= */
+.cptt-hubModal__progress {
+  margin-bottom: 16px !important;
+}
+.cptt-hubModal__progressBar {
+  height: 8px !important;
+  background: #f1f5f9 !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+  margin-bottom: 6px !important;
+}
+.cptt-hubModal__progressFill {
+  height: 100% !important;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6) !important;
+  border-radius: 999px !important;
+  transition: width 0.4s ease !important;
+}
+.cptt-hubModal__progressLabel {
+  font-size: 12px !important;
+  color: #64748b !important;
+  font-weight: 700 !important;
+}
+.cptt-hubModal__finRow {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(100px,1fr)) !important;
+  gap: 8px !important;
+  margin-bottom: 16px !important;
+  padding: 12px !important;
+  background: #f8fafc !important;
+  border-radius: 12px !important;
+  border: 1px solid #e5e7eb !important;
+}
+.cptt-hubModal__finBox {
+  text-align: center !important;
+}
+.cptt-hubModal__finBox span {
+  display: block !important;
+  font-size: 10px !important;
+  color: #64748b !important;
+  font-weight: 600 !important;
+  margin-bottom: 3px !important;
+}
+.cptt-hubModal__finBox strong {
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  direction: ltr !important;
+  display: block !important;
+}
+.cptt-hubModal__stepsTitle {
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  color: #334155 !important;
+  margin-bottom: 10px !important;
+}
+.cptt-hubModal__stepChecklist {
+  margin-top: 8px !important;
+  font-size: 12px !important;
+  color: #475569 !important;
+  font-weight: 700 !important;
+}
+.cptt-hubModal__checkItems {
+  margin: 6px 0 0 0 !important;
+  padding: 0 18px 0 0 !important;
+  list-style: disc !important;
+}
+.cptt-hubModal__checkItems li {
+  font-size: 12px !important;
+  margin: 4px 0 !important;
+  color: #475569 !important;
+}
+.cptt-hubModal__checkItems li.is-done {
+  text-decoration: line-through !important;
+  color: #059669 !important;
+}
+.cptt-hubModal__checkItems a {
+  color: #6366f1 !important;
+  font-size: 11px !important;
+  margin-right: 8px !important;
+}
+
+/* =========================================================
+   EXPERT PROFILE MODAL - بهبود
+   ========================================================= */
+.cptt-expertProfile__header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 18px !important;
+  margin-bottom: 20px !important;
+  padding-bottom: 16px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+.cptt-expertProfile__headerInfo { flex: 1 !important; }
+.cptt-expertProfile__avatarDefault {
+  width: 90px !important;
+  height: 90px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg,#6366f1,#8b5cf6) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 36px !important;
+  font-weight: 900 !important;
+  color: white !important;
+  flex-shrink: 0 !important;
+}
+.cptt-expertProfile__section {
+  margin-bottom: 16px !important;
+}
+.cptt-expertProfile__sectionTitle {
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  color: #334155 !important;
+  margin-bottom: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+.cptt-expertProfile__sectionTitle::after {
+  content: '' !important;
+  flex: 1 !important;
+  height: 1px !important;
+  background: #e5e7eb !important;
+}
+.cptt-expertProfile__statBox {
+  background: #f8fafc !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  padding: 10px 14px !important;
+  text-align: center !important;
+  min-width: 80px !important;
+}
+.cptt-expertProfile__statBox strong {
+  display: block !important;
+  font-size: 22px !important;
+  font-weight: 900 !important;
+  color: #6366f1 !important;
+}
+.cptt-expertProfile__statBox span {
+  font-size: 11px !important;
+  color: #64748b !important;
+}
+
+/* =========================================================
+   NEW CUSTOMER MODAL - بازطراحی کامل
+   ========================================================= */
+.cptt-new-customer-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(15,23,42,0.65) !important;
+  z-index: 2147483647 !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  backdrop-filter: blur(4px) !important;
+  display: none !important;
+}
+.cptt-new-customer-modal-overlay[style*="flex"] { display: flex !important; }
+
+.cptt-new-customer-modal-dialog {
+  background: #ffffff !important;
+  border-radius: 20px !important;
+  width: min(420px, 100%) !important;
+  padding: 0 !important;
+  box-shadow: 0 25px 60px rgba(15,23,42,0.3) !important;
+  border: 1px solid #e2e8f0 !important;
+  direction: rtl !important;
+  text-align: right !important;
+  animation: cpttFadeIn 0.2s ease !important;
+  overflow: hidden !important;
+}
+.cptt-new-customer-modal-dialog .cptt-ncm-header {
+  padding: 20px 24px 16px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+.cptt-new-customer-modal-dialog .cptt-ncm-header h3 {
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+}
+.cptt-new-customer-modal-dialog .cptt-ncm-body {
+  padding: 20px 24px !important;
+  display: grid !important;
+  gap: 14px !important;
+}
+.cptt-new-customer-modal-dialog .cptt-ncm-field {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+}
+.cptt-new-customer-modal-dialog .cptt-ncm-field label {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  color: #475569 !important;
+  margin: 0 !important;
+}
+.cptt-new-customer-modal-dialog .cptt-ncm-field input {
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  padding: 11px 14px !important;
+  font-size: 14px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background: #fff !important;
+  color: #0f172a !important;
+  font-family: inherit !important;
+  min-height: 44px !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transition: border-color 0.15s !important;
+}
+.cptt-new-customer-modal-dialog .cptt-ncm-field input:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.1) !important;
+}
+.cptt-new-customer-modal-dialog .cptt-ncm-footer {
+  padding: 0 24px 20px !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 10px !important;
+}
+.cptt-new-customer-modal-dialog .cptt-ncm-footer .cptt-btn {
+  width: 100% !important;
+  justify-content: center !important;
+  min-height: 44px !important;
+  font-size: 14px !important;
+}
+.cptt-new-customer-modal-dialog #cptt-cust-msg {
+  padding: 0 24px 12px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  min-height: 20px !important;
+}
+
+/* Sep actions */
+.cptt-sep-actions {
+  margin-top: 14px !important;
+  text-align: center !important;
+}
+
+/* Sidebar user actions */
+.cptt-sidebar-userActions .cptt-btn {
+  font-size: 12px !important;
+  padding: 8px 10px !important;
+  min-height: 36px !important;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .cptt-editProfile__grid {
+    grid-template-columns: 1fr !important;
+  }
+  .cptt-hubModal__finRow {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+
+/* =========================================================
+   EXPERT PROFILE MODAL - REDESIGN (v5.0)
+   ========================================================= */
+.cptt-expertProfileModal .cptt-hubModal__dialog {
+  width: min(500px, 95vw) !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+.cptt-expertProfileModal .cptt-hubModal__close {
+  top: 12px !important;
+  left: 12px !important;
+  z-index: 10 !important;
+  background: rgba(255,255,255,0.85) !important;
+}
+.cptt-expertProfile__hero {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #ec4899 110%) !important;
+  padding: 28px 24px 60px !important;
+  text-align: center !important;
+  position: relative !important;
+}
+.cptt-expertProfile__hero .cptt-expertProfile__name {
+  color: #fff !important;
+  margin: 0 !important;
+  font-size: 20px !important;
+}
+.cptt-expertProfile__hero .cptt-expertProfile__title {
+  color: rgba(255,255,255,0.85) !important;
+  font-size: 13px !important;
+  margin: 4px 0 0 !important;
+}
+.cptt-expertProfile__avatarFloat {
+  width: 96px !important;
+  height: 96px !important;
+  border-radius: 50% !important;
+  border: 4px solid #fff !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2) !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  bottom: -48px !important;
+  right: 50% !important;
+  transform: translateX(50%) !important;
+  background: #eff6ff !important;
+}
+.cptt-expertProfile__avatarFloat img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+.cptt-expertProfile__avatarDefault2 {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: linear-gradient(135deg,#6366f1,#8b5cf6) !important;
+  color: #fff !important;
+  font-size: 36px !important;
+  font-weight: 900 !important;
+}
+.cptt-expertProfile__body {
+  padding: 56px 24px 24px !important;
+}
+.cptt-expertProfile__statsRow {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 10px !important;
+  margin-bottom: 18px !important;
+}
+.cptt-expertProfile__statCard {
+  background: linear-gradient(135deg, #f8fafc, #fff) !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 14px !important;
+  padding: 14px 10px !important;
+  text-align: center !important;
+}
+.cptt-expertProfile__statCard strong {
+  display: block !important;
+  font-size: 24px !important;
+  font-weight: 950 !important;
+  color: #4f46e5 !important;
+  line-height: 1.2 !important;
+}
+.cptt-expertProfile__statCard span {
+  display: block !important;
+  font-size: 11px !important;
+  color: #64748b !important;
+  font-weight: 700 !important;
+  margin-top: 4px !important;
+}
+.cptt-expertProfile__bioText {
+  font-size: 13px !important;
+  color: #334155 !important;
+  line-height: 1.9 !important;
+  background: #f8fafc !important;
+  border-radius: 12px !important;
+  padding: 14px !important;
+  border: 1px solid #f1f5f9 !important;
+  margin-bottom: 16px !important;
+}
+.cptt-expertProfile__skillsWrap {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  justify-content: center !important;
+}
+.cptt-expertProfile__skillTag {
+  background: linear-gradient(135deg,#eef2ff,#f5f3ff) !important;
+  border: 1px solid #c7d2fe !important;
+  border-radius: 999px !important;
+  padding: 5px 14px !important;
+  font-size: 12px !important;
+  color: #4338ca !important;
+  font-weight: 800 !important;
+}
+@media (max-width: 480px) {
+  .cptt-expertProfile__hero { padding: 22px 16px 54px !important; }
+  .cptt-expertProfile__body { padding: 50px 16px 20px !important; }
+}
+
+
+
+
+
+/* =========================================================
+   BUDGET FIELD LABELS (mobile + desktop)
+   ========================================================= */
+.cptt-bf {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+.cptt-bf-lbl {
+  display: none;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  color: #64748b !important;
+  margin-bottom: 4px !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 720px) {
+  .cptt-bf-lbl {
+    display: block !important;
+  }
+  #cptt-create-finance-header {
+    display: none !important;
+  }
+  .cptt-create-finance-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    padding: 14px !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 14px !important;
+    margin-bottom: 10px !important;
+    position: relative !important;
+  }
+  .cptt-create-finance-row .cptt-bf:first-child {
+    grid-column: 1 / -1 !important;
+  }
+  .cptt-create-finance-row .cptt-bf--total {
+    display: none !important;
+  }
+  .cptt-create-finance-row .cptt-bf--qty {
+    max-width: 100% !important;
+  }
+  .cptt-create-finance-row .cptt-create-remove-finance-row {
+    position: absolute !important;
+    top: 10px !important;
+    left: 10px !important;
+  }
+  .cptt-create-finance-row input {
+    font-size: 13px !important;
+    min-height: 40px !important;
+  }
+}
+
+/* Summary fields mobile - shorter labels */
+@media (max-width: 600px) {
+  #cptt-create-steps-finance-wrap + .cptt-createProjectGrid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    padding-top: 12px !important;
+  }
+  #cptt-create-steps-finance-wrap + .cptt-createProjectGrid > span {
+    font-size: 12px !important;
+  }
+  #cptt-create-steps-finance-wrap + .cptt-createProjectGrid label span {
+    font-size: 11px !important;
+  }
+  #cptt-create-steps-finance-wrap + .cptt-createProjectGrid input {
+    font-size: 12px !important;
+    padding: 8px !important;
+    min-height: 38px !important;
+  }
+}
+
+/* =========================================================
+   Analytics Toggle
+   ========================================================= */
+.cptt-analytics-toggle {
+  background: #fff !important;
+  border: 1px solid #e6ebf2 !important;
+  border-radius: 20px !important;
+  box-shadow: 0 6px 18px rgba(15,23,42,0.04) !important;
+  overflow: hidden !important;
+  margin-bottom: 12px !important;
+}
+.cptt-analytics-toggle > summary {
+  padding: 16px 20px !important;
+  cursor: pointer !important;
+  font-size: 15px !important;
+  font-weight: 950 !important;
+  color: #0f172a !important;
+  list-style: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+.cptt-analytics-toggle[open] > summary {
+  border-bottom: 1px solid #e6ebf2 !important;
+}
+.cptt-analytics-toggle > summary::-webkit-details-marker { display: none !important; }
+.cptt-analytics-toggle > summary::marker { display: none !important; content: "" !important; }
+body.cptt-dark .cptt-analytics-toggle {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+body.cptt-dark .cptt-analytics-toggle > summary {
+  color: #f8fafc !important;
+}
+body.cptt-dark .cptt-analytics-toggle[open] > summary {
+  border-bottom-color: #334155 !important;
+}
+
+/* =========================================================
+   Responsive Analytics inside dashboard
+   ========================================================= */
+.cptt-expert-analytics-section {
+  max-width: 100%;
+  overflow: hidden;
+}
+@media (max-width: 600px) {
+  .cptt-expert-analytics-section > div[style*="grid-template-columns"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .cptt-expert-analytics-section > div[style*="grid-template-columns:100px"] {
+    grid-template-columns: 80px 1fr 40px !important;
+  }
+}
+
+
+/* =========================================================
+   Edit Profile - Avatar button mobile fix
+   ========================================================= */
+.cptt-editProfile__avatarWrap {
+  flex-wrap: wrap !important;
+}
+@media (max-width: 480px) {
+  .cptt-editProfile__avatarWrap {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+  .cptt-editProfile__avatarWrap > div {
+    width: 100% !important;
+    text-align: center !important;
+  }
+  #cptt-ep-avatar-btn {
+    width: 100% !important;
+    max-width: 200px !important;
+  }
+}
+
+
+/* =====================================================================
+   ADDITIONAL CUSTOM STYLES (v5.2.1)
+   - Oval profile picture fix
+   - Floating save changes button for active edit form
+   ===================================================================== */
+
+/* Prevent avatar stretching in edit profile modal */
+.cptt-editProfile__avatarPreview img {
+    width: 72px !important;
+    height: 72px !important;
+    max-width: 72px !important;
+    max-height: 72px !important;
+    object-fit: cover !important;
+    border-radius: 50% !important;
+    display: block !important;
+}
+
+/* Floating save button for expert project manage form */
+.cptt-expertCard.is-expanded .cptt-expert-save-floating {
+    position: fixed !important;
+    bottom: 24px !important;
+    /* روی سایدبار راست (280px) نیفتد: 280 + 22(gap) + 22(padding) ≈ 324 */
+    right: 340px !important;
+    left: auto !important;
+    z-index: 999 !important;
+    padding: 14px 28px !important;
+    font-size: 14px !important;
+    font-weight: 950 !important;
+    background: linear-gradient(135deg, #059669, #10b981) !important;
+    color: #fff !important;
+    border-radius: 50px !important;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4) !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.cptt-expertCard.is-expanded .cptt-expert-save-floating:hover {
+    transform: translateY(-2px) scale(1.05) !important;
+    box-shadow: 0 14px 30px rgba(16, 185, 129, 0.5) !important;
+    background: linear-gradient(135deg, #047857, #059669) !important;
+}
+
+/* Position adjustment for mobile view */
+/* در حالت تبلت (سایدبار 240px) جای دکمه عقب‌تر بیاید */
+@media (max-width: 1180px) and (min-width: 821px) {
+    .cptt-expertCard.is-expanded .cptt-expert-save-floating {
+        right: 290px !important;
+        left: auto !important;
+    }
+}
+/* در موبایل دقیقا وسط پایین، همتراز با FAB منو */
+@media (max-width: 820px) {
+    .cptt-expertCard.is-expanded .cptt-expert-save-floating {
+        bottom: 20px !important;
+        right: 50% !important;
+        left: auto !important;
+        transform: translateX(50%) !important;
+        padding: 10px 18px !important;
+        font-size: 13px !important;
+        min-height: 50px !important;
+    }
+    .cptt-expertCard.is-expanded .cptt-expert-save-floating:hover {
+        transform: translateX(50%) translateY(-2px) scale(1.05) !important;
+    }
+}
+
+
+/* =====================================================================
+   EXPERT PROFILE MOBILE & AVATAR CROP STYLES (v5.4.0)
+   ===================================================================== */
+
+/* Custom mobile menu profile centering */
+.cptt-expertProfileMobile {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+.cptt-expertProfileMobile img {
+  display: block !important;
+  margin: 0 auto 10px auto !important;
+  width: 60px !important;
+  height: 60px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  flex-shrink: 0 !important;
+}
+.cptt-expertProfileMobile div {
+  text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+/* Bulletproof avatar preview styling to prevent oval stretch */
+.cptt-editProfile__avatarPreview,
+#cptt-ep-avatar-preview {
+  width: 72px !important;
+  height: 72px !important;
+  min-width: 72px !important;
+  max-width: 72px !important;
+  min-height: 72px !important;
+  max-height: 72px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  border: 3px solid #c7d2fe !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #eff6ff !important;
+  flex-shrink: 0 !important;
+  aspect-ratio: 1/1 !important;
+}
+.cptt-editProfile__avatarPreview img,
+#cptt-ep-avatar-preview img {
+  width: 72px !important;
+  height: 72px !important;
+  min-width: 72px !important;
+  max-width: 72px !important;
+  min-height: 72px !important;
+  max-height: 72px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  display: block !important;
+  aspect-ratio: 1/1 !important;
+  max-height: 100% !important;
+  max-width: 100% !important;
+}
+
+
+/* =====================================================================
+   BACK TO TOP FLOATING BUTTON STYLES (v5.4.0)
+   ===================================================================== */
+#cptt-back-to-top {
+    position: fixed !important;
+    bottom: 24px !important;
+    left: 24px !important;
+    right: auto !important;
+    z-index: 99999 !important;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+    color: #fff !important;
+    border: none !important;
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    box-shadow: 0 8px 20px rgba(99,102,241,0.3) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    transition: all 0.2s ease !important;
+    outline: none !important;
+}
+#cptt-back-to-top:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 12px 24px rgba(99,102,241,0.45) !important;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+}
+
+/* Make sure mobile menu FAB is positioned correctly and doesn't overlap with Back to Top */
+@media (max-width: 820px) {
+    #cptt-back-to-top {
+        /* همتراز با دکمه‌ی FAB منو که bottom:20px right:20px است */
+        bottom: 20px !important;
+        left: 20px !important;
+        right: auto !important;
+        width: 50px !important;
+        height: 50px !important;
+    }
+    /* وقتی مودال موبایل باز است، این دکمه‌ها زیر مودال بروند */
+    body.cptt-mobile-menu-open #cptt-back-to-top,
+    body.cptt-mobile-menu-open .cptt-expertCard.is-expanded .cptt-expert-save-floating,
+    body.cptt-mobile-menu-open .cptt-mobile-fab {
+        display: none !important;
+    }
+}
+/* =====================================================================
+   CPTT Expert Dashboard Additions — Chat Bubbles, Kanban, Dark Mode, Delete
+   ===================================================================== */
+
+/* ---------- Chat Bubbles ---------- */
+.cptt-chat-bubble {
+	background: #fff;
+	border: 1px solid #e6ebf2;
+	border-radius: 16px;
+	padding: 12px 14px;
+	margin-bottom: 10px;
+	max-width: 82%;
+	box-shadow: 0 4px 10px rgba(15,23,42,0.04);
+	word-break: break-word;
+}
+.cptt-chat-bubble--me {
+	margin-right: auto;
+	margin-left: 0;
+	background: linear-gradient(135deg,#eff6ff,#ffffff);
+	border-color: #dbeafe;
+	border-top-right-radius: 4px;
+}
+.cptt-chat-bubble--other {
+	margin-left: auto;
+	margin-right: 0;
+	background: linear-gradient(135deg,#f8fafc,#ffffff);
+	border-color: #e6ebf2;
+	border-top-left-radius: 4px;
+}
+.cptt-chat-bubble__head {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 6px;
+	font-size: 11px;
+	font-weight: 900;
+	color: #64748b;
+	flex-wrap: wrap;
+}
+.cptt-chat-bubble__body {
+	font-size: 13px;
+	line-height: 1.9;
+	color: #334155;
+}
+.cptt-chat-file-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 10px;
+	background: linear-gradient(135deg,#6366f1,#8b5cf6);
+	color: #fff;
+	border-radius: 999px;
+	font-size: 11px;
+	font-weight: 900;
+	text-decoration: none;
+	margin-top: 6px;
+	box-shadow: 0 4px 10px rgba(99,102,241,0.22);
+}
+.cptt-chat-file-btn:hover { color: #fff; transform: translateY(-1px); }
+
+/* ---------- Kanban ---------- */
+.cptt-kanban { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; margin-bottom: 20px; }
+.cptt-kanban__col { background: #f8fafc; border: 1px solid #e6ebf2; border-radius: 20px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-height: 220px; }
+.cptt-kanban__head { font-size: 13px; font-weight: 950; color: #0f172a; padding-bottom: 8px; border-bottom: 1px dashed #dbeafe; margin-bottom: 4px; }
+.cptt-kanban__dropzone { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.cptt-kanban__card { background: #fff; border: 1px solid #e6ebf2; border-radius: 14px; padding: 12px; cursor: grab; box-shadow: 0 4px 10px rgba(15,23,42,0.04); transition: transform .15s ease, box-shadow .15s ease; }
+.cptt-kanban__card:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(15,23,42,0.08); }
+.cptt-kanban__card.is-dragging { opacity: 0.6; transform: scale(0.98); }
+.cptt-kanban__cardTitle { font-size: 13px; font-weight: 900; color: #0f172a; line-height: 1.7; }
+.cptt-kanban__cardMeta { font-size: 11px; color: #64748b; margin-top: 4px; }
+
+/* ---------- Delete Buttons ---------- */
+.cptt-btn--danger { background: linear-gradient(135deg,#ef4444,#f87171); color: #fff; border-color: transparent; box-shadow: 0 6px 14px rgba(239,68,68,0.28); }
+.cptt-btn--danger:hover { background: linear-gradient(135deg,#dc2626,#ef4444); color: #fff; transform: translateY(-1px); }
+
+/* ---------- Dark Mode ---------- */
+body.cptt-dark,
+body.cptt-dark .cptt-shell-page,
+body.cptt-dark .cptt-shell-page--hub { background: #0f172a; }
+body.cptt-dark .cptt-expertSidebar,
+body.cptt-dark .cptt-sideBox,
+body.cptt-dark .cptt-kpiCard,
+body.cptt-dark .cptt-insightBox,
+body.cptt-dark .cptt-expertCard,
+body.cptt-dark .cptt-expert-step,
+body.cptt-dark .cptt-expertFilters,
+body.cptt-dark .cptt-expert-projectMeta,
+body.cptt-dark .cptt-newProjectModal__dialog,
+body.cptt-dark .cptt-expert-chatModal__dialog,
+body.cptt-dark .cptt-direct-chat-modal__dialog,
+body.cptt-dark .cptt-expertsDirectory,
+body.cptt-dark .cptt-hubProjects,
+body.cptt-dark .cptt-publicProject,
+body.cptt-dark .cptt-hubStep,
+body.cptt-dark .cptt-hubModal__dialog,
+body.cptt-dark .cptt-expertBadge,
+body.cptt-dark .cptt-kanban__col,
+body.cptt-dark .cptt-kanban__card { background: #1e293b; border-color: #334155; color: #e2e8f0; }
+body.cptt-dark .cptt-proHero--expert { background: linear-gradient(135deg,#312e81,#4c1d95,#be185d); }
+body.cptt-dark .cptt-expertProfile strong,
+body.cptt-dark .cptt-expertCard__top h3,
+body.cptt-dark .cptt-sideBox__title,
+body.cptt-dark .cptt-kpiCard__value,
+body.cptt-dark .cptt-insightBox__title,
+body.cptt-dark .cptt-expert-step__toggleMain strong,
+body.cptt-dark .cptt-expert-step__metaGrid label > span,
+body.cptt-dark .cptt-expert-sectionTitle,
+body.cptt-dark .cptt-hubStep__head strong,
+body.cptt-dark .cptt-publicProject__top h3,
+body.cptt-dark .cptt-expertsHero__title,
+body.cptt-dark .cptt-hubModal__title,
+body.cptt-dark .cptt-direct-chat-info strong,
+body.cptt-dark .cptt-kanban__head,
+body.cptt-dark .cptt-kanban__cardTitle { color: #f8fafc; }
+body.cptt-dark .cptt-expertCard__meta,
+body.cptt-dark .cptt-expert-step__toggleMain span,
+body.cptt-dark .cptt-expert-step__metaItem > span,
+body.cptt-dark .cptt-hubStep__meta,
+body.cptt-dark .cptt-publicProject__experts,
+body.cptt-dark .cptt-hubMetaChip,
+body.cptt-dark .cptt-kanban__cardMeta { color: #94a3b8; }
+body.cptt-dark .cptt-expert-step__body,
+body.cptt-dark .cptt-expert-noteField textarea,
+body.cptt-dark .cptt-createProjectGrid input,
+body.cptt-dark .cptt-createProjectGrid select,
+body.cptt-dark .cptt-expertFilters input,
+body.cptt-dark .cptt-expertFilters select,
+body.cptt-dark .cptt-expert-step__metaGrid input,
+body.cptt-dark .cptt-expert-step__metaGrid select,
+body.cptt-dark .cptt-expert-checkRow input,
+body.cptt-dark .cptt-expert-userTask input,
+body.cptt-dark .cptt-expert-userTask textarea { background: #0f172a; color: #e2e8f0; border-color: #334155; }
+body.cptt-dark .cptt-jdp { background: #1e293b; border-color: #334155; }
+body.cptt-dark .cptt-jdp__head strong,
+body.cptt-dark .cptt-jdp__days button { color: #f1f5f9; }
+body.cptt-dark .cptt-jdp__days button:hover { background: #334155; }
+body.cptt-dark .cptt-jdp__days button.is-selected { background: linear-gradient(135deg,#6366f1,#8b5cf6); }
+body.cptt-dark .cptt-notification-item { background: #1e293b; border-bottom-color: #334155; color: #e2e8f0; }
+body.cptt-dark .cptt-notification-item.is-read { background: #0f172a; }
+body.cptt-dark .cptt-notifications-header { background: #1e293b; border-bottom-color: #334155; }
+body.cptt-dark .cptt-expert-list-item { background: #1e293b; border-color: #334155; }
+body.cptt-dark .cptt-expert-list-item span { color: #e2e8f0; }
+body.cptt-dark .cptt-empty,
+body.cptt-dark .cptt-dashboard__empty,
+body.cptt-dark .cptt-expert-emptyMini { background: #1e293b; border-color: #334155; color: #94a3b8; }
+body.cptt-dark .cptt-chat-bubble { background: #1e293b; border-color: #334155; color: #e2e8f0; }
+body.cptt-dark .cptt-chat-bubble__body { color: #e2e8f0; }
+body.cptt-dark .cptt-newProjectModal__header { background: linear-gradient(135deg,#312e81,#4c1d95,#be185d); }
+body.cptt-dark .cptt-hubChecklist li { background: #1e293b; border-color: #334155; }
+body.cptt-dark .cptt-hubChecklist li.is-done { background: #064e3b; border-color: #065f46; }
+body.cptt-dark .cptt-hubModal__stats div,
+body.cptt-dark .cptt-hubModal__detailsGrid div { background: #1e293b; border-color: #334155; }
+
+/* ---------- Dark toggle button ---------- */
+.cptt-dark-toggle { margin-top: 8px; width: 100%; }
+
+/* Small responsive */
+@media (max-width: 980px) {
+	.cptt-kanban { grid-template-columns: 1fr; }
+}
+
+/* =====================================================================
+   v5.4.4 — Compact action buttons (manage project / proforma / report)
+   ===================================================================== */
+.cptt-expertCard__actions {
+    display: flex !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    align-items: stretch !important;
+}
+.cptt-expertCard__actions .cptt-btn,
+.cptt-expertCard__actions a.cptt-btn,
+.cptt-expertCard__actions button.cptt-btn {
+    padding: 8px 14px !important;
+    font-size: 12.5px !important;
+    font-weight: 800 !important;
+    line-height: 1.3 !important;
+    min-height: 36px !important;
+    border-radius: 10px !important;
+    white-space: nowrap !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    max-width: 100% !important;
+}
+
+/* Mobile: مدیریت پروژه و پیش‌فاکتور در یک ردیف، گزارش نهایی فول‌ویدث در ردیف بعدی */
+@media (max-width: 720px) {
+    .cptt-expertCard__actions {
+        gap: 6px !important;
+    }
+    .cptt-expertCard__actions .cptt-btn,
+    .cptt-expertCard__actions a.cptt-btn,
+    .cptt-expertCard__actions button.cptt-btn {
+        padding: 9px 10px !important;
+        font-size: 12px !important;
+        min-height: 38px !important;
+    }
+    /* دو دکمه اول (مدیریت پروژه + پیش‌فاکتور) هرکدوم نیم عرض */
+    .cptt-expertCard__actions .cptt-expert-toggleProject,
+    .cptt-expertCard__actions a[href*="cptt_view_invoice"] {
+        flex: 1 1 calc(50% - 3px) !important;
+        max-width: calc(50% - 3px) !important;
+        min-width: 0 !important;
+        text-align: center !important;
+        justify-content: center !important;
+    }
+    /* گزارش نهایی فول‌ویدث در ردیف بعد */
+    .cptt-expertCard__actions a[href*="cptt_view_report"] {
+        flex: 1 1 100% !important;
+        max-width: 100% !important;
+        text-align: center !important;
+        justify-content: center !important;
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe) !important;
+        color: #075985 !important;
+        border: 1px solid #bae6fd !important;
+    }
+    /* دکمه‌ی حذف (اگر بود) فول‌ویدث در ردیف خودش */
+    .cptt-expertCard__actions .cptt-expert-delete-project {
+        flex: 1 1 100% !important;
+        max-width: 100% !important;
+        text-align: center !important;
+        justify-content: center !important;
+    }
+}
+
+/* =====================================================================
+   v5.4.5 — UI/UX FIXES
+   1) Desktop: مدیریت پروژه / پیش‌فاکتور / گزارش هم‌اندازه در یک ردیف
+   2) Mobile: مدیریت پروژه + پیش‌فاکتور کنار هم، گزارش هم‌عرض پایین
+   3) رفع تداخل z-index دکمه‌ی منوی شناور موبایل با مودال
+   ===================================================================== */
+
+/* ---- 1) Card action buttons: equal-width row on desktop ---- */
+.cptt-expertCard__actions {
+    display: flex !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    align-items: stretch !important;
+}
+.cptt-expertCard__actions .cptt-btn,
+.cptt-expertCard__actions a.cptt-btn,
+.cptt-expertCard__actions button.cptt-btn {
+    /* همه‌ی دکمه‌ها هم‌اندازه و در یک ردیف */
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: 100% !important;
+    padding: 9px 12px !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    line-height: 1.3 !important;
+    min-height: 40px !important;
+    border-radius: 10px !important;
+    text-align: center !important;
+    justify-content: center !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* اگر کارشناس مجوز حذف دارد، دکمه‌ی حذف از ردیف خط فاصله بگیرد */
+.cptt-expertCard__actions .cptt-expert-delete-project {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+    margin-top: 4px !important;
+}
+
+/* ---- 2) Mobile (≤720px): دو دکمه‌ی اول کنار هم، گزارش پایین فول‌ویدث ---- */
+@media (max-width: 720px) {
+    .cptt-expertCard__actions {
+        gap: 6px !important;
+    }
+    .cptt-expertCard__actions .cptt-btn,
+    .cptt-expertCard__actions a.cptt-btn,
+    .cptt-expertCard__actions button.cptt-btn {
+        padding: 10px 8px !important;
+        font-size: 12.5px !important;
+        min-height: 42px !important;
+        white-space: nowrap !important;
+    }
+    /* مدیریت پروژه + پیش‌فاکتور هرکدام دقیقاً نصف عرض ردیف */
+    .cptt-expertCard__actions .cptt-expert-toggleProject,
+    .cptt-expertCard__actions a[href*="cptt_view_invoice"] {
+        flex: 1 1 calc(50% - 3px) !important;
+        max-width: calc(50% - 3px) !important;
+        min-width: 0 !important;
+    }
+    /* گزارش نهایی: فول‌ویدث پایین ولی هم‌ارتفاع با بقیه */
+    .cptt-expertCard__actions a[href*="cptt_view_report"] {
+        flex: 1 1 100% !important;
+        max-width: 100% !important;
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe) !important;
+        color: #075985 !important;
+        border: 1px solid #bae6fd !important;
+    }
+    .cptt-expertCard__actions .cptt-expert-delete-project {
+        flex: 1 1 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+/* ---- 3) Mobile menu open → hide floating FAB & back-to-top properly ----
+   مودال موبایل z-index: 999999 دارد، دکمه‌ی فاب z-index: 9999999.
+   باید وقتی منو باز است، فاب و دکمه‌های شناور دیگر کاملاً مخفی شوند. */
+.cptt-mobile-fab { z-index: 999998 !important; }
+.cptt-mobile-menu { z-index: 9999999 !important; }
+.cptt-mobile-menu__backdrop { z-index: 9999999 !important; }
+.cptt-mobile-menu__dialog { z-index: 10000000 !important; position: absolute; }
+
+body.cptt-mobile-menu-open .cptt-mobile-fab,
+body.cptt-mobile-menu-open #cptt-back-to-top,
+body.cptt-mobile-menu-open .cptt-expertCard.is-expanded .cptt-expert-save-floating {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* =====================================================================
+   v5.4.5 — Debtors Modal (popup مینیمال لیست بدهکاران)
+   ===================================================================== */
+.cptt-debtors-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #fee2e2, #fef2f2);
+    color: #b91c1c;
+    border: 1px solid rgba(185,28,28,0.25);
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s ease;
+    height: 36px;
+    align-self: end;
+}
+.cptt-debtors-trigger:hover {
+    background: linear-gradient(135deg, #fecaca, #fee2e2);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(185,28,28,0.15);
+}
+
+.cptt-debtors-modal[hidden] { display: none !important; }
+.cptt-debtors-modal {
+    position: fixed; inset: 0; z-index: 100000;
+}
+.cptt-debtors-modal__backdrop {
+    position: absolute; inset: 0;
+    background: rgba(15,23,42,0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    animation: cpttDebFadeIn .18s ease;
+}
+.cptt-debtors-modal__dialog {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(720px, 94vw);
+    max-height: 86vh;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.25);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    animation: cpttDebPop .22s cubic-bezier(.2,.8,.2,1);
+}
+.cptt-debtors-modal__header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    background: linear-gradient(135deg, #fff1f2, #fff7ed);
+}
+.cptt-debtors-modal__title {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 16px; font-weight: 900; color: #b91c1c;
+}
+.cptt-debtors-modal__title .cptt-debtors-count {
+    background: #b91c1c; color: #fff;
+    padding: 2px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 800;
+}
+.cptt-debtors-modal__close {
+    background: #fff; border: 1px solid #fecaca;
+    width: 32px; height: 32px; border-radius: 10px;
+    font-size: 18px; cursor: pointer; color: #64748b;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: all .15s ease;
+}
+.cptt-debtors-modal__close:hover { background:#fee2e2; color:#b91c1c; }
+
+.cptt-debtors-modal__summary {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    padding: 14px 20px;
+    background: #fafafa; border-bottom: 1px solid #f1f5f9;
+}
+.cptt-debtors-modal__summary > div {
+    text-align: center; padding: 8px;
+    background: #fff; border-radius: 10px; border: 1px solid #f1f5f9;
+}
+.cptt-debtors-modal__summary span {
+    display: block; font-size: 11px; color: #64748b; margin-bottom: 4px;
+}
+.cptt-debtors-modal__summary strong {
+    display: block; font-size: 14px; font-weight: 900; color: #0f172a;
+}
+.cptt-debtors-modal__summary .num-debtor { color: #b91c1c; }
+.cptt-debtors-modal__summary .num-total { color: #b45309; }
+
+.cptt-debtors-modal__body {
+    flex: 1; overflow-y: auto;
+    padding: 8px 12px 16px;
+}
+.cptt-debtors-modal__search {
+    position: sticky; top: 0; background: #fff;
+    padding: 10px 8px; z-index: 2;
+    border-bottom: 1px solid #f1f5f9;
+}
+.cptt-debtors-modal__search input {
+    width: 100%; padding: 9px 12px;
+    border: 1px solid #e2e8f0; border-radius: 10px;
+    font-size: 13px; font-family: inherit; outline: none;
+    transition: border-color .15s ease;
+}
+.cptt-debtors-modal__search input:focus { border-color: #6366f1; }
+
+.cptt-debtors-list { list-style: none; padding: 0; margin: 0; }
+.cptt-debtors-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    border: 1px solid #f1f5f9;
+    border-radius: 12px;
+    margin: 8px 0;
+    background: #fff;
+    transition: all .15s ease;
+}
+.cptt-debtors-item:hover {
+    border-color: #fecaca;
+    background: #fffafa;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+}
+.cptt-debtors-item__name {
+    font-weight: 800; font-size: 13.5px; color: #0f172a;
+    margin-bottom: 2px;
+}
+.cptt-debtors-item__meta {
+    font-size: 11.5px; color: #64748b;
+    display: flex; flex-wrap: wrap; gap: 6px 10px;
+}
+.cptt-debtors-item__amount {
+    text-align: left;
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    color: #b91c1c;
+    padding: 6px 12px; border-radius: 10px;
+    font-weight: 900; font-size: 14px;
+    white-space: nowrap;
+    border: 1px solid rgba(185,28,28,0.18);
+}
+.cptt-debtors-item__amount small {
+    display: block; font-size: 10px; font-weight: 700;
+    color: #b91c1c; opacity: .8; margin-top: 2px;
+}
+.cptt-debtors-empty {
+    text-align: center; padding: 40px 20px; color: #64748b;
+}
+.cptt-debtors-empty .icn {
+    font-size: 42px; margin-bottom: 8px; display: block;
+}
+
+@keyframes cpttDebFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cpttDebPop {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(.92); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@media (max-width: 600px) {
+    .cptt-debtors-modal__dialog { width: 96vw; max-height: 92vh; border-radius: 14px; }
+    .cptt-debtors-modal__summary { grid-template-columns: 1fr 1fr; }
+    .cptt-debtors-modal__summary > div:last-child { grid-column: 1/-1; }
+    .cptt-debtors-item { grid-template-columns: 1fr; }
+    .cptt-debtors-item__amount { text-align: center; }
+}
+
+/* v5.4.8 fixes: client search, dark inputs, step experts */
+.cptt-client-search-wrap{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center}
+.cptt-client-search-wrap select{grid-column:1/-1;width:100%}
+.cptt-client-search-toggle{width:38px;height:38px;border-radius:10px;border:1px solid #cbd5e1;background:#f8fafc;cursor:pointer;font-size:16px;display:inline-flex;align-items:center;justify-content:center}
+.cptt-client-search-input{min-height:38px;border-radius:10px;border:1px solid #cbd5e1;padding:8px 12px;width:100%;box-sizing:border-box}
+.cptt-step-expert-wrap{margin:10px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cptt-step-expert-btn{border:1px dashed #a5b4fc;background:#eef2ff;color:#3730a3;border-radius:10px;padding:8px 12px;font-weight:800;cursor:pointer}
+.cptt-step-expert-btn.has-expert{border-style:solid;background:#ecfdf5;color:#047857;border-color:#86efac}
+.cptt-sep-option--hint{font-size:12px;color:#64748b;padding:8px 10px;background:#f8fafc;border-radius:10px;margin-bottom:6px}
+.cptt-product-pair-row label{margin:0}
+
+body.cptt-dark .cptt-expertWrap input,
+body.cptt-dark .cptt-expertWrap select,
+body.cptt-dark .cptt-expertWrap textarea,
+body.cptt-dark .cptt-newProjectModal input,
+body.cptt-dark .cptt-newProjectModal select,
+body.cptt-dark .cptt-newProjectModal textarea,
+body.cptt-dark .cptt-new-customer-modal-dialog input,
+body.cptt-dark .cptt-new-customer-modal-dialog textarea,
+body.cptt-dark .cptt-new-customer-modal-dialog select{
+  background:#111827!important;color:#e5e7eb!important;border-color:#334155!important;box-shadow:none!important;
+}
+body.cptt-dark .cptt-expertWrap input::placeholder,
+body.cptt-dark .cptt-expertWrap textarea::placeholder{color:#94a3b8!important}
+body.cptt-dark .cptt-expertWrap label span,
+body.cptt-dark .cptt-expert-sectionTitle,
+body.cptt-dark .cptt-fieldLabel,
+body.cptt-dark .cptt-bf-lbl,
+body.cptt-dark .cptt-expertCard__meta,
+body.cptt-dark .cptt-expert-emptyMini{color:#cbd5e1!important}
+body.cptt-dark .cptt-client-search-toggle,
+body.cptt-dark .cptt-step-expert-btn{background:#1e293b!important;color:#e0e7ff!important;border-color:#475569!important}
+body.cptt-dark .cptt-step-expert-btn.has-expert{background:rgba(16,185,129,.14)!important;color:#86efac!important;border-color:rgba(134,239,172,.35)!important}
+body.cptt-dark .cptt-create-finance-row input[readonly],
+body.cptt-dark #cptt-create-total-price,
+body.cptt-dark #cptt-create-paid-amount,
+body.cptt-dark #cptt-create-remaining{background:#0f172a!important;color:#e5e7eb!important}
+
+/* v5.4.9 project code / dashboard timeline / labels */
+.cptt-project-code{display:inline-flex;align-items:center;margin-inline-start:6px;padding:2px 7px;border-radius:999px;background:#eef2ff;color:#4f46e5;font-size:11px;font-weight:900;vertical-align:middle}
+.cptt-expertCardTimeline{margin:12px 0 10px;overflow-x:auto;padding-bottom:4px}
+.cptt-expertCardTimeline .cptt-publicTimeline__items{min-width:max-content}
+.cptt-expertCardTimeline .cptt-publicTimeline__label{max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cptt-client-search-inline .cptt-client-search-input{flex:1;min-width:180px}
+body.cptt-dark .cptt-project-code{background:#1e293b;color:#a5b4fc}
+
+/* v5.4.10 isolated create-project customer search */
+.cptt-clientSearchCreate{width:100%;max-width:100%;display:grid;gap:6px;box-sizing:border-box;isolation:isolate;position:relative;z-index:1}
+.cptt-clientSearchCreate__search{width:100%;max-width:100%;box-sizing:border-box}
+.cptt-clientSearchCreate__input{width:100%!important;max-width:100%!important;min-height:38px!important;height:38px!important;border-radius:10px!important;border:1px solid #cbd5e1!important;background:#fff!important;color:#0f172a!important;padding:8px 12px!important;box-sizing:border-box!important;font:inherit!important;box-shadow:none!important;margin:0!important}
+.cptt-clientSearchCreate__field{width:100%;max-width:100%;display:flex!important;align-items:center!important;gap:8px!important;box-sizing:border-box!important;direction:rtl!important}
+.cptt-clientSearchCreate__field select{flex:1 1 auto!important;min-width:0!important;width:auto!important;max-width:calc(100% - 46px)!important;margin:0!important;box-sizing:border-box!important}
+.cptt-clientSearchCreate__btn{flex:0 0 38px!important;width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;padding:0!important;margin:0!important;border-radius:10px!important;border:1px solid #cbd5e1!important;background:#f8fafc!important;color:#334155!important;box-shadow:none!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important;font:16px/1 inherit!important;box-sizing:border-box!important}
+body.cptt-dark .cptt-clientSearchCreate__input{background:#111827!important;color:#e5e7eb!important;border-color:#334155!important}
+body.cptt-dark .cptt-clientSearchCreate__btn{background:#1e293b!important;color:#e0e7ff!important;border-color:#475569!important}
+.cptt-clientSearchCreate__results{margin-top:6px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 14px 35px rgba(15,23,42,.14);max-height:240px;overflow:auto;padding:6px;z-index:20;position:relative}.cptt-clientSearchCreate__results button{width:100%!important;text-align:right!important;background:#fff!important;border:0!important;border-radius:9px!important;padding:9px 10px!important;color:#0f172a!important;cursor:pointer!important;font:inherit!important;box-shadow:none!important;margin:0 0 2px!important}.cptt-clientSearchCreate__results button:hover{background:#eef2ff!important}.cptt-clientSearchCreate__empty{padding:10px;color:#64748b;font-size:12px}body.cptt-dark .cptt-clientSearchCreate__results{background:#0f172a;border-color:#334155}body.cptt-dark .cptt-clientSearchCreate__results button{background:#0f172a!important;color:#e5e7eb!important}body.cptt-dark .cptt-clientSearchCreate__results button:hover{background:#1e293b!important}
+.cptt-step-toggle-avatars{display:inline-flex;align-items:center;margin-inline-start:8px;vertical-align:middle}.cptt-step-toggle-avatars img{width:22px!important;height:22px!important;border-radius:50%!important;object-fit:cover!important;border:2px solid #fff!important;margin-inline-start:-6px!important;box-shadow:0 2px 6px rgba(15,23,42,.18)}body.cptt-dark .cptt-step-toggle-avatars img{border-color:#0f172a!important}
+
+/* v5.4.11 analytics polish */
+.cptt-expert-analytics-section{background:linear-gradient(180deg,#ffffff,#f8fafc);border:1px solid #e5e7eb;border-radius:18px;padding:16px;box-shadow:0 10px 28px rgba(15,23,42,.06)}
+.cptt-expert-analytics-section .cptt-expert-sectionTitle{font-size:16px!important;font-weight:950!important;color:#0f172a!important;margin-bottom:12px!important}
+body.cptt-dark .cptt-expert-analytics-section{background:linear-gradient(180deg,#111827,#0f172a);border-color:#334155}
+body.cptt-dark .cptt-expert-analytics-section *{border-color:#334155!important}
+.cptt-expert-step__toggleMain strong .cptt-step-toggle-avatars{display:inline-flex!important;align-items:center!important;width:auto!important;margin-top:0!important}.cptt-expert-step__toggleMain strong .cptt-step-toggle-avatars img{display:inline-block!important;visibility:visible!important;opacity:1!important}
+/* v5.4.15 avatar shape fix */
+.cptt-expert-step__toggleMain strong .cptt-step-toggle-avatars{display:inline-flex!important;align-items:center!important;gap:0!important;vertical-align:middle!important;line-height:1!important;white-space:nowrap!important;overflow:visible!important;flex:0 0 auto!important;width:auto!important;max-width:none!important;height:30px!important;min-height:30px!important}
+.cptt-expert-step__toggleMain strong .cptt-step-toggle-avatars img{display:inline-block!important;width:30px!important;height:30px!important;min-width:30px!important;max-width:30px!important;min-height:30px!important;max-height:30px!important;aspect-ratio:1/1!important;border-radius:999px!important;object-fit:cover!important;flex:0 0 30px!important;overflow:hidden!important;margin-inline-start:-7px!important;box-sizing:border-box!important}
+.cptt-expert-step__toggleMain strong .cptt-step-toggle-avatars img:first-child{margin-inline-start:0!important}
+
+/* v5.5.0 — دکمه + برای افزودن محصول به بودجه‌بندی */
+.cptt-add-plus-btn{width:42px;height:42px;min-width:42px;border-radius:12px;border:0;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:22px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 6px 14px -4px rgba(79,70,229,.4);font-family:inherit;line-height:1}
+.cptt-add-plus-btn:hover{transform:scale(1.05);box-shadow:0 10px 22px -6px rgba(79,70,229,.5)}
+.cptt-add-plus-btn:active{transform:scale(.95)}
+.cptt-add-plus-btn.is-added{background:linear-gradient(135deg,#16a34a,#22c55e);transform:scale(1.1)}
+
