@@ -293,8 +293,8 @@
                   var list = qs('.cptt-all-notifs-list', notifModal);
                   var fd = new FormData();
                   fd.append('action', 'cptt_expert_fetch_all_notifications');
-                  fd.append('nonce', window.CPTT_EXPERT ? CPTT_EXPERT.nonce : window.CPTT_ADMIN.nonce);
-                  fetch(window.CPTT_EXPERT ? CPTT_EXPERT.ajax : window.CPTT_ADMIN.ajax, { method: 'POST', body: fd })
+                  fd.append('nonce', (window.CPTT_EXPERT && CPTT_EXPERT.nonce) ? CPTT_EXPERT.nonce : (window.CPTT_ADMIN ? CPTT_ADMIN.nonce : ''));
+                  fetch((window.CPTT_EXPERT && CPTT_EXPERT.ajax) ? CPTT_EXPERT.ajax : (window.CPTT_ADMIN ? CPTT_ADMIN.ajax : ''), { method: 'POST', body: fd })
                   .then(r => r.json()).then(data => {
                       if (data.success && list) {
                           list.innerHTML = data.data.html;
@@ -464,6 +464,7 @@
     var client = (qs('#cptt-expert-client') || {}).value || '';
     var product = (qs('#cptt-expert-product') || {}).value || '';
     var cat = (qs('#cptt-expert-cat') || {}).value || '';
+    var label = (qs('#cptt-expert-label') || {}).value || '';
     var visible = 0;
     qsa('.cptt-expertCard').forEach(function (card) {
       var ok = true;
@@ -473,12 +474,14 @@
       var dataClient = String(card.getAttribute('data-client') || '');
       var dataProduct = String(card.getAttribute('data-product') || '');
       var dataCats = String(card.getAttribute('data-cats') || '');
+      var dataLabel = String(card.getAttribute('data-label') || '');
       if (search && dataSearch.indexOf(search) === -1) ok = false;
       if (status && dataStatus !== status) ok = false;
       if (settled !== '' && dataSettled !== settled) ok = false;
       if (client && dataClient !== client) ok = false;
       if (product && dataProduct !== product) ok = false;
       if (cat && dataCats.indexOf(',' + cat + ',') === -1) ok = false;
+      if (label && dataLabel !== label) ok = false;
       card.hidden = !ok;
       card.style.display = ok ? '' : 'none';
       if (ok) visible++;
@@ -1028,7 +1031,8 @@
     var client = qs('#cptt-expert-client');
     var product = qs('#cptt-expert-product');
     var cat = qs('#cptt-expert-cat');
-    [search, status, settled, client, product, cat].forEach(function (el) {
+    var label = qs('#cptt-expert-label');
+    [search, status, settled, client, product, cat, label].forEach(function (el) {
       if (!el) return;
       el.addEventListener('input', updateVisibility);
       el.addEventListener('change', updateVisibility);
@@ -1042,6 +1046,7 @@
         if (client) client.value = '';
         if (product) product.value = '';
         if (cat) cat.value = '';
+        if (label) label.value = '';
         updateVisibility();
       });
     }
@@ -1276,9 +1281,9 @@
               if (id) {
                   var fd = new FormData();
                   fd.append('action', 'cptt_expert_mark_single_notification_read');
-                  fd.append('nonce', window.CPTT_EXPERT ? CPTT_EXPERT.nonce : window.CPTT_ADMIN.nonce);
+                  fd.append('nonce', (window.CPTT_EXPERT && CPTT_EXPERT.nonce) ? CPTT_EXPERT.nonce : (window.CPTT_ADMIN ? CPTT_ADMIN.nonce : ''));
                   fd.append('id', id);
-                  fetch(window.CPTT_EXPERT ? CPTT_EXPERT.ajax : window.CPTT_ADMIN.ajax, { method: 'POST', body: fd, keepalive: true });
+                  fetch((window.CPTT_EXPERT && CPTT_EXPERT.ajax) ? CPTT_EXPERT.ajax : (window.CPTT_ADMIN ? CPTT_ADMIN.ajax : ''), { method: 'POST', body: fd, keepalive: true });
               }
           }
       }
@@ -1323,8 +1328,8 @@
               var list = qs('.cptt-all-notifs-list', modal);
               var fd = new FormData();
               fd.append('action', 'cptt_expert_fetch_all_notifications');
-              fd.append('nonce', window.CPTT_EXPERT ? CPTT_EXPERT.nonce : window.CPTT_ADMIN.nonce);
-              fetch(window.CPTT_EXPERT ? CPTT_EXPERT.ajax : window.CPTT_ADMIN.ajax, { method: 'POST', body: fd })
+              fd.append('nonce', (window.CPTT_EXPERT && CPTT_EXPERT.nonce) ? CPTT_EXPERT.nonce : (window.CPTT_ADMIN ? CPTT_ADMIN.nonce : ''));
+              fetch((window.CPTT_EXPERT && CPTT_EXPERT.ajax) ? CPTT_EXPERT.ajax : (window.CPTT_ADMIN ? CPTT_ADMIN.ajax : ''), { method: 'POST', body: fd })
               .then(r => r.json()).then(data => {
                   if (data.success && list) {
                       list.innerHTML = data.data.html;
@@ -1522,6 +1527,10 @@
     var modal = document.getElementById('cptt-new-customer-modal');
     if (modal) {
       modal.style.display = 'flex';
+      modal.style.zIndex = '2147483647';
+      // Blur the project modal if it exists
+      var parentModal = document.getElementById('cptt-new-project-modal');
+      if (parentModal) parentModal.style.filter = 'blur(5px)';
       var fnInput = document.getElementById('cptt-cust-firstname');
       if (fnInput) fnInput.focus();
     }
@@ -1539,6 +1548,8 @@
         var closeBtn = e.target.closest('#cptt-cust-close');
         if (closeBtn) {
           custModal.style.display = 'none';
+          var parentModal = document.getElementById('cptt-new-project-modal');
+          if (parentModal) parentModal.style.filter = '';
           _activeClientSelect = null;
           return;
         }
@@ -1593,6 +1604,8 @@
 
                 setTimeout(function() {
                   custModal.style.display = 'none';
+                  var parentModal = document.getElementById('cptt-new-project-modal');
+                  if (parentModal) parentModal.style.filter = '';
                   var fn = document.getElementById('cptt-cust-firstname');
                   var ln = document.getElementById('cptt-cust-lastname');
                   var ph = document.getElementById('cptt-cust-phone');
@@ -1616,11 +1629,12 @@
       custModal.addEventListener('click', function(e) {
         if (e.target === custModal) {
           custModal.style.display = 'none';
+          var parentModal = document.getElementById('cptt-new-project-modal');
+          if (parentModal) parentModal.style.filter = '';
           _activeClientSelect = null;
         }
       });
     }
-  }
   }
 
   /* =========================================================
@@ -1839,6 +1853,13 @@
           html += '<div class="cptt-hubModal__step cptt-hubModal__step--'+escH(st)+'">';
           html += '<div class="cptt-hubModal__stepHead">';
           html += '<strong>'+escH(s.index||'')+'&nbsp;'+escH(s.title||'')+'</strong>';
+          if (s.experts && s.experts.length) {
+              html += '<div class="cptt-hubModal__stepExperts">';
+              s.experts.forEach(function(ex){
+                  html += '<img src="'+escH(ex.avatar)+'" title="'+escH(ex.name)+'" alt="'+escH(ex.name)+'" style="width:24px;height:24px;border-radius:50%;border:1.5px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);margin-right:-8px;">';
+              });
+              html += '</div>';
+          }
           html += '<span class="cptt-expertStatusBadge cptt-expertStatusBadge--'+escH(st)+'">'+escH(stLabel)+'</span>';
           html += '</div>';
 
@@ -2049,6 +2070,7 @@
     var selProd= document.getElementById('cptt-hub-product');
     var selCat = document.getElementById('cptt-hub-cat');
     var selDl  = document.getElementById('cptt-hub-deadline');
+    var selLbl = document.getElementById('cptt-hub-label');
     var reset  = document.getElementById('cptt-hub-reset');
 
     if (!grid) return;
@@ -2060,6 +2082,7 @@
       var prod= selProd ? selProd.value : '';
       var cat = selCat  ? selCat.value  : '';
       var dl  = selDl   ? selDl.value   : '';
+      var lbl = selLbl  ? selLbl.value  : '';
       var vis = 0;
 
       cards.forEach(function(c) {
@@ -2069,6 +2092,7 @@
         if (show && prod && c.getAttribute('data-product') !== prod) show = false;
         if (show && cat  && !(c.getAttribute('data-cats')||'').includes(','+cat+',')) show = false;
         if (show && dl   && c.getAttribute('data-deadline') !== dl) show = false;
+        if (show && lbl  && c.getAttribute('data-label') !== lbl) show = false;
         c.style.display = show ? '' : 'none';
         if (show) vis++;
       });
@@ -2077,13 +2101,13 @@
       if (empty) empty[vis === 0 ? 'removeAttribute' : 'setAttribute']('hidden','');
     }
 
-    [search, selExp, selProd, selCat, selDl].forEach(function(el){
+    [search, selExp, selProd, selCat, selDl, selLbl].forEach(function(el){
       if (el) el.addEventListener('input', filter);
     });
 
     if (reset) {
       reset.addEventListener('click', function() {
-        [search, selExp, selProd, selCat, selDl].forEach(function(el){ if(el) el.value=''; });
+        [search, selExp, selProd, selCat, selDl, selLbl].forEach(function(el){ if(el) el.value=''; });
         filter();
       });
     }
@@ -2409,7 +2433,7 @@
   var oldModal = document.getElementById('cptt-expert-profile-modal');
   if (oldModal) {
     // Rebind badge clicks to use new renderer
-    document.removeEventListener('click', _cpttOldExpertHandler);
+    // document.removeEventListener('click', _cpttOldExpertHandler);
   }
 
   function b64DecodeUtf8(b64) {

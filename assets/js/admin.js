@@ -373,13 +373,29 @@ jQuery(function ($) {
   $(document).on('click', '#cptt-dash-reset', function(){ $('.cptt-dashboard__filters input,.cptt-dashboard__filters select').val(''); filterDashboard(); });
 
   /* ===== Accounting filters ===== */
+  function parseFaDateToTs(faStr) {
+    if (!faStr) return 0;
+    const s = cpttToEn(String(faStr)).trim();
+    const m = s.match(/(\d{4})\/(\d{1,2})\/(\d{1,2})(?:\s+(\d{1,2}):(\d{1,2}))?/);
+    if (!m) return 0;
+    const jy = parseInt(m[1], 10), jm = parseInt(m[2], 10), jd = parseInt(m[3], 10);
+    const hh = m[4] ? parseInt(m[4], 10) : 0, ii = m[5] ? parseInt(m[5], 10) : 0;
+    const g = j2g(jy, jm, jd);
+    const d = new Date(g[0], g[1] - 1, g[2], hh, ii, 0);
+    return Math.floor(d.getTime() / 1000);
+  }
+
   function filterAccounting(){
     const q=($('#cptt-acct-search').val()||'').toLowerCase().trim();
     const client=$('#cptt-acct-client').val()||'';
     const settled=$('#cptt-acct-settled').val();
     const status=$('#cptt-acct-status').val()||'';
-    const from=$('#cptt-acct-from').val()?Math.floor(new Date($('#cptt-acct-from').val()).getTime()/1000):0;
-    const to=$('#cptt-acct-to').val()?Math.floor(new Date($('#cptt-acct-to').val()).getTime()/1000)+86399:0;
+    
+    const fromStr = $('#cptt-acct-from').val();
+    const toStr = $('#cptt-acct-to').val();
+    const from = fromStr ? parseFaDateToTs(fromStr) : 0;
+    const to = toStr ? parseFaDateToTs(toStr) + 86399 : 0;
+
     let count=0;
     $('.cptt-acct-row').each(function(){
       const $r=$(this); let ok=true;

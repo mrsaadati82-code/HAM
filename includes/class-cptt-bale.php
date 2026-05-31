@@ -1696,6 +1696,10 @@ class CPTT_Bale {
 		$chat_id = get_user_meta((int)$user_id, '_cptt_bale_chat_id', true);
 		if (!$chat_id) return;
 		$kb = null;
+		if ($project_id) {
+			$code = class_exists('CPTT_Core') ? CPTT_Core::get_project_code($project_id) : $project_id;
+			$message = "🔖 کد پروژه: #{$code}\n" . $message;
+		}
 		if ($project_id && in_array($type, ['project_assigned','project_chat','project_completed','overdue','user_task_done'], true)) {
 			$kb = ['inline_keyboard' => [[['text' => '📁 مشاهده پروژه', 'callback_data' => 'view_proj_' . $project_id]]]];
 		}

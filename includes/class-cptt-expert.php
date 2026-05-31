@@ -1787,6 +1787,20 @@ class CPTT_Expert {
 					];
 				}
 			}
+
+			$step_experts = [];
+			if ($full_details) {
+				$assigned_ids = isset($step['assigned_expert_ids']) && is_array($step['assigned_expert_ids']) ? $step['assigned_expert_ids'] : [];
+				if (empty($assigned_ids) && !empty($step['assigned_expert_id'])) $assigned_ids = [(int)$step['assigned_expert_id']];
+				foreach ($assigned_ids as $eid) {
+					$u = get_user_by('id', (int)$eid);
+					if ($u) {
+						$av = $this->get_expert_avatar_url($eid, 64);
+						$step_experts[] = ['name' => $u->display_name, 'avatar' => $av];
+					}
+				}
+			}
+
 			$items[] = [
 				'index' => $index + 1,
 				'title' => (string) ($step['title'] ?? ('مرحله ' . ($index + 1))),
@@ -1802,6 +1816,7 @@ class CPTT_Expert {
 				'user_tasks_items' => $user_tasks_items,
 				'cost' => $full_details ? (float) ($step['cost'] ?? 0) : 0,
 				'paid' => $full_details ? (float) ($step['paid'] ?? 0) : 0,
+				'experts' => $step_experts,
 			];
 		}
 		$card = $this->project_card_data($project_id);
@@ -1890,9 +1905,10 @@ class CPTT_Expert {
 	}
 
 	private function render_public_project_card($project, $limited_public = false) {
-		$search = strtolower(trim($project['title'] . ' ' . implode(' ', (array) $project['experts']) . ' ' . $project['product'] . ' ' . implode(' ', (array) $project['categories']) . ' ' . (!$limited_public ? $project['customer'] : '')));
+		$search = strtolower(trim($project['title'] . ' ' . implode(' ', (array) $project['experts']) . ' ' . $project['product'] . ' ' . implode(' ', (array) $project['categories']) . ' ' . ($project['code'] ?? '') . ' ' . (!$limited_public ? $project['customer'] : '')));
 		$payload_b64 = base64_encode(wp_json_encode($project['payload'], JSON_UNESCAPED_UNICODE));
 		$timeline_steps = isset($project['payload']['steps']) && is_array($project['payload']['steps']) ? $project['payload']['steps'] : [];
+		$label_id = is_array($project['label'] ?? null) ? (string)$project['label']['id'] : '';
 		$timeline_count = count($timeline_steps);
 		$timeline_progress = 0;
 		if ($timeline_count > 1) {
@@ -1906,7 +1922,7 @@ class CPTT_Expert {
 			$timeline_progress = 100;
 		}
 		?>
-		<article class="cptt-publicProject cptt-publicProject--<?php echo esc_attr($project['progress']['status']); ?> cptt-publicProject--deadline-<?php echo esc_attr($project['deadline_state']); ?>" data-search="<?php echo esc_attr($search); ?>" data-experts=",<?php echo esc_attr(implode(',', array_map('intval', (array) $project['expert_ids']))); ?>," data-product="<?php echo esc_attr((string) $project['product_id']); ?>" data-cats=",<?php echo esc_attr(implode(',', array_map('intval', (array) $project['cat_ids']))); ?>," data-deadline="<?php echo esc_attr($project['deadline_state']); ?>">
+		<article class="cptt-publicProject cptt-publicProject--<?php echo esc_attr($project['progress']['status']); ?> cptt-publicProject--deadline-<?php echo esc_attr($project['deadline_state']); ?>" data-search="<?php echo esc_attr($search); ?>" data-experts=",<?php echo esc_attr(implode(',', array_map('intval', (array) $project['expert_ids']))); ?>," data-product="<?php echo esc_attr((string) $project['product_id']); ?>" data-cats=",<?php echo esc_attr(implode(',', array_map('intval', (array) $project['cat_ids']))); ?>," data-deadline="<?php echo esc_attr($project['deadline_state']); ?>" data-label="<?php echo esc_attr($label_id); ?>">
 			<div class="cptt-publicProject__top">
 				<div>
 					<h3><?php echo esc_html($project['title']); ?> <span class="cptt-project-code">#<?php echo esc_html($project['code'] ?? ''); ?></span></h3>
@@ -2043,6 +2059,7 @@ class CPTT_Expert {
 					<label>کارشناس<select id="cptt-hub-expert"><option value="">همه</option><?php foreach ($expert_map as $id => $name): ?><option value="<?php echo esc_attr($id); ?>"><?php echo esc_html($name); ?></option><?php endforeach; ?></select></label>
 					<label>محصول<select id="cptt-hub-product"><option value="">همه</option><?php foreach ($product_map as $id => $name): ?><option value="<?php echo esc_attr($id); ?>"><?php echo esc_html($name); ?></option><?php endforeach; ?></select></label>
 					<label>دسته‌بندی<select id="cptt-hub-cat"><option value="">همه</option><?php foreach ($cat_map as $id => $name): ?><option value="<?php echo esc_attr($id); ?>"><?php echo esc_html($name); ?></option><?php endforeach; ?></select></label>
+					<label>لیبل<select id="cptt-hub-label"><option value="">همه</option><?php foreach ((class_exists('CPTT_Core') ? CPTT_Core::get_project_labels() : []) as $l): ?><option value="<?php echo esc_attr($l['id']); ?>"><?php echo esc_html($l['name']); ?></option><?php endforeach; ?></select></label>
 					<label>مهلت<select id="cptt-hub-deadline"><option value="">همه</option><option value="overdue">دیرکرد</option><option value="soon">نزدیک به سررسید</option><option value="future">دارای مهلت</option><option value="none">بدون مهلت</option></select></label>
 					<button type="button" class="cptt-btn" id="cptt-hub-reset">پاک کردن فیلترها</button>
 				</div>
@@ -3512,6 +3529,7 @@ class CPTT_Expert {
 				<label>مشتری<select id="cptt-expert-client"><option value="">همه</option><?php foreach ($clients_map as $id => $name): ?><option value="<?php echo esc_attr($id); ?>"><?php echo esc_html($name); ?></option><?php endforeach; ?></select></label>
 				<label>محصول<select id="cptt-expert-product"><option value="">همه</option><?php foreach ($products_map as $id => $name): if (!$id) continue; ?><option value="<?php echo esc_attr($id); ?>"><?php echo esc_html($name); ?></option><?php endforeach; ?></select></label>
 				<label>دسته‌بندی<select id="cptt-expert-cat"><option value="">همه</option><?php foreach ($cats_map as $id => $name): ?><option value="<?php echo esc_attr($id); ?>"><?php echo esc_html($name); ?></option><?php endforeach; ?></select></label>
+				<label>لیبل<select id="cptt-expert-label"><option value="">همه</option><?php foreach ((class_exists('CPTT_Core') ? CPTT_Core::get_project_labels() : []) as $l): ?><option value="<?php echo esc_attr($l['id']); ?>"><?php echo esc_html($l['name']); ?></option><?php endforeach; ?></select></label>
 				<button type="button" class="cptt-btn" id="cptt-expert-reset">پاک کردن فیلترها</button>
 				<button type="button" class="cptt-btn" id="cptt-kanban-toggle">📌 نمایش Kanban</button>
 			</div>
@@ -3540,7 +3558,8 @@ class CPTT_Expert {
 					<div class="cptt-empty">در حال حاضر پروژه‌ای به شما اختصاص داده نشده است.</div>
 				<?php else: foreach ($projects as $p):
 					$data = $this->project_card_data($p->ID);
-					$search = strtolower(get_the_title($p->ID) . ' ' . $data['customer'] . ' ' . $data['product'] . ' ' . implode(' ', $data['experts']));
+					$label_id = is_array($data['label']) ? (string)$data['label']['id'] : '';
+					$search = strtolower(get_the_title($p->ID) . ' ' . $data['customer'] . ' ' . $data['product'] . ' ' . implode(' ', $data['experts']) . ' ' . ($data['code'] ?? ''));
 				?>
 				<?php
 				$_card_experts_for_step = [];
@@ -3562,7 +3581,7 @@ class CPTT_Expert {
 			$_tl_count = count($_tl_steps); $_tl_progress = 0;
 			if ($_tl_count > 1) { $_last = 0; foreach ($_tl_steps as $_i => $_st) { if (in_array((string)($_st['status'] ?? 'todo'), ['done','current'], true)) $_last = $_i; } $_tl_progress = ($_last / max(1, $_tl_count - 1)) * 100; } elseif ($_tl_count === 1) { $_tl_progress = 100; }
 			?>
-			<article class="cptt-expertCard" data-project-id="<?php echo esc_attr($p->ID); ?>" data-search="<?php echo esc_attr($search); ?>" data-status="<?php echo esc_attr($data['progress']['status']); ?>" data-settled="<?php echo esc_attr((string)$data['settled']); ?>" data-client="<?php echo esc_attr((string)$data['customer_id']); ?>" data-product="<?php echo esc_attr((string)$data['product_id']); ?>" data-cats=",<?php echo esc_attr(implode(',', array_map('intval', (array)$data['term_ids']))); ?>," data-project-experts="<?php echo esc_attr($_step_experts_b64); ?>">
+			<article class="cptt-expertCard" data-project-id="<?php echo esc_attr($p->ID); ?>" data-search="<?php echo esc_attr($search); ?>" data-status="<?php echo esc_attr($data['progress']['status']); ?>" data-settled="<?php echo esc_attr((string)$data['settled']); ?>" data-client="<?php echo esc_attr((string)$data['customer_id']); ?>" data-product="<?php echo esc_attr((string)$data['product_id']); ?>" data-cats=",<?php echo esc_attr(implode(',', array_map('intval', (array)$data['term_ids']))); ?>," data-label="<?php echo esc_attr($label_id); ?>" data-project-experts="<?php echo esc_attr($_step_experts_b64); ?>">
 					<div class="cptt-expertCard__top">
 						<div>
 							<h3><?php echo esc_html(get_the_title($p->ID)); ?> <span class="cptt-project-code">#<?php echo esc_html($data['code'] ?? (class_exists('CPTT_Core') ? CPTT_Core::get_project_code($p->ID) : '')); ?></span></h3>

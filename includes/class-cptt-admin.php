@@ -136,11 +136,37 @@ class CPTT_Admin {
 				echo '<div class="notice notice-success"><p>اطلاعات مشتری ذخیره شد.</p></div>';
 			}
 		}
-		$users = get_users(['orderby'=>'registered','order'=>'DESC','number'=>500]);
+
+		$search_query = isset($_GET['s']) ? sanitize_text_field($_GET['s']) : '';
+		$args = [
+			'orderby' => 'registered',
+			'order'   => 'DESC',
+			'number'  => 500,
+		];
+		if ($search_query !== '') {
+			$args['search'] = '*' . $search_query . '*';
+			$args['search_columns'] = ['user_login', 'user_nicename', 'user_email', 'display_name'];
+		}
+		$users = get_users($args);
 		?>
 		<div class="cptt-customers-admin" dir="rtl"><style>
 		.cptt-customers-admin{margin:20px 20px 20px 0;font-family:inherit}.cptt-cust-hero{background:linear-gradient(135deg,#0f172a,#4f46e5);color:#fff;border-radius:24px;padding:24px;margin-bottom:18px}.cptt-cust-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}.cptt-cust-card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:16px;box-shadow:0 8px 22px rgba(15,23,42,.06)}.cptt-cust-card h3{margin:0 0 10px;color:#0f172a}.cptt-cust-form{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cptt-cust-form input{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:8px}.cptt-cust-actions{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end}.cptt-bale-ok{color:#059669;font-weight:900}.cptt-bale-no{color:#dc2626;font-weight:900}
-		</style><div class="cptt-cust-hero"><h1>👥 مشتریان</h1><p>مدیریت اختصاصی مشتریان، اطلاعات تماس و وضعیت عضویت در بله</p></div><div class="cptt-cust-grid">
+		.cptt-cust-search-bar{margin-bottom:16px; display:flex; gap:8px;}
+		.cptt-cust-search-bar input{flex:1; border:1px solid #cbd5e1; border-radius:12px; padding:10px 15px;}
+		</style>
+		<div class="cptt-cust-hero">
+			<h1>👥 مشتریان</h1>
+			<p>مدیریت اختصاصی مشتریان، اطلاعات تماس و وضعیت عضویت در بله</p>
+		</div>
+
+		<form method="get" class="cptt-cust-search-bar">
+			<input type="hidden" name="post_type" value="cptt_project">
+			<input type="hidden" name="page" value="cptt-customers">
+			<input type="search" name="s" value="<?php echo esc_attr($search_query); ?>" placeholder="جستجوی نام، ایمیل یا نام کاربری مشتری...">
+			<button type="submit" class="button button-primary" style="height:auto; border-radius:12px; padding:0 20px;">جستجو</button>
+		</form>
+
+		<div class="cptt-cust-grid">
 		<?php foreach ($users as $u): $roles=(array)$u->roles; if (in_array('administrator',$roles,true) || in_array('cptt_expert',$roles,true)) continue; $phone=(string)get_user_meta($u->ID,'billing_phone',true); if($phone==='')$phone=(string)get_user_meta($u->ID,'cptt_phone',true); $bale=(string)get_user_meta($u->ID,'_cptt_bale_chat_id',true); ?>
 		<div class="cptt-cust-card"><h3><?php echo esc_html($u->display_name ?: $u->user_login); ?></h3><div style="font-size:12px;color:#64748b;margin-bottom:10px;">عضویت بله: <?php echo $bale?'<span class="cptt-bale-ok">دارد</span> <code>'.esc_html($bale).'</code>':'<span class="cptt-bale-no">ندارد</span>'; ?></div>
 		<form method="post" class="cptt-cust-form"><?php wp_nonce_field('cptt_save_customer','cptt_customer_nonce'); ?><input type="hidden" name="customer_id" value="<?php echo esc_attr($u->ID); ?>"><label>نام<input name="first_name" value="<?php echo esc_attr(get_user_meta($u->ID,'first_name',true)); ?>"></label><label>نام خانوادگی<input name="last_name" value="<?php echo esc_attr(get_user_meta($u->ID,'last_name',true)); ?>"></label><label>نام نمایشی<input name="display_name" value="<?php echo esc_attr($u->display_name); ?>"></label><label>موبایل<input name="phone" value="<?php echo esc_attr($phone); ?>"></label><label style="grid-column:1/-1;">ایمیل<input name="email" value="<?php echo esc_attr($u->user_email); ?>"></label><div class="cptt-cust-actions"><button class="button button-primary">ذخیره</button><a class="button" href="<?php echo esc_url(get_edit_user_link($u->ID)); ?>">وردپرس</a><a class="button button-link-delete" onclick="return confirm('حذف شود؟')" href="<?php echo esc_url(wp_nonce_url(admin_url('edit.php?post_type=cptt_project&page=cptt-customers&cptt_delete_customer='.$u->ID),'cptt_delete_customer_'.$u->ID)); ?>">حذف</a></div></form></div>
@@ -583,7 +609,9 @@ class CPTT_Admin {
 				<label>جستجو<input type="search" id="cptt-acct-search" placeholder="عنوان پروژه، مشتری..."></label>
 				<label>مشتری<select id="cptt-acct-client"><option value="">همه</option><?php foreach ($clients_map as $id=>$name): ?><option value="<?php echo esc_attr($id); ?>"><?php echo esc_html($name); ?></option><?php endforeach; ?></select></label>
 				<label>وضعیت مالی<select id="cptt-acct-settled"><option value="">همه</option><option value="1">تسویه شده</option><option value="0">تسویه نشده</option></select></label>
-				<label>وضعیت پروژه<select id="cptt-acct-status"><option value="">همه</option><option value="completed">تکمیل شده</option><option value="in_progress">در حال انجام</option></select></label><label>از تاریخ<input type="date" id="cptt-acct-from"></label><label>تا تاریخ<input type="date" id="cptt-acct-to"></label>
+				<label>وضعیت پروژه<select id="cptt-acct-status"><option value="">همه</option><option value="completed">تکمیل شده</option><option value="in_progress">در حال انجام</option></select></label>
+				<label>از تاریخ<input type="text" class="cptt-jalali-datetime" id="cptt-acct-from" placeholder="انتخاب تاریخ"></label>
+				<label>تا تاریخ<input type="text" class="cptt-jalali-datetime" id="cptt-acct-to" placeholder="انتخاب تاریخ"></label>
 				<button type="button" class="button" id="cptt-acct-reset">پاک کردن</button>
 				<button type="button" class="button" id="cptt-acct-print" style="background:#059669; border-color:#059669; color:#fff; font-weight:bold; margin-right:5px; height:30px; align-self:end;">🖨 چاپ گزارش مالی</button>
 				<button type="button" class="cptt-debtors-trigger" id="cptt-acct-debtors">👥 لیست بدهکاران <span class="cptt-debtors-count" id="cptt-debtors-count-badge">0</span></button>
@@ -781,10 +809,65 @@ class CPTT_Admin {
 					<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;"><h3 style="margin:0;">تسویه‌های انجام‌شده</h3><button type="button" class="button" id="cptt-settled-history-close">×</button></div>
 					<input type="search" id="cptt-settled-history-search" placeholder="جستجو در پروژه، مرحله یا کارشناس..." style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:10px;margin-bottom:10px;">
 					<table class="widefat striped"><thead><tr><th>پروژه/مرحله</th><th>کارشناس</th><th>پرداخت کارشناس</th><th>سهم مدیر</th><th>تاریخ</th><th>عملیات</th></tr></thead><tbody>
-					<?php foreach ($step_settlement_rows as $rr): if (empty($rr['settled'])) continue; $srch=mb_strtolower($rr['project_title'].' '.$rr['step_title'].' '.$rr['expert_name']); ?>
-					<tr class="cptt-settled-history-row" data-search="<?php echo esc_attr($srch); ?>"><td><b><?php echo esc_html($rr['project_title']); ?></b><br><small><?php echo esc_html($rr['step_title']); ?></small></td><td><?php echo esc_html($rr['expert_name']); ?></td><td><input type="text" class="cptt-settle-edit-amount" value="<?php echo esc_attr(number_format($rr['exp_to_expert'])); ?>" style="width:110px"></td><td><?php echo number_format($rr['admin_received']); ?></td><td><?php echo esc_html($rr['settle_at_fa']); ?></td><td><button type="button" class="button cptt-settle-edit" data-project-id="<?php echo esc_attr($rr['project_id']); ?>" data-step-id="<?php echo esc_attr($rr['step_id']); ?>">ذخیره</button> <button type="button" class="button button-link-delete cptt-settle-delete" data-project-id="<?php echo esc_attr($rr['project_id']); ?>" data-step-id="<?php echo esc_attr($rr['step_id']); ?>">حذف</button></td></tr>
+					<?php
+					$settled_history = [];
+					foreach ($step_settlement_rows as $rr) { if (!empty($rr['settled'])) { $settled_history[] = $rr; } }
+					
+					// Fetch manual payments from ledger
+					global $wpdb;
+					$manuals = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}cptt_ledger WHERE type='expert_manual_payout' ORDER BY created_at DESC LIMIT 100");
+					foreach ($manuals as $m) {
+						$u = get_user_by('id', $m->user_id);
+						$settled_history[] = [
+							'project_id' => 0,
+							'project_title' => '💸 پرداخت دستی',
+							'step_id' => 'manual_'.$m->id,
+							'step_title' => $m->note ?: 'بدون توضیح',
+							'expert_id' => $m->user_id,
+							'expert_name' => $u ? $u->display_name : '—',
+							'exp_to_expert' => abs($m->amount),
+							'admin_received' => 0,
+							'settle_at_fa' => class_exists('CPTT_Core') ? CPTT_Core::jalali_datetime(strtotime($m->created_at)) : $m->created_at,
+							'is_manual' => true,
+							'ledger_id' => $m->id
+						];
+					}
+					// Sort history by date descending
+					// (Rough sort since we have mixing formats, but better than nothing)
+					
+					foreach ($settled_history as $rr): $srch=mb_strtolower(($rr['project_title']??'').' '.($rr['step_title']??'').' '.($rr['expert_name']??'')); ?>
+					<tr class="cptt-settled-history-row" data-search="<?php echo esc_attr($srch); ?>">
+						<td><b><?php echo esc_html($rr['project_title']); ?></b><br><small><?php echo esc_html($rr['step_title']); ?></small></td>
+						<td><?php echo esc_html($rr['expert_name']); ?></td>
+						<td><?php if(!empty($rr['is_manual'])): ?><b><?php echo number_format($rr['exp_to_expert']); ?></b><?php else: ?><input type="text" class="cptt-settle-edit-amount" value="<?php echo esc_attr(number_format($rr['exp_to_expert'])); ?>" style="width:110px"><?php endif; ?></td>
+						<td><?php echo number_format($rr['admin_received']); ?></td>
+						<td><?php echo esc_html($rr['settle_at_fa']); ?></td>
+						<td><?php if(empty($rr['is_manual'])): ?><button type="button" class="button cptt-settle-edit" data-project-id="<?php echo esc_attr($rr['project_id']); ?>" data-step-id="<?php echo esc_attr($rr['step_id']); ?>">ذخیره</button> <button type="button" class="button button-link-delete cptt-settle-delete" data-project-id="<?php echo esc_attr($rr['project_id']); ?>" data-step-id="<?php echo esc_attr($rr['step_id']); ?>">حذف</button><?php else: ?><span class="cptt-chip cptt-chip--completed">پرداخت دستی</span><?php endif; ?></td>
+					</tr>
 					<?php endforeach; ?>
 					</tbody></table>
+				</div>
+			</div>
+
+			<div id="cptt-bulk-settle-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,.6); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+				<div style="background:#fff; border-radius:18px; max-width:640px; width:100%; padding:24px; box-shadow:0 30px 60px rgba(0,0,0,.3); direction:rtl; display:flex; flex-direction:column; max-height:85vh;">
+					<h3 style="margin:0 0 10px; font-weight:900; color:#0f172a;">📦 تسویه یکجای مراحل انتخاب‌شده</h3>
+					<p style="margin:0 0 14px; color:#475569; font-size:13px;">مبالغ پرداختی برای هر مرحله را تایید یا اصلاح کنید. با تایید نهایی، همه‌ی این موارد تسویه می‌شوند.</p>
+					
+					<div id="cptt-bulk-settle-list" style="overflow-y:auto; flex:1; margin-bottom:16px; border:1px solid #e2e8f0; border-radius:12px;">
+						<!-- Rows will be injected here -->
+					</div>
+
+					<div style="background:#f8fafc; padding:12px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">
+						<span style="font-size:13px; font-weight:800;">جمع کل پرداختی:</span>
+						<b id="cptt-bulk-settle-total" style="font-size:16px; color:#2563eb;">0 تومان</b>
+					</div>
+
+					<div style="display:flex; gap:8px;">
+						<button type="button" id="cptt-bulk-settle-confirm" style="flex:1; padding:12px; border-radius:12px; border:none; background:linear-gradient(135deg,#059669,#10b981); color:#fff; font-weight:900; cursor:pointer;">✓ ثبت و تسویه نهایی همه</button>
+						<button type="button" id="cptt-bulk-settle-cancel" style="padding:12px 20px; border-radius:12px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-weight:800; cursor:pointer;">انصراف</button>
+					</div>
+					<div id="cptt-bulk-settle-msg" style="margin-top:10px; font-size:12px; text-align:center;"></div>
 				</div>
 			</div>
 
@@ -840,8 +923,69 @@ class CPTT_Admin {
 				if(hSearch) hSearch.addEventListener('input', function(){ var q=this.value.toLowerCase(); document.querySelectorAll('.cptt-settled-history-row').forEach(function(r){ r.style.display=((r.dataset.search||'').toLowerCase().indexOf(q)>-1)?'':'none'; }); });
 
 				document.addEventListener('click', function(e){ var c=e.target.closest('.cptt-settle-expert-card'); if(!c) return; document.querySelectorAll('.cptt-settle-expert-card').forEach(function(x){x.classList.remove('is-active')}); c.classList.add('is-active'); var id=c.dataset.expert||''; document.querySelectorAll('.cptt-step-settle-row').forEach(function(r){ r.style.display=(id&&r.dataset.expert===id)?'':'none'; }); });
-				var chkAll=document.getElementById('cptt-settle-check-all'); if(chkAll) chkAll.addEventListener('change', function(){ document.querySelectorAll('.cptt-step-settle-row:not([style*="display: none"]) .cptt-settle-row-check').forEach(function(ch){ ch.checked=chkAll.checked; }); });
-				var bulk=document.getElementById('cptt-bulk-settle-selected'); if(bulk) bulk.addEventListener('click', async function(){ var items=Array.from(document.querySelectorAll('.cptt-settle-row-check:checked')).filter(function(ch){return parseFloat(ch.dataset.amount||'0')>0;}); if(!items.length){alert('هیچ ردیفی انتخاب نشده یا مانده‌ای ندارد.');return;} if(!confirm('تسویه نهایی '+items.length+' مرحله ثبت شود؟')) return; bulk.disabled=true; for (var i=0;i<items.length;i++){ var ch=items[i]; var fd=new FormData(); fd.append('action','cptt_step_settle'); fd.append('nonce',(window.cpttAdminNonce||'')); fd.append('project_id',ch.dataset.projectId); fd.append('step_id',ch.dataset.stepId); fd.append('expert_id',ch.dataset.expertId); fd.append('amount',ch.dataset.amount); fd.append('mode','final'); await fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:fd}); } location.reload(); });
+				var chkAll=document.getElementById('cptt-settle-check-all');
+				if(chkAll) chkAll.addEventListener('change', function(){ document.querySelectorAll('.cptt-step-settle-row:not([style*="display: none"]) .cptt-settle-row-check').forEach(function(ch){ ch.checked=chkAll.checked; }); });
+
+				var bulk=document.getElementById('cptt-bulk-settle-selected');
+				var bulkModal=document.getElementById('cptt-bulk-settle-modal');
+				var bulkList=document.getElementById('cptt-bulk-settle-list');
+				var bulkTotal=document.getElementById('cptt-bulk-settle-total');
+				var bulkConfirm=document.getElementById('cptt-bulk-settle-confirm');
+				var bulkCancel=document.getElementById('cptt-bulk-settle-cancel');
+				var bulkMsg=document.getElementById('cptt-bulk-settle-msg');
+
+				if(bulk) bulk.addEventListener('click', function(){
+					var checked=Array.from(document.querySelectorAll('.cptt-settle-row-check:checked'));
+					if(!checked.length){ alert('هیچ ردیفی انتخاب نشده است.'); return; }
+					
+					var html = ''; var total = 0;
+					checked.forEach(function(ch, idx){
+						var row = ch.closest('tr');
+						var pTitle = row.querySelector('a').textContent;
+						var sTitle = row.querySelector('div').textContent;
+						var amount = parseFloat(ch.dataset.amount || '0');
+						total += amount;
+						html += '<div class="cptt-bulk-row" style="padding:12px; border-bottom:1px solid #f1f5f9; display:grid; grid-template-columns:1fr 140px; gap:10px; align-items:center;" data-pid="'+ch.dataset.projectId+'" data-sid="'+ch.dataset.stepId+'" data-eid="'+ch.dataset.expertId+'">'+
+								'<div><div style="font-weight:800; font-size:12px;">'+pTitle+'</div><div style="font-size:11px; color:#64748b;">'+sTitle+'</div></div>'+
+								'<div><input type="text" class="cptt-bulk-amount cptt-currency-input" value="'+amount.toLocaleString('en-US')+'" style="width:100%; padding:6px 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; text-align:left; direction:ltr;"></div>'+
+								'</div>';
+					});
+					bulkList.innerHTML = html;
+					bulkTotal.textContent = total.toLocaleString('en-US') + ' تومان';
+					bulkModal.style.display = 'flex';
+					bulkMsg.textContent = '';
+				});
+
+				if(bulkCancel) bulkCancel.addEventListener('click', function(){ bulkModal.style.display='none'; });
+				
+				$(document).on('input', '.cptt-bulk-amount', function(){
+					var sum = 0;
+					$('.cptt-bulk-amount').each(function(){ sum += toNum($(this).val()); });
+					bulkTotal.textContent = sum.toLocaleString('en-US') + ' تومان';
+				});
+
+				if(bulkConfirm) bulkConfirm.addEventListener('click', async function(){
+					var rows = Array.from(bulkList.querySelectorAll('.cptt-bulk-row'));
+					if(!rows.length) return;
+					bulkConfirm.disabled = true; bulkMsg.style.color='#475569'; bulkMsg.textContent='در حال تسویه ردیف‌ها (۰ از '+rows.length+')...';
+					
+					for(var i=0; i<rows.length; i++){
+						var r = rows[i];
+						var amount = toNum(r.querySelector('.cptt-bulk-amount').value);
+						var fd = new FormData();
+						fd.append('action','cptt_step_settle');
+						fd.append('nonce', (window.cpttAdminNonce||''));
+						fd.append('project_id', r.dataset.pid);
+						fd.append('step_id', r.dataset.sid);
+						fd.append('expert_id', r.dataset.eid);
+						fd.append('amount', String(amount));
+						fd.append('mode', 'final');
+						bulkMsg.textContent = 'در حال تسویه ردیف‌ها ('+(i+1)+' از '+rows.length+')...';
+						await fetch(ajaxurl, {method:'POST', body:fd});
+					}
+					bulkMsg.style.color='#059669'; bulkMsg.textContent='✅ تمام موارد با موفقیت تسویه شدند. رفرش صفحه...';
+					setTimeout(function(){ location.reload(); }, 800);
+				});
 
 				document.addEventListener('click', function(e){
 					var eb=e.target.closest('.cptt-settle-edit,.cptt-settle-delete'); if(!eb) return;
@@ -2018,7 +2162,7 @@ class CPTT_Admin {
 		$mode       = isset($_POST['mode']) ? sanitize_key($_POST['mode']) : 'final';
 
 		if (!$project_id || $step_id === '') wp_send_json_error('اطلاعات نامعتبر.', 400);
-		if ($amount <= 0) wp_send_json_error('مبلغ نامعتبر.', 400);
+		if ($amount < 0) wp_send_json_error('مبلغ نامعتبر.', 400);
 		if (!in_array($mode, ['final', 'partial'], true)) $mode = 'final';
 
 		$steps = get_post_meta($project_id, '_cptt_steps', true);
