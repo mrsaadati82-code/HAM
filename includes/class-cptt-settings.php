@@ -94,16 +94,6 @@ class CPTT_Settings {
 		register_setting('cptt_settings_group', 'cptt_fields');
 		register_setting('cptt_settings_group', 'cptt_branding_toggles');
 		register_setting('cptt_settings_group', 'cptt_bale_settings');
-		register_setting('cptt_settings_group', 'cptt_currency_settings', [
-			'sanitize_callback' => function($val){
-				if (!is_array($val)) $val = [];
-				$val['unit'] = class_exists('CPTT_Currency') ? CPTT_Currency::sanitize_unit($val['unit'] ?? 'toman') : 'toman';
-				$val['usd_rate'] = max(1, (float)($val['usd_rate'] ?? 700000));
-				$val['eur_rate'] = max(1, (float)($val['eur_rate'] ?? 760000));
-				$val['decimals'] = max(0, min(4, (int)($val['decimals'] ?? 0)));
-				return $val;
-			},
-		]);
 	}
 
 	public function assets($hook) {
@@ -864,7 +854,6 @@ class CPTT_Settings {
 				<aside class="cptt-set-sidebar">
 					<a href="?post_type=cptt_project&page=cptt-settings&tab=style" class="<?php echo $tab==='style'?'is-active':'';?>">استایل و فونت</a>
 					<a href="?post_type=cptt_project&page=cptt-settings&tab=branding" class="<?php echo $tab==='branding'?'is-active':'';?>">برندینگ</a>
-					<a href="?post_type=cptt_project&page=cptt-settings&tab=currency" class="<?php echo $tab==='currency'?'is-active':'';?>">💰 واحد مالی</a>
 					<a href="?post_type=cptt_project&page=cptt-settings&tab=fields" class="<?php echo $tab==='fields'?'is-active':'';?>">تنظیمات فیلدها</a>
 					<a href="?post_type=cptt_project&page=cptt-settings&tab=advanced" class="<?php echo $tab==='advanced'?'is-active':'';?>">تنظیمات سیستمی</a>
 					<a href="?post_type=cptt_project&page=cptt-settings&tab=bale" class="<?php echo $tab==='bale'?'is-active':'';?>">ربات بله</a>
@@ -1081,44 +1070,6 @@ class CPTT_Settings {
 										</label>
 									</div>
 									<?php endforeach; ?>
-								</div>
-							</div>
-						<?php elseif ($tab === 'currency'):
-							$cur = class_exists('CPTT_Currency') ? CPTT_Currency::get_settings() : ['unit'=>'toman','usd_rate'=>700000,'eur_rate'=>760000,'decimals'=>0];
-						?>
-							<div class="cptt-set-grid">
-								<div class="cptt-set-field" style="grid-column:1/-1;background:linear-gradient(135deg,#eef2ff,#fdf2f8);padding:14px;border-radius:14px;border:1px solid #c7d2fe">
-									<b>💰 واحد مالی نمایش</b>
-									<p style="color:#475569;font-size:12.5px;line-height:1.8;margin:6px 0 0">واحد مالی پیش‌فرض برای نمایش مبالغ در سراسر پلاگین. تمام برچسب‌های «تومان/ریال» و اعداد به‌صورت خودکار به این واحد تبدیل می‌شوند. مقادیر ذخیره‌شده در دیتابیس تغییر نمی‌کنند و فقط در نمایش تبدیل می‌شوند (بنابراین در هر زمان می‌توانید واحد را عوض کنید).</p>
-								</div>
-								<div class="cptt-set-field">
-									<label>واحد پولی پیش‌فرض</label>
-									<select name="cptt_currency_settings[unit]">
-										<option value="toman" <?php selected($cur['unit'],'toman');?>>تومان (پیش‌فرض)</option>
-										<option value="rial"  <?php selected($cur['unit'],'rial');?>>ریال</option>
-										<option value="usd"   <?php selected($cur['unit'],'usd');?>>دلار ($)</option>
-										<option value="eur"   <?php selected($cur['unit'],'eur');?>>یورو (€)</option>
-									</select>
-								</div>
-								<div class="cptt-set-field">
-									<label>نرخ هر ۱ دلار (به تومان)</label>
-									<input type="number" min="1" step="any" name="cptt_currency_settings[usd_rate]" value="<?php echo esc_attr($cur['usd_rate']); ?>">
-								</div>
-								<div class="cptt-set-field">
-									<label>نرخ هر ۱ یورو (به تومان)</label>
-									<input type="number" min="1" step="any" name="cptt_currency_settings[eur_rate]" value="<?php echo esc_attr($cur['eur_rate']); ?>">
-								</div>
-								<div class="cptt-set-field">
-									<label>تعداد ارقام اعشار (نمایش)</label>
-									<input type="number" min="0" max="4" name="cptt_currency_settings[decimals]" value="<?php echo esc_attr($cur['decimals']); ?>">
-								</div>
-								<div class="cptt-set-field" style="grid-column:1/-1;background:#fef3c7;border:1px solid #fde68a;padding:12px;border-radius:12px">
-									<b style="color:#92400e">⚙️ مثال تبدیل:</b>
-									<p style="color:#78350f;font-size:12.5px;line-height:1.9;margin:6px 0 0">مبلغ ۳۵٬۰۰۰ تومان در دیتابیس:<br>
-									• حالت <b>تومان</b>: ۳۵٬۰۰۰ تومان<br>
-									• حالت <b>ریال</b>: ۳۵۰٬۰۰۰ ریال<br>
-									• حالت <b>دلار</b> (نرخ ۷۰۰٬۰۰۰): ۰٫۰۵ دلار<br>
-									• حالت <b>یورو</b> (نرخ ۷۶۰٬۰۰۰): ۰٫۰۵ یورو</p>
 								</div>
 							</div>
 						<?php elseif ($tab === 'fields'): 

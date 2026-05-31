@@ -1331,7 +1331,7 @@ class CPTT_Bale {
 		$d = $state['d']; $d['tpl_id'] = (int)$tpl_id;
 		$this->set_state($chat_id, 'wiz_cp_cost', $d);
 		$this->edit_or_send($chat_id, $msg_id,
-			"💰 *مرحله ۴ از ۵*\n\n*هزینه کل پروژه* (<?php echo CPTT_Core::currency_label(); ?>) را ارسال کنید.\nبرای پروژه‌ی رایگان عدد `0` بفرستید.",
+			"💰 *مرحله ۴ از ۵*\n\n*هزینه کل پروژه* (تومان) را ارسال کنید.\nبرای پروژه‌ی رایگان عدد `0` بفرستید.",
 			$this->kb_cancel()
 		);
 	}
@@ -1776,10 +1776,32 @@ class CPTT_Bale {
 	}
 	private function customer_payments($chat_id, $msg_id, $user) {
 		$projects = get_posts(['post_type'=>'cptt_project','post_status'=>'any','numberposts'=>20,'meta_key'=>'_cptt_client_user_id','meta_value'=>(int)$user->ID]);
-		$rows=[]; $txt="💳 *پرداخت بدهی پروژه‌ها*\n\n";
-		foreach($projects as $p){ $steps=get_post_meta($p->ID,'_cptt_steps',true); $remain=0; if(is_array($steps)) foreach($steps as $st) $remain += max(0,(float)($st['cost']??0)-(float)($st['paid']??0)); if($remain>0){ $txt.='• '.get_the_title($p).' — '.number_format($remain)." تومان\n"; if(class_exists('CPTT_Payment')) $rows[]=[['text'=>'پرداخت '.get_the_title($p),'url'=>CPTT_Payment::payment_url($p->ID,$remain)]]; } }
-		if(empty($rows)) $txt.="✅ بدهی فعالی ندارید.";
-		$this->edit_or_send($chat_id,$msg_id,$txt, ['inline_keyboard'=>array_merge($rows, [[['text'=>'🏠 منو','callback_data'=>'back_to_menu']]])]);
+		$rows=[];
+		$total_remain = 0;
+		$txt = "💳 *مرکز پرداخت بدهی‌ها*\n\n";
+		foreach($projects as $p){
+			$steps=get_post_meta($p->ID,'_cptt_steps',true); $remain=0;
+			if(is_array($steps)) foreach($steps as $st) $remain += max(0,(float)($st['cost']??0)-(float)($st['paid']??0));
+			if($remain>0){
+				$total_remain += $remain;
+				$code = class_exists('CPTT_Core') ? CPTT_Core::get_project_code($p->ID) : $p->ID;
+				$txt .= "📁 *" . get_the_title($p) . "*\n";
+				$txt .= "   💰 بدهی: " . number_format($remain) . " تومان\n";
+				$txt .= "   🔖 شناسه: #" . $code . "\n\n";
+				if(class_exists('CPTT_Payment')) {
+					$rows[] = [[
+						'text' => '💳 پرداخت ' . mb_substr(get_the_title($p), 0, 22, 'UTF-8') . ' • ' . number_format($remain) . ' ت',
+						'url'  => CPTT_Payment::payment_url($p->ID, $remain),
+					]];
+				}
+			}
+		}
+		if(empty($rows)) {
+			$txt = "💳 *مرکز پرداخت*\n\n✅ تبریک! بدهی فعالی ندارید.\n\nهمه پروژه‌های شما تسویه شده‌اند 🎉";
+		} else {
+			$txt .= "━━━━━━━━━━━━━━━━━━\n💵 *جمع کل بدهی:* " . number_format($total_remain) . " تومان\n\nبا کلیک روی هر دکمه به صفحه‌ی پرداخت امن منتقل می‌شوید 👇";
+		}
+		$this->edit_or_send($chat_id, $msg_id, $txt, ['inline_keyboard'=>array_merge($rows, [[['text'=>'🏠 منو','callback_data'=>'back_to_menu']]])]);
 	}
 
 	public function cron_weekly_report() {

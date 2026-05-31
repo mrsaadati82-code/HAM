@@ -383,8 +383,8 @@ class CPTT_Analytics {
 				<div class="cptt-an-kpi"><div class="cptt-an-kpi__icon">✅</div><div class="cptt-an-kpi__value"><?php echo number_format($g_completed); ?></div><div class="cptt-an-kpi__label">تکمیل شده</div></div>
 				<div class="cptt-an-kpi"><div class="cptt-an-kpi__icon">📋</div><div class="cptt-an-kpi__value"><?php echo number_format($g_done_steps); ?>/<?php echo number_format($g_steps); ?></div><div class="cptt-an-kpi__label">مراحل انجام‌شده</div></div>
 				<div class="cptt-an-kpi"><div class="cptt-an-kpi__icon">⚠️</div><div class="cptt-an-kpi__value"><?php echo number_format($g_overdue); ?></div><div class="cptt-an-kpi__label">مراحل عقب‌افتاده</div></div>
-				<div class="cptt-an-kpi"><div class="cptt-an-kpi__icon">💰</div><div class="cptt-an-kpi__value"><?php echo number_format($g_cost); ?></div><div class="cptt-an-kpi__label">کل هزینه (<?php echo CPTT_Core::currency_label(); ?>)</div></div>
-				<div class="cptt-an-kpi"><div class="cptt-an-kpi__icon"><?php echo $g_remain > 0 ? '📊' : '💚'; ?></div><div class="cptt-an-kpi__value" style="color:<?php echo $g_remain > 0 ? '#dc2626' : '#059669'; ?>"><?php echo number_format($g_remain); ?></div><div class="cptt-an-kpi__label">مانده کل (<?php echo CPTT_Core::currency_label(); ?>)</div></div>
+				<div class="cptt-an-kpi"><div class="cptt-an-kpi__icon">💰</div><div class="cptt-an-kpi__value"><?php echo number_format($g_cost); ?></div><div class="cptt-an-kpi__label">کل هزینه (ریال)</div></div>
+				<div class="cptt-an-kpi"><div class="cptt-an-kpi__icon"><?php echo $g_remain > 0 ? '📊' : '💚'; ?></div><div class="cptt-an-kpi__value" style="color:<?php echo $g_remain > 0 ? '#dc2626' : '#059669'; ?>"><?php echo number_format($g_remain); ?></div><div class="cptt-an-kpi__label">مانده کل (ریال)</div></div>
 			</div>
 
 

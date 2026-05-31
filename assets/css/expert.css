@@ -4902,10 +4902,3 @@ body.cptt-dark .cptt-expert-analytics-section *{border-color:#334155!important}
 .cptt-expert-step__toggleMain strong .cptt-step-toggle-avatars{display:inline-flex!important;align-items:center!important;gap:0!important;vertical-align:middle!important;line-height:1!important;white-space:nowrap!important;overflow:visible!important;flex:0 0 auto!important;width:auto!important;max-width:none!important;height:30px!important;min-height:30px!important}
 .cptt-expert-step__toggleMain strong .cptt-step-toggle-avatars img{display:inline-block!important;width:30px!important;height:30px!important;min-width:30px!important;max-width:30px!important;min-height:30px!important;max-height:30px!important;aspect-ratio:1/1!important;border-radius:999px!important;object-fit:cover!important;flex:0 0 30px!important;overflow:hidden!important;margin-inline-start:-7px!important;box-sizing:border-box!important}
 .cptt-expert-step__toggleMain strong .cptt-step-toggle-avatars img:first-child{margin-inline-start:0!important}
-
-/* v5.5.0 — دکمه + برای افزودن محصول به بودجه‌بندی */
-.cptt-add-plus-btn{width:42px;height:42px;min-width:42px;border-radius:12px;border:0;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:22px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 6px 14px -4px rgba(79,70,229,.4);font-family:inherit;line-height:1}
-.cptt-add-plus-btn:hover{transform:scale(1.05);box-shadow:0 10px 22px -6px rgba(79,70,229,.5)}
-.cptt-add-plus-btn:active{transform:scale(.95)}
-.cptt-add-plus-btn.is-added{background:linear-gradient(135deg,#16a34a,#22c55e);transform:scale(1.1)}
-

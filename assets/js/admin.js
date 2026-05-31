@@ -752,12 +752,6 @@ jQuery(function($){
   };
   var oldFilter = window.cpttAcctFilterHooked;
   $(document).on('input change', '#cptt-acct-from,#cptt-acct-to', function(){ $('#cptt-acct-search').trigger('input'); });
-  $(document).on('click', '#cptt-acct-excel', function(){
-    var rows=[['عنوان پروژه','مشتری','موبایل','تاریخ ایجاد','کل هزینه','دریافتی','طلب از مشتری','سود ناخالص']];
-    visibleAcctRows().each(function(){ var $r=$(this); rows.push([$r.find('.cptt-acct-title').text().trim(),$r.find('td').eq(1).text().trim(),$r.attr('data-phone')||'',$r.attr('data-created')||'',$r.attr('data-cost')||0,$r.attr('data-paid')||0,$r.attr('data-remain')||0,$r.attr('data-profit')||0]); });
-    var csv='\ufeff'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
-    var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})); a.download='cptt-finance-report.csv'; a.click();
-  });
-  $(document).on('click', '#cptt-acct-pdf', function(){ $('#cptt-acct-print').trigger('click'); setTimeout(function(){ try{ window.print(); }catch(e){} },500); });
+  // v5.4.17: دکمه‌های اکسل/PDF از UI حذف شدند (طبق درخواست). handlerها نگه‌داشته نشدند.
   setTimeout(window.cpttRenderAccountingCharts, 300);
 });

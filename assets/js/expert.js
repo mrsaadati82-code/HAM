@@ -2198,15 +2198,15 @@
 
       // ذخیره در hidden inputها
       if (modal._hiddenInput) { modal._hiddenInput.value = val; }
+      var stepId = modal._stepEl ? (modal._stepEl.getAttribute('data-step-id') || '') : '';
       if (modal._stepEl) {
         var list = modal._stepEl.querySelector('.cptt-step-expert-hidden-list');
         if (list) {
-          var stepId = modal._stepEl.getAttribute('data-step-id') || '';
           list.innerHTML = vals.map(function(v){ return '<input type="hidden" name="steps[' + escH(stepId) + '][assigned_expert_ids][]" value="' + escH(v) + '">'; }).join('');
         }
       }
 
-      // آپدیت متن دکمه
+      // آپدیت متن دکمه + آواتارها کنار عنوان
       if (modal._stepEl) {
         var dispBtn = modal._stepEl.querySelector('.cptt-step-expert-btn');
         if (dispBtn) {
@@ -2214,19 +2214,55 @@
             var names = vals.map(function(v){ var found = experts.filter(function(ex){ return String(ex.id)===String(v); }); return found.length ? found[0].name : v; });
             dispBtn.textContent = '👥 ' + names.join('، ');
             dispBtn.classList.add('has-expert');
-            var titleStrong = modal._stepEl.querySelector('.cptt-expert-step__toggleMain strong');
-            if (titleStrong) {
-              var oldAv = titleStrong.querySelector('.cptt-step-toggle-avatars'); if (oldAv) oldAv.remove();
-              var avWrap = document.createElement('span'); avWrap.className = 'cptt-step-toggle-avatars';
-              vals.forEach(function(v){ var found = experts.filter(function(ex){ return String(ex.id)===String(v); })[0]; if(found && found.avatar){ var img=document.createElement('img'); img.src=found.avatar; img.alt=''; avWrap.appendChild(img); } });
-              if (avWrap.children.length) titleStrong.appendChild(avWrap);
-            }
           } else {
             dispBtn.textContent = '👥 انتخاب کارشناسان مرحله';
             dispBtn.classList.remove('has-expert');
           }
         }
+        var titleStrong = modal._stepEl.querySelector('.cptt-expert-step__toggleMain strong');
+        if (titleStrong) {
+          var oldAv = titleStrong.querySelector('.cptt-step-toggle-avatars'); if (oldAv) oldAv.remove();
+          if (vals.length) {
+            var avWrap = document.createElement('span'); avWrap.className = 'cptt-step-toggle-avatars';
+            vals.forEach(function(v){ var found = experts.filter(function(ex){ return String(ex.id)===String(v); })[0]; if(found && found.avatar){ var img=document.createElement('img'); img.src=found.avatar; img.alt=''; avWrap.appendChild(img); } });
+            if (avWrap.children.length) titleStrong.appendChild(avWrap);
+          }
+        }
       }
+
+      // ✅ v5.4.17: ذخیره فوری انتخاب کارشناسان مرحله در سرور (auto-save)
+      // تا حتی اگر کاربر کل پروژه را Save نکند، آواتار کنار عنوان بعد رفرش بماند.
+      try {
+        var card = modal._stepEl ? modal._stepEl.closest('.cptt-expertCard') : null;
+        var projectId = card ? card.getAttribute('data-project-id') : '';
+        if (projectId && stepId && window.CPTT_EXPERT && CPTT_EXPERT.ajax) {
+          var fd = new FormData();
+          fd.append('action', 'cptt_expert_save_step_experts');
+          fd.append('nonce', CPTT_EXPERT.nonce || '');
+          fd.append('project_id', projectId);
+          fd.append('step_id', stepId);
+          if (vals.length) {
+            vals.forEach(function(v){ fd.append('expert_ids[]', v); });
+          } else {
+            fd.append('expert_ids[]', '');
+          }
+          fetch(CPTT_EXPERT.ajax, { method:'POST', credentials:'same-origin', body: fd })
+            .then(function(r){ return r.json(); })
+            .then(function(j){
+              if (!j || !j.success) return;
+              // در صورت نیاز آواتار را با پاسخ سرور هم به‌روزرسانی کن
+              var avs = (j.data && j.data.avatars) ? j.data.avatars : null;
+              if (!avs || !avs.length || !modal._stepEl) return;
+              var titleStrong2 = modal._stepEl.querySelector('.cptt-expert-step__toggleMain strong');
+              if (!titleStrong2) return;
+              var oldAv2 = titleStrong2.querySelector('.cptt-step-toggle-avatars'); if (oldAv2) oldAv2.remove();
+              var wrap2 = document.createElement('span'); wrap2.className = 'cptt-step-toggle-avatars';
+              avs.forEach(function(a){ if (a && a.avatar) { var img = document.createElement('img'); img.src = a.avatar; img.alt = a.name || ''; img.title = a.name || ''; wrap2.appendChild(img); } });
+              if (wrap2.children.length) titleStrong2.appendChild(wrap2);
+            })
+            .catch(function(){ /* silent */ });
+        }
+      } catch(e) {}
 
       modal.setAttribute('hidden','');
       document.body.style.overflow='';

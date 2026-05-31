@@ -535,7 +535,7 @@ class CPTT_Admin {
 					<div class="cptt-acct-kpi__body">
 						<div class="cptt-acct-kpi__label">کل هزینه</div>
 						<div class="cptt-acct-kpi__value"><?php echo number_format($total_cost_all); ?></div>
-						<small><?php echo CPTT_Core::currency_label(); ?></small>
+						<small>تومان</small>
 					</div>
 				</div>
 				<div class="cptt-acct-kpi">
@@ -543,7 +543,7 @@ class CPTT_Admin {
 					<div class="cptt-acct-kpi__body">
 						<div class="cptt-acct-kpi__label">کل دریافتی</div>
 						<div class="cptt-acct-kpi__value"><?php echo number_format($total_paid_all); ?></div>
-						<small><?php echo CPTT_Core::currency_label(); ?></small>
+						<small>تومان</small>
 					</div>
 				</div>
 				<div class="cptt-acct-kpi <?php echo $total_remain_all>0?'is-remain':'is-done'; ?>">
@@ -551,7 +551,7 @@ class CPTT_Admin {
 					<div class="cptt-acct-kpi__body">
 						<div class="cptt-acct-kpi__label">طلب از مشتریان</div>
 						<div class="cptt-acct-kpi__value"><?php echo number_format($total_remain_all); ?></div>
-						<small><?php echo CPTT_Core::currency_label(); ?></small>
+						<small>تومان</small>
 					</div>
 				</div>
 				<div class="cptt-acct-kpi">
@@ -585,7 +585,6 @@ class CPTT_Admin {
 				<label>وضعیت مالی<select id="cptt-acct-settled"><option value="">همه</option><option value="1">تسویه شده</option><option value="0">تسویه نشده</option></select></label>
 				<label>وضعیت پروژه<select id="cptt-acct-status"><option value="">همه</option><option value="completed">تکمیل شده</option><option value="in_progress">در حال انجام</option></select></label><label>از تاریخ<input type="date" id="cptt-acct-from"></label><label>تا تاریخ<input type="date" id="cptt-acct-to"></label>
 				<button type="button" class="button" id="cptt-acct-reset">پاک کردن</button>
-				<?php /* v5.5.0: دکمه‌های Excel و PDF بر اساس درخواست حذف شدند */ ?>
 				<button type="button" class="button" id="cptt-acct-print" style="background:#059669; border-color:#059669; color:#fff; font-weight:bold; margin-right:5px; height:30px; align-self:end;">🖨 چاپ گزارش مالی</button>
 				<button type="button" class="cptt-debtors-trigger" id="cptt-acct-debtors">👥 لیست بدهکاران <span class="cptt-debtors-count" id="cptt-debtors-count-badge">0</span></button>
 			</div>
@@ -702,10 +701,10 @@ class CPTT_Admin {
 			<h2 style="margin-top:40px; font-weight:950; color:#0f172a; font-size:18px;">💼 تسویه مراحل با کارشناسان</h2>
 			<p style="color:#64748b; margin-top:4px; margin-bottom:8px; font-size:12px;">برای هر مرحله‌ای که دریافتی دارد می‌توانید با کلیک روی «تسویه»، مبلغ پرداختی به کارشناس را تعیین کنید. اگر «تسویه نهایی» بزنید، باقی‌مانده به دریافتی‌های مدیر سایت منتقل و مرحله تسویه‌شده ثبت می‌شود.</p>
 			<div style="display:flex; gap:10px; flex-wrap:wrap; margin:8px 0 14px;">
-				<div class="cptt-acct-kpi" style="flex:1; min-width:160px;"><div class="cptt-acct-kpi__body"><div class="cptt-acct-kpi__label">جمع دریافتی مراحل</div><div class="cptt-acct-kpi__value" style="font-size:16px;"><?php echo CPTT_Core::money($sum_paid); ?></div></div></div>
-				<div class="cptt-acct-kpi" style="flex:1; min-width:160px;"><div class="cptt-acct-kpi__body"><div class="cptt-acct-kpi__label">سهم تسویه‌شده به مدیر</div><div class="cptt-acct-kpi__value" style="font-size:16px; color:#15803d;"><?php echo CPTT_Core::money($sum_to_admin); ?></div></div></div>
-				<div class="cptt-acct-kpi" style="flex:1; min-width:160px;"><div class="cptt-acct-kpi__body"><div class="cptt-acct-kpi__label">سهم تسویه‌شده به کارشناسان</div><div class="cptt-acct-kpi__value" style="font-size:16px; color:#2563eb;"><?php echo CPTT_Core::money($sum_to_expert); ?></div></div></div>
-				<div class="cptt-acct-kpi" style="flex:1; min-width:160px;"><div class="cptt-acct-kpi__body"><div class="cptt-acct-kpi__label">پرداخت به کارشناس بدون تسویه نهایی</div><div class="cptt-acct-kpi__value" style="font-size:16px; color:#b45309;"><?php echo CPTT_Core::money($sum_unsettled_to_expert); ?></div></div></div>
+				<div class="cptt-acct-kpi" style="flex:1; min-width:160px;"><div class="cptt-acct-kpi__body"><div class="cptt-acct-kpi__label">جمع دریافتی مراحل</div><div class="cptt-acct-kpi__value" style="font-size:16px;"><?php echo number_format($sum_paid); ?> <small>تومان</small></div></div></div>
+				<div class="cptt-acct-kpi" style="flex:1; min-width:160px;"><div class="cptt-acct-kpi__body"><div class="cptt-acct-kpi__label">سهم تسویه‌شده به مدیر</div><div class="cptt-acct-kpi__value" style="font-size:16px; color:#15803d;"><?php echo number_format($sum_to_admin); ?> <small>تومان</small></div></div></div>
+				<div class="cptt-acct-kpi" style="flex:1; min-width:160px;"><div class="cptt-acct-kpi__body"><div class="cptt-acct-kpi__label">سهم تسویه‌شده به کارشناسان</div><div class="cptt-acct-kpi__value" style="font-size:16px; color:#2563eb;"><?php echo number_format($sum_to_expert); ?> <small>تومان</small></div></div></div>
+				<div class="cptt-acct-kpi" style="flex:1; min-width:160px;"><div class="cptt-acct-kpi__body"><div class="cptt-acct-kpi__label">پرداخت به کارشناس بدون تسویه نهایی</div><div class="cptt-acct-kpi__value" style="font-size:16px; color:#b45309;"><?php echo number_format($sum_unsettled_to_expert); ?> <small>تومان</small></div></div></div>
 			</div>
 
 			<?php $settle_experts = []; foreach (get_users(['role__in'=>['cptt_expert','administrator']]) as $_eu) { $settle_experts[(int)$_eu->ID]=['name'=>$_eu->display_name,'count'=>0,'remain'=>0]; } foreach ($step_settlement_rows as $_sr) { if (!empty($_sr['settled'])) continue; $eid=(int)$_sr['expert_id']; if(!$eid) continue; if(!isset($settle_experts[$eid])) $settle_experts[$eid]=['name'=>$_sr['expert_name'],'count'=>0,'remain'=>0]; $settle_experts[$eid]['count']++; $settle_experts[$eid]['remain'] += max(0, (float)$_sr['paid'] - (float)$_sr['exp_to_expert']); } ?>
@@ -723,7 +722,7 @@ class CPTT_Admin {
 						<tr>
 							<th style="width:34px"><input type="checkbox" id="cptt-settle-check-all"></th><th>پروژه / مرحله</th>
 							<th>کارشناس</th>
-							<th style="text-align:left">دریافتی مرحله (<?php echo CPTT_Core::currency_label(); ?>)</th>
+							<th style="text-align:left">دریافتی مرحله (تومان)</th>
 							<th style="text-align:left">پرداخت به کارشناس</th>
 							<th style="text-align:left">سهم مدیر</th>
 							<th>وضعیت</th>
@@ -799,7 +798,7 @@ class CPTT_Admin {
 						<div style="display:flex; justify-content:space-between; font-size:13px;"><span>قبلاً به کارشناس پرداخت‌شده:</span><b id="cptt-step-settle-already" style="color:#2563eb;">0</b></div>
 					</div>
 
-					<label style="display:block; font-weight:800; margin-bottom:6px; color:#0f172a; font-size:13px;">پرداخت به کارشناس (<?php echo CPTT_Core::currency_label(); ?>)</label>
+					<label style="display:block; font-weight:800; margin-bottom:6px; color:#0f172a; font-size:13px;">پرداخت به کارشناس (تومان)</label>
 					<input type="text" id="cptt-step-settle-amount" class="cptt-currency-input" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px;" placeholder="مثلا 250000" />
 					<div style="margin-top:6px; font-size:11px; color:#64748b;">با «تسویه نهایی» مابقی به دریافتی‌های مدیر می‌رود و مرحله بسته می‌شود. با «ثبت پرداختی» فقط مبلغ کارشناس ثبت می‌شود و مرحله باز می‌ماند.</div>
 
@@ -948,11 +947,11 @@ class CPTT_Admin {
 						</div>
 						<div>
 							<span>کل بدهی</span>
-							<strong class="num-total"><?php echo number_format_i18n((int)$debtors_total_remain); ?> <small style="font-weight:700; font-size:10px; color:#94a3b8;"><?php echo CPTT_Core::currency_label(); ?></small></strong>
+							<strong class="num-total"><?php echo number_format_i18n((int)$debtors_total_remain); ?> <small style="font-weight:700; font-size:10px; color:#94a3b8;">تومان</small></strong>
 						</div>
 						<div>
 							<span>میانگین بدهی هر نفر</span>
-							<strong><?php echo $debtors_count ? number_format_i18n((int)round($debtors_total_remain / $debtors_count)) : '0'; ?> <small style="font-weight:700; font-size:10px; color:#94a3b8;"><?php echo CPTT_Core::currency_label(); ?></small></strong>
+							<strong><?php echo $debtors_count ? number_format_i18n((int)round($debtors_total_remain / $debtors_count)) : '0'; ?> <small style="font-weight:700; font-size:10px; color:#94a3b8;">تومان</small></strong>
 						</div>
 					</div>
 
@@ -1341,8 +1340,8 @@ class CPTT_Admin {
 							<div class="cptt-stepCard__billing">
 								<div class="cptt-fieldLabel">حساب و کتاب مرحله</div>
 								<div class="cptt-billing-row" style="grid-template-columns: repeat(4, 1fr) !important; gap:10px !important;">
-									<label>هزینه (<?php echo CPTT_Core::currency_label(); ?>) <input type="text" name="cptt_steps[<?php echo esc_attr($i); ?>][cost]" value="<?php echo esc_attr(number_format($step['cost']??0)); ?>" class="cptt-step-cost cptt-currency-input" step="any" /></label>
-									<label>دریافتی (<?php echo CPTT_Core::currency_label(); ?>) <input type="text" name="cptt_steps[<?php echo esc_attr($i); ?>][paid]" value="<?php echo esc_attr(number_format($step['paid']??0)); ?>" class="cptt-step-paid cptt-currency-input" step="any" /></label>
+									<label>هزینه (تومان) <input type="text" name="cptt_steps[<?php echo esc_attr($i); ?>][cost]" value="<?php echo esc_attr(number_format($step['cost']??0)); ?>" class="cptt-step-cost cptt-currency-input" step="any" /></label>
+									<label>دریافتی (تومان) <input type="text" name="cptt_steps[<?php echo esc_attr($i); ?>][paid]" value="<?php echo esc_attr(number_format($step['paid']??0)); ?>" class="cptt-step-paid cptt-currency-input" step="any" /></label>
 									<?php /* v5.4.3: فیلدهای سهم/پرداختی کارشناس از UI متاباکس حذف شدند؛ این مقادیر در صفحه‌ی «حساب و کتاب» مدیریت می‌شوند. مقادیر فعلی به‌صورت hidden حفظ می‌شوند. */ ?>
 									<input type="hidden" name="cptt_steps[<?php echo esc_attr($i); ?>][expert_share]" value="<?php echo esc_attr((float)($step['expert_share']??0)); ?>" />
 									<input type="hidden" name="cptt_steps[<?php echo esc_attr($i); ?>][expert_paid]" value="<?php echo esc_attr((float)($step['expert_paid']??0)); ?>" />
@@ -1444,8 +1443,8 @@ class CPTT_Admin {
 							<div class="cptt-stepCard__billing">
 								<div class="cptt-fieldLabel">حساب و کتاب مرحله</div>
 								<div class="cptt-billing-row" style="grid-template-columns: repeat(4, 1fr) !important; gap:10px !important;">
-									<label>هزینه (<?php echo CPTT_Core::currency_label(); ?>) <input type="text" name="cptt_steps[{{i}}][cost]" value="0" class="cptt-step-cost cptt-currency-input" step="any" /></label>
-									<label>دریافتی (<?php echo CPTT_Core::currency_label(); ?>) <input type="text" name="cptt_steps[{{i}}][paid]" value="0" class="cptt-step-paid cptt-currency-input" step="any" /></label>
+									<label>هزینه (تومان) <input type="text" name="cptt_steps[{{i}}][cost]" value="0" class="cptt-step-cost cptt-currency-input" step="any" /></label>
+									<label>دریافتی (تومان) <input type="text" name="cptt_steps[{{i}}][paid]" value="0" class="cptt-step-paid cptt-currency-input" step="any" /></label>
 									<?php /* v5.4.3: حذف فیلدها از تمپلیت مرحله‌ی جدید */ ?>
 									<input type="hidden" name="cptt_steps[{{i}}][expert_share]" value="0" />
 									<input type="hidden" name="cptt_steps[{{i}}][expert_paid]" value="0" />

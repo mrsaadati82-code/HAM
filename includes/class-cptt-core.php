@@ -260,16 +260,6 @@ class CPTT_Core {
 			'public'=>false,'show_ui'=>false,'show_in_menu'=>false,'supports'=>['title'],'has_archive'=>false,'show_in_rest'=>false,
 		]);
 
-		register_post_type('cptt_payment_txn', [
-			'labels' => ['name'=>'تراکنش‌های پرداخت','singular_name'=>'تراکنش','menu_name'=>'تراکنش‌ها'],
-			'public'=>false,'show_ui'=>false,'show_in_menu'=>false,'supports'=>['title'],'has_archive'=>false,'show_in_rest'=>false,
-		]);
-
-		register_post_type('cptt_order_form', [
-			'labels' => ['name'=>'فرم‌های سفارش','singular_name'=>'فرم سفارش','menu_name'=>'فرم‌های سفارش'],
-			'public'=>false,'show_ui'=>false,'show_in_menu'=>false,'supports'=>['title'],'has_archive'=>false,'show_in_rest'=>false,
-		]);
-
 				register_post_type('cptt_checklist_tpl', [
 			'labels' => [
 				'name' => 'تمپلیت چک‌لیست','singular_name' => 'تمپلیت چک‌لیست','add_new_item' => 'افزودن تمپلیت چک‌لیست',
@@ -468,22 +458,6 @@ class CPTT_Core {
 		for ($i = 1; $i <= 12; $i++) { if ($gd <= $sal_a[$i]) { $gm = $i; break; } $gd -= $sal_a[$i]; }
 		return [$gy, $gm, (int)$gd];
 	}
-	/**
-	 * v5.5.0: helper نمایش مبلغ (تبدیل خودکار به واحد جاری).
-	 * $amount مبلغ تومان است (پایه دیتابیس).
-	 */
-	public static function money($amount, $with_label = true) {
-		if (class_exists('CPTT_Currency')) {
-			return CPTT_Currency::format($amount, $with_label);
-		}
-		$n = number_format((float)$amount);
-		return $with_label ? ($n . ' تومان') : $n;
-	}
-
-	public static function currency_label() {
-		return class_exists('CPTT_Currency') ? CPTT_Currency::label() : 'تومان';
-	}
-
 	public static function gregorian_to_jalali($gy, $gm, $gd) {
 		$g_d_m = [0,31,59,90,120,151,181,212,243,273,304,334];
 		$gy2 = ($gm > 2) ? ($gy + 1) : $gy;

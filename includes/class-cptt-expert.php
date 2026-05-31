@@ -35,6 +35,7 @@ class CPTT_Expert {
 		add_action('edit_user_profile_update', [$this, 'save_expert_profile_fields']);
 		add_action('wp_ajax_cptt_expert_save_project', [$this, 'ajax_save_project']);
 		add_action('wp_ajax_cptt_expert_update_step_status', [$this, 'ajax_update_step_status']);
+		add_action('wp_ajax_cptt_expert_save_step_experts', [$this, 'ajax_save_step_experts']);
 		add_action('wp_ajax_cptt_expert_create_project', [$this, 'ajax_create_project']);
 		add_action('wp_ajax_cptt_expert_create_customer', [$this, 'ajax_create_customer']);
 		add_action('wp_ajax_cptt_expert_send_message', [$this, 'ajax_send_message']);
@@ -402,7 +403,7 @@ class CPTT_Expert {
 					];
 				}
 			}
-			$out[$step_id] = [
+			$normalized = [
 				'status' => $status,
 				'title' => sanitize_text_field($row['title'] ?? ''),
 				'desc' => wp_kses_post($row['desc'] ?? ''),
@@ -413,9 +414,16 @@ class CPTT_Expert {
 				'expert_paid' => isset($row['expert_paid']) ? (float)str_replace(",", "", (string)$row['expert_paid']) : 0,
 				'checklist' => $checklist,
 				'user_tasks' => $user_tasks,
-				'assigned_expert_id' => isset($row['assigned_expert_id']) ? absint($row['assigned_expert_id']) : 0,
-				'assigned_expert_ids' => isset($row['assigned_expert_ids']) && is_array($row['assigned_expert_ids']) ? array_values(array_filter(array_unique(array_map('absint', $row['assigned_expert_ids'])))) : [],
 			];
+			// v5.4.17: فقط در صورتی که assigned_expert_ids واقعاً در فرم set شده باشد، آن را اعمال می‌کنیم
+			// در غیر اینصورت در save_expert_project از مقدار قدیمی استفاده می‌شود تا انتخاب کارشناسان مرحله پاک نشود.
+			if (isset($row['assigned_expert_ids']) && is_array($row['assigned_expert_ids'])) {
+				$normalized['assigned_expert_ids'] = array_values(array_filter(array_unique(array_map('absint', $row['assigned_expert_ids']))));
+			}
+			if (isset($row['assigned_expert_id'])) {
+				$normalized['assigned_expert_id'] = absint($row['assigned_expert_id']);
+			}
+			$out[$step_id] = $normalized;
 		}
 		return $out;
 	}
@@ -674,8 +682,10 @@ class CPTT_Expert {
 					'status' => $status,
 					'title' => $title,
 					'desc' => $desc,
-					'unit_price' => isset($unit_price) ? $unit_price : 0,
-					'qty' => isset($qty) ? $qty : 1,
+					'unit_price' => $fee,
+					'qty' => $qty,
+					'unit_price' => $unit_price,
+					'qty' => $qty,
 					'cost' => $cost,
 					'paid' => $paid,
 					'expert_share' => $expert_share,
@@ -823,6 +833,54 @@ class CPTT_Expert {
 		$progress = $this->progress_data($project_id);
 		update_post_meta($project_id, '_cptt_progress_status_cache', $progress['status']);
 		wp_send_json_success(['progress' => $progress]);
+	}
+
+	/**
+	 * v5.4.17: ذخیره فوری انتخاب کارشناسان یک مرحله (auto-save)
+	 * تا اگر کاربر کل پروژه را Save نکرد، انتخاب مرحله از بین نرود و عکس کنار عنوان مرحله بعد رفرش بماند.
+	 */
+	public function ajax_save_step_experts() {
+		if (!is_user_logged_in()) wp_send_json_error('login_required', 401);
+		check_ajax_referer('cptt_expert_nonce', 'nonce');
+		$project_id = isset($_POST['project_id']) ? absint($_POST['project_id']) : 0;
+		$step_id    = isset($_POST['step_id']) ? sanitize_text_field((string)$_POST['step_id']) : '';
+		$raw_ids    = isset($_POST['expert_ids']) ? (array)$_POST['expert_ids'] : [];
+		$expert_ids = array_values(array_filter(array_unique(array_map('absint', $raw_ids))));
+
+		if (!$project_id || get_post_type($project_id) !== 'cptt_project') wp_send_json_error('invalid_project', 400);
+		if (!$this->can_manage_project($project_id, get_current_user_id())) wp_send_json_error('no_access', 403);
+		if ($step_id === '') wp_send_json_error('invalid_step', 400);
+
+		$steps = get_post_meta($project_id, '_cptt_steps', true);
+		if (!is_array($steps)) $steps = [];
+		$found = false;
+		foreach ($steps as &$st) {
+			if (!is_array($st)) continue;
+			$sid = !empty($st['id']) ? (string)$st['id'] : '';
+			if ($sid !== $step_id) continue;
+			$st['assigned_expert_ids'] = $expert_ids;
+			$st['assigned_expert_id']  = !empty($expert_ids) ? (int)$expert_ids[0] : 0;
+			$found = true;
+			break;
+		}
+		unset($st);
+		if (!$found) wp_send_json_error('step_not_found', 404);
+
+		update_post_meta($project_id, '_cptt_steps', $steps);
+		$now = (int) current_time('timestamp', true);
+		update_post_meta($project_id, '_cptt_last_update', $now);
+		update_post_meta($project_id, '_cptt_last_update_fa', class_exists('CPTT_Core') ? CPTT_Core::jalali_datetime($now) : date('Y-m-d H:i', $now));
+
+		// آماده کردن لیست avatar برای پاسخ
+		$avatars = [];
+		foreach ($expert_ids as $eid) {
+			$u = get_user_by('id', $eid);
+			if (!$u) continue;
+			$av = $this->get_expert_avatar_url($eid);
+			if (!$av) $av = get_avatar_url($eid);
+			$avatars[] = ['id' => $eid, 'name' => $u->display_name, 'avatar' => $av];
+		}
+		wp_send_json_success(['expert_ids' => $expert_ids, 'avatars' => $avatars]);
 	}
 
 	private function project_card_data($project_id) {
@@ -1027,14 +1085,15 @@ class CPTT_Expert {
 					$badge_class = $status === 'done' ? 'done' : ($status === 'current' ? 'current' : 'todo');
 					$due_local = !empty($step['due_at_fa']) ? (string)$step['due_at_fa'] : '';
 					$is_first = false;
-				// v5.5.0: فقط کارشناسانی که واقعاً به این مرحله اختصاص داده شده‌اند
-				$toggle_assigned_ids = $this->get_step_assigned_expert_ids($step);
+				$toggle_assigned_ids = isset($step['assigned_expert_ids']) && is_array($step['assigned_expert_ids']) ? array_values(array_filter(array_unique(array_map('intval',$step['assigned_expert_ids'])))) : [];
+				if (empty($toggle_assigned_ids) && !empty($step['assigned_expert_id'])) $toggle_assigned_ids = [(int)$step['assigned_expert_id']];
+					if (empty($toggle_assigned_ids) && class_exists('CPTT_Core')) $toggle_assigned_ids = CPTT_Core::get_project_expert_ids($project_id);
 				?>
 				<div class="cptt-expert-step <?php echo $is_first ? 'is-open' : ''; ?>" data-step-id="<?php echo esc_attr($step_id); ?>" draggable="true">
 					<button type="button" class="cptt-expert-step__toggle" aria-expanded="<?php echo $is_first ? 'true' : 'false'; ?>">
 						<span class="cptt-step-reorder-handle" title="تغییر ترتیب">⠿</span>
 						<div class="cptt-expert-step__toggleMain">
-							<strong><?php echo esc_html(($index + 1) . '. ' . $title); ?><?php echo $this->step_assigned_avatars_html($step); ?></strong>
+							<strong><?php echo esc_html(($index + 1) . '. ' . $title); ?><?php if (!empty($toggle_assigned_ids)): ?><span class="cptt-step-toggle-avatars"><?php foreach ($toggle_assigned_ids as $taid): $av=$this->get_expert_avatar_url($taid); if(!$av)$av=get_avatar_url($taid); ?><img src="<?php echo esc_url($av); ?>" alt=""><?php endforeach; ?></span><?php endif; ?></strong>
 							<span><?php echo esc_html($all_count ? ('چک‌لیست: ' . $done_count . '/' . $all_count) : 'بدون چک‌لیست'); ?><?php echo !empty($user_tasks) ? esc_html(' • تسک مشتری: ' . count($user_tasks)) : ''; ?></span>
 						</div>
 						<div class="cptt-expert-step__toggleSide">
@@ -1067,11 +1126,11 @@ class CPTT_Expert {
 							</label>
 							<input type="hidden" name="steps[<?php echo esc_attr($step_id); ?>][unit_price]" value="<?php echo esc_attr((float)($step['unit_price'] ?? 0)); ?>">
 							<label>
-								<span>هزینه مرحله (<?php echo CPTT_Core::currency_label(); ?>)</span>
+								<span>هزینه مرحله (ریال)</span>
 								<input type="text" name="steps[<?php echo esc_attr($step_id); ?>][cost]" class="cptt-currency-input" value="<?php echo esc_attr(number_format($step['cost'] ?? 0)); ?>">
 							</label>
 							<label>
-								<span>دریافتی مرحله (<?php echo CPTT_Core::currency_label(); ?>)</span>
+								<span>دریافتی مرحله (ریال)</span>
 								<input type="text" name="steps[<?php echo esc_attr($step_id); ?>][paid]" class="cptt-currency-input" value="<?php echo esc_attr(number_format($step['paid'] ?? 0)); ?>">
 							</label>
 							<?php /* فیلدهای سهم/پرداختی کارشناس از UI حذف شدند (v5.4.3) - تسویه از طریق صفحه‌ی حساب و کتاب انجام می‌شود. مقادیر فعلی به‌صورت hidden حفظ می‌شوند تا با ذخیره فرم پاک نشوند. */ ?>
@@ -1224,15 +1283,15 @@ class CPTT_Expert {
 			<div class="cptt-expert-sectionTitle" style="margin-top:16px;">خلاصه حساب و کتاب پروژه</div>
 			<div class="cptt-createProjectGrid cptt-manage-finance-summary">
 				<div class="cptt-manage-fin-box">
-					<span>جمع هزینه‌ها (<?php echo CPTT_Core::currency_label(); ?>)</span>
+					<span>جمع هزینه‌ها (ریال)</span>
 					<strong class="cptt-manage-fin-cost"><?php echo esc_html(number_format((int)$mgmt_fin['cost'])); ?></strong>
 				</div>
 				<div class="cptt-manage-fin-box">
-					<span>دریافت‌شده (<?php echo CPTT_Core::currency_label(); ?>)</span>
+					<span>دریافت‌شده (ریال)</span>
 					<strong class="cptt-manage-fin-paid" style="color:#059669;"><?php echo esc_html(number_format((int)$mgmt_fin['paid'])); ?></strong>
 				</div>
 				<div class="cptt-manage-fin-box">
-					<span>مانده (<?php echo CPTT_Core::currency_label(); ?>)</span>
+					<span>مانده (ریال)</span>
 					<strong class="cptt-manage-fin-remain" style="color:<?php echo $mgmt_fin['remain'] > 0 ? '#dc2626' : '#059669'; ?>"><?php echo esc_html(number_format((int)$mgmt_fin['remain'])); ?></strong>
 				</div>
 				<div class="cptt-manage-fin-box">
@@ -1384,40 +1443,6 @@ class CPTT_Expert {
 			if ($url) return $url;
 		}
 		return get_avatar_url($user_id, ['size' => $size]);
-	}
-
-	/**
-	 * v5.5.0: helper یکپارچه برای استخراج id های کارشناس اختصاص داده‌شده به یک مرحله.
-	 * فقط ids واقعی برمی‌گرداند (بدون fallback به همه کارشناسان پروژه).
-	 */
-	public function get_step_assigned_expert_ids($step) {
-		if (!is_array($step)) return [];
-		$ids = [];
-		if (isset($step['assigned_expert_ids']) && is_array($step['assigned_expert_ids'])) {
-			$ids = array_values(array_filter(array_unique(array_map('intval', $step['assigned_expert_ids']))));
-		}
-		if (empty($ids) && !empty($step['assigned_expert_id'])) {
-			$ids = [(int)$step['assigned_expert_id']];
-		}
-		return $ids;
-	}
-
-	/**
-	 * v5.5.0: HTML آماده برای آواتار کارشناسان اختصاص داده‌شده به مرحله.
-	 */
-	public function step_assigned_avatars_html($step) {
-		$ids = $this->get_step_assigned_expert_ids($step);
-		if (empty($ids)) return '';
-		$html = '<span class="cptt-step-toggle-avatars">';
-		foreach ($ids as $taid) {
-			$av = $this->get_expert_avatar_url((int)$taid, 64);
-			if (!$av) $av = get_avatar_url((int)$taid, ['size' => 64]);
-			$u = get_user_by('id', (int)$taid);
-			$name = $u ? $u->display_name : '';
-			$html .= '<img src="' . esc_url($av) . '" alt="' . esc_attr($name) . '" title="' . esc_attr($name) . '">';
-		}
-		$html .= '</span>';
-		return $html;
 	}
 
 	private function get_expert_avatar_markup($user_id, $size = 80, $class = '') {
@@ -2652,7 +2677,7 @@ class CPTT_Expert {
 					<?php if (($vis['product'] ?? '1') === '1'): ?>
 					<label id="cptt-create-product-wrap" style="display:none;">
 						<span>محصول مرتبط</span>
-						<div style="display:flex;gap:6px;align-items:center;">
+						<div style="display:flex; gap:6px; align-items:stretch;">
 							<select name="product_id" id="cptt-create-product-select" style="flex:1;">
 								<option value="">— بدون محصول —</option>
 								<?php foreach ($products as $product): 
@@ -2665,12 +2690,10 @@ class CPTT_Expert {
 								</option>
 								<?php endforeach; ?>
 							</select>
-							<button type="button" id="cptt-add-product-to-budget" class="cptt-add-plus-btn" title="افزودن این محصول به بودجه‌بندی مالی" aria-label="افزودن به بودجه">+</button>
+							<button type="button" id="cptt-add-product-to-budget" title="افزودن این محصول به بودجه‌بندی" aria-label="افزودن این محصول به بودجه‌بندی" style="min-width:42px; height:42px; padding:0; border-radius:12px; background:linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; border:none; font-size:22px; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(79,70,229,.25); transition:transform .15s ease, box-shadow .15s ease;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 18px rgba(79,70,229,.35)';" onmouseout="this.style.transform=''; this.style.boxShadow='0 4px 12px rgba(79,70,229,.25)';">+</button>
 						</div>
 					</label>
-					<div id="cptt-extra-product-pairs" style="grid-column:1/-1;display:grid;gap:10px;"></div>
-					<input type="hidden" name="product_ids" id="cptt-product-ids-hidden" value="">
-					<input type="hidden" name="wc_cat_ids" id="cptt-cat-ids-hidden" value="">
+					<div id="cptt-selected-products-chips" style="grid-column:1/-1; display:flex; flex-wrap:wrap; gap:6px; margin-top:-6px;"></div>
 					<?php endif; ?>
 
 					<?php if (($vis['template'] ?? '1') === '1'): ?>
@@ -2722,10 +2745,10 @@ class CPTT_Expert {
 					<span style="font-size: 13px; font-weight: bold; color: #475569; display: block; margin-bottom: 8px;">بودجه‌بندی مراحل پروژه</span>
 					<div id="cptt-create-finance-header" style="display:grid; grid-template-columns: 2.2fr 1.2fr 80px 1.4fr 1.4fr auto; gap:6px; align-items:center; margin-bottom:6px; font-size:11px; font-weight:bold; color:#64748b; padding-left:30px;">
 						<span>عنوان مرحله</span>
-						<span>مبلغ فی (<?php echo CPTT_Core::currency_label(); ?>)</span>
+						<span>مبلغ فی (ریال)</span>
 						<span>تعداد</span>
-						<span>مبلغ کل (<?php echo CPTT_Core::currency_label(); ?>)</span>
-						<span>پرداختی (<?php echo CPTT_Core::currency_label(); ?>)</span>
+						<span>مبلغ کل (ریال)</span>
+						<span>پرداختی (ریال)</span>
 					</div>
 					<div id="cptt-create-steps-finance-list" style="display:grid; gap:6px;"></div>
 					<button type="button" id="cptt-create-add-finance-row" class="cptt-btn" style="margin-top:10px; font-size:11px; padding:6px 12px; min-height: 30px; height: 30px; background:#f1f5f9; color:#475569; border: 1px dashed #cbd5e1; border-radius:8px; width:100%;">+ افزودن ردیف بودجه جدید</button>
@@ -2985,10 +3008,10 @@ class CPTT_Expert {
 					var rowId = 'row_' + Math.floor(Math.random() * 100000);
 					var html = '<div class="cptt-create-finance-row" id="' + rowId + '" style="display:grid; grid-template-columns: 2.2fr 1.2fr 80px 1.4fr 1.4fr auto; gap:6px; align-items:center; margin-bottom:5px;">' +
 						'  <div class="cptt-bf"><span class="cptt-bf-lbl">عنوان مرحله</span><input type="text" name="create_step_titles[]" value="' + escapeHtml(title) + '" placeholder="عنوان مرحله" style="font-size:13px; padding:8px 10px; min-height:38px; height:38px; border-radius:10px; border:1px solid #cbd5e1; box-sizing:border-box; width:100%;" /></div>' +
-						'  <div class="cptt-bf"><span class="cptt-bf-lbl">مبلغ فی (<?php echo CPTT_Core::currency_label(); ?>)</span><input type="text" class="cptt-create-step-fee cptt-num-format" name="create_step_fees[]" value="' + formatWithCommas(fee) + '" placeholder="مبلغ فی" style="font-size:13px; padding:8px 10px; min-height:38px; height:38px; border-radius:10px; border:1px solid #cbd5e1; box-sizing:border-box; width:100%;" /></div>' +
+						'  <div class="cptt-bf"><span class="cptt-bf-lbl">مبلغ فی (ریال)</span><input type="text" class="cptt-create-step-fee cptt-num-format" name="create_step_fees[]" value="' + formatWithCommas(fee) + '" placeholder="مبلغ فی" style="font-size:13px; padding:8px 10px; min-height:38px; height:38px; border-radius:10px; border:1px solid #cbd5e1; box-sizing:border-box; width:100%;" /></div>' +
 						'  <div class="cptt-bf cptt-bf--qty"><span class="cptt-bf-lbl">تعداد</span><input type="number" class="cptt-create-step-qty" name="create_step_qty[]" value="' + qty + '" min="1" placeholder="تعداد" style="font-size:13px; padding:8px 10px; min-height:38px; height:38px; border-radius:10px; border:1px solid #cbd5e1; box-sizing:border-box; width:100%; text-align:center;" /></div>' +
 						'  <div class="cptt-bf cptt-bf--total"><span class="cptt-bf-lbl">مبلغ کل</span><input type="text" class="cptt-create-step-cost" readonly style="font-size:13px; padding:8px 10px; min-height:38px; height:38px; border-radius:10px; border:1px solid #cbd5e1; box-sizing:border-box; width:100%; background:#f1f5f9; font-weight:700;" value="' + formatWithCommas(fee * qty) + '" /></div>' +
-						'  <div class="cptt-bf"><span class="cptt-bf-lbl">پرداختی (<?php echo CPTT_Core::currency_label(); ?>)</span><input type="text" class="cptt-create-step-paid cptt-num-format" name="create_step_paids[]" value="' + formatWithCommas(paid) + '" placeholder="پرداختی" style="font-size:13px; padding:8px 10px; min-height:38px; height:38px; border-radius:10px; border:1px solid #cbd5e1; box-sizing:border-box; width:100%;" /></div>' +
+						'  <div class="cptt-bf"><span class="cptt-bf-lbl">پرداختی (ریال)</span><input type="text" class="cptt-create-step-paid cptt-num-format" name="create_step_paids[]" value="' + formatWithCommas(paid) + '" placeholder="پرداختی" style="font-size:13px; padding:8px 10px; min-height:38px; height:38px; border-radius:10px; border:1px solid #cbd5e1; box-sizing:border-box; width:100%;" /></div>' +
 						'  <button type="button" class="cptt-create-remove-finance-row" style="color:#ef4444; background:#fee2e2; border:none; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; font-weight:bold; padding:0; line-height:1;">×</button>' +
 						'</div>';
 					list.insertAdjacentHTML('beforeend', html);
@@ -3074,66 +3097,83 @@ class CPTT_Expert {
 					}
 				}
 
-				// v5.5.0: تغییر رفتار انتخاب محصول.
-				// به‌جای add خودکار، فقط با کلیک روی دکمه‌ی + اضافه می‌شود
-				// و فیلدهای انتخاب دسته‌بندی/محصول پاک می‌شوند.
+				// v5.4.17: دکمه «+» کنار select محصول
+				// با کلیک: محصول انتخاب‌شده به بودجه‌بندی اضافه می‌شود + chip در chips نشان داده می‌شود
+				// + product_ids[] و wc_cat_ids[] به‌صورت hidden ثبت می‌شوند
+				// + select های دسته/محصول reset می‌شوند.
 				var addProductBtn = document.getElementById('cptt-add-product-to-budget');
-				var catSelMain = document.getElementById('cptt-create-cat-select');
-				var hiddenProductIds = document.getElementById('cptt-product-ids-hidden');
-				var hiddenCatIds = document.getElementById('cptt-cat-ids-hidden');
-				var collectedProducts = [];
-				var collectedCats = [];
+				var chipsWrap = document.getElementById('cptt-selected-products-chips');
+				var catMain = document.getElementById('cptt-create-cat-select');
 
-				function refreshHiddenIds(){
-					if (hiddenProductIds) hiddenProductIds.value = collectedProducts.join(',');
-					if (hiddenCatIds) hiddenCatIds.value = collectedCats.join(',');
-					// produce array name versions too (compat)
-					var wrap = document.getElementById('cptt-extra-product-pairs');
-					if (wrap) {
-						// remove existing helper inputs
-						Array.prototype.forEach.call(wrap.querySelectorAll('.cptt-helper-input'), function(n){n.remove();});
-						collectedProducts.forEach(function(pid){
-							var i = document.createElement('input'); i.type='hidden'; i.name='product_ids[]'; i.value=pid; i.className='cptt-helper-input'; wrap.appendChild(i);
-						});
-						collectedCats.forEach(function(cid){
-							var i = document.createElement('input'); i.type='hidden'; i.name='wc_cat_ids[]'; i.value=cid; i.className='cptt-helper-input'; wrap.appendChild(i);
-						});
+				function addProductToBudget() {
+					if (!productSelect) return false;
+					var opt = productSelect.options[productSelect.selectedIndex];
+					if (!opt || !opt.value) return false;
+					var pid = opt.value;
+					var title = opt.textContent.trim();
+					var price = parseFloat(opt.getAttribute('data-price')) || 0;
+					var catId = catMain ? catMain.value : '';
+					// جلوگیری از تکرار همان محصول
+					if (chipsWrap && chipsWrap.querySelector('[data-pid="' + pid + '"]')) {
+						// به جای افزودن دوباره، یک ردیف اضافه با عنوان مشابه به بودجه اضافه نکن
+						return false;
 					}
+					addStepsFinanceRow(title, price, 1, 0);
+					calculateFromStepBreakdown();
+					// chip
+					if (chipsWrap) {
+						var chip = document.createElement('span');
+						chip.setAttribute('data-pid', pid);
+						chip.style.cssText = 'display:inline-flex; align-items:center; gap:6px; background:#eef2ff; color:#4338ca; border:1px solid #c7d2fe; border-radius:999px; padding:5px 10px; font-size:12px; font-weight:700;';
+						chip.innerHTML = '🛒 ' + escapeHtml(title) +
+							' <input type="hidden" name="product_ids[]" value="' + escapeHtml(pid) + '">' +
+							(catId ? '<input type="hidden" name="wc_cat_ids[]" value="' + escapeHtml(catId) + '">' : '') +
+							' <button type="button" aria-label="حذف" style="background:transparent;border:none;color:#b91c1c;font-size:14px;cursor:pointer;padding:0 2px;line-height:1;">×</button>';
+						chipsWrap.appendChild(chip);
+						chip.querySelector('button').addEventListener('click', function(){ chip.remove(); });
+					}
+					// reset انتخاب
+					try { productSelect.value = ''; } catch(e){}
+					try { if (catMain) catMain.value = ''; } catch(e){}
+					// تریگر change برای فیلتر محصول
+					try {
+						var ev = document.createEvent('Event'); ev.initEvent('change', true, true);
+						if (catMain) catMain.dispatchEvent(ev);
+					} catch(e){}
+					return true;
 				}
 
-				if (addProductBtn && productSelect) {
-					addProductBtn.addEventListener('click', function(){
-						var opt = productSelect.options[productSelect.selectedIndex];
-						if (!opt || !opt.value) {
-							productSelect.style.borderColor = '#ef4444';
-							setTimeout(function(){ productSelect.style.borderColor = ''; }, 1200);
-							return;
-						}
-						var pid = String(opt.value);
-						if (collectedProducts.indexOf(pid) !== -1) {
-							// duplicate
-							addProductBtn.textContent = '✓ قبلاً اضافه شده';
-							setTimeout(function(){ addProductBtn.textContent = '+'; }, 1200);
-							return;
-						}
-						var price = parseFloat(opt.getAttribute('data-price')) || 0;
-						var title = opt.textContent.trim();
-						addStepsFinanceRow(title, price, 1, 0);
-						calculateFromStepBreakdown();
-						collectedProducts.push(pid);
-						if (catSelMain && catSelMain.value) {
-							if (collectedCats.indexOf(catSelMain.value) === -1) collectedCats.push(catSelMain.value);
-						}
-						refreshHiddenIds();
-						// flash effect
-						addProductBtn.classList.add('is-added');
-						setTimeout(function(){ addProductBtn.classList.remove('is-added'); }, 600);
-						// reset fields
-						productSelect.value = '';
-						if (catSelMain) catSelMain.value = '';
-						// re-trigger change on cat to reset product filter
-						if (catSelMain) { var ev = new Event('change'); catSelMain.dispatchEvent(ev); }
+				if (addProductBtn) {
+					addProductBtn.addEventListener('click', function(e) {
+						e.preventDefault();
+						addProductToBudget();
 					});
+				}
+
+				// فیلتر محصولات بر اساس دسته‌بندی + نمایش/پنهان product wrap
+				var productWrap = document.getElementById('cptt-create-product-wrap');
+				function filterProductsByCat() {
+					if (!productSelect || !catMain) return;
+					var cid = catMain.value;
+					var hasAny = false;
+					Array.prototype.forEach.call(productSelect.options, function(opt) {
+						if (!opt.value) return;
+						var cats = opt.getAttribute('data-cats') || '';
+						var match = !cid || cats.split(',').indexOf(cid) > -1;
+						opt.style.display = match ? '' : 'none';
+						if (match) hasAny = true;
+					});
+					if (productWrap) productWrap.style.display = (cid && hasAny) ? '' : (cid ? '' : 'none');
+					if (!cid && productWrap) productWrap.style.display = 'none';
+					// reset انتخاب اگر دیگر مطابق نیست
+					if (productSelect.value) {
+						var curOpt = productSelect.options[productSelect.selectedIndex];
+						if (curOpt && curOpt.style.display === 'none') productSelect.value = '';
+					}
+				}
+				if (catMain) {
+					catMain.addEventListener('change', filterProductsByCat);
+					filterProductsByCat();
 				}
 
 				// New customer trigger is handled by expert.js initNewCustomerModals()

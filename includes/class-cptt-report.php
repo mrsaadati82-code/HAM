@@ -954,9 +954,9 @@ class CPTT_Report {
 						<tr>
 							<th class="text-center" style="width:50px;">ردیف</th>
 							<th>شرح خدمات / مرحله</th>
-							<th class="text-left" style="width:140px;">هزینه (<?php echo CPTT_Core::currency_label(); ?>)</th>
-							<th class="text-left" style="width:140px;">دریافتی (<?php echo CPTT_Core::currency_label(); ?>)</th>
-							<th class="text-left" style="width:140px;">مانده (<?php echo CPTT_Core::currency_label(); ?>)</th>
+							<th class="text-left" style="width:140px;">هزینه (ریال)</th>
+							<th class="text-left" style="width:140px;">دریافتی (ریال)</th>
+							<th class="text-left" style="width:140px;">مانده (ریال)</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -980,7 +980,7 @@ class CPTT_Report {
 								<td class="text-center"><?php echo esc_html($row_idx++); ?></td>
 								<td>
 									<div style="font-weight:700; color:#0f172a;"><?php echo esc_html($st_title); ?></div>
-									<?php /* v5.5.0: توضیحات مرحله از پیش‌فاکتور/فاکتور حذف شد بر اساس درخواست */ ?>
+									<?php /* v5.4.17: نمایش توضیحات مرحله از فاکتور حذف شد. */ ?>
 								</td>
 								<td class="text-left"><?php echo esc_html(number_format($cost)); ?></td>
 								<td class="text-left" style="color:#059669;"><?php echo esc_html(number_format($paid)); ?></td>
@@ -990,7 +990,7 @@ class CPTT_Report {
 
 						<!-- Totals -->
 						<tr class="totals-row">
-							<td colspan="2" style="text-align:left;">جمع کل <?php echo esc_html($invoice_short); ?> (<?php echo CPTT_Core::currency_label(); ?>):</td>
+							<td colspan="2" style="text-align:left;">جمع کل <?php echo esc_html($invoice_short); ?> (ریال):</td>
 							<td class="text-left"><?php echo esc_html(number_format($total_cost)); ?></td>
 							<td class="text-left" style="color:#059669;"><?php echo esc_html(number_format($total_paid)); ?></td>
 							<td class="text-left" style="color:<?php echo $total_remain > 0 ? '#dc2626' : '#059669'; ?>;"><?php echo esc_html(number_format($total_remain)); ?></td>
