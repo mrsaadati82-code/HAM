@@ -342,8 +342,15 @@
       var num = index + 1;
       var titleStrong = qs('.cptt-expert-step__toggleMain strong', step);
       if (titleStrong) {
+        // Save the avatar span if it exists
+        var avatarSpan = titleStrong.querySelector('.cptt-step-toggle-avatars');
+        if (avatarSpan) avatarSpan.remove();
+
         var currentTitle = titleStrong.textContent.replace(/^\d+\.\s*/, '');
         titleStrong.textContent = num + '. ' + currentTitle;
+
+        // Restore the avatar span
+        if (avatarSpan) titleStrong.appendChild(avatarSpan);
       }
     });
   }
@@ -1515,94 +1522,105 @@
     var modal = document.getElementById('cptt-new-customer-modal');
     if (modal) {
       modal.style.display = 'flex';
-      var fnInput = document.getElementById('cptt-cust-fullname');
+      var fnInput = document.getElementById('cptt-cust-firstname');
       if (fnInput) fnInput.focus();
     }
   }
 
   function bindNewCustomerSubmit() {
-    var custSubmit = document.getElementById('cptt-cust-submit');
-    var custClose = document.getElementById('cptt-cust-close');
     var custModal = document.getElementById('cptt-new-customer-modal');
-    if (!custSubmit || !custModal) return;
+    if (!custModal) return;
 
-    if (custClose) {
-      custClose.addEventListener('click', function() {
-        custModal.style.display = 'none';
-        _activeClientSelect = null;
+    // Use global document delegation for reliable close/submit handling
+    if (!custModal.dataset.delegated) {
+      custModal.dataset.delegated = '1';
+
+      document.addEventListener('click', function(e) {
+        var closeBtn = e.target.closest('#cptt-cust-close');
+        if (closeBtn) {
+          custModal.style.display = 'none';
+          _activeClientSelect = null;
+          return;
+        }
+
+        var submitBtn = e.target.closest('#cptt-cust-submit');
+        if (submitBtn) {
+          var firstName = (document.getElementById('cptt-cust-firstname') || {}).value;
+          var lastName = (document.getElementById('cptt-cust-lastname') || {}).value;
+          var phone = (document.getElementById('cptt-cust-phone') || {}).value;
+          var msg = document.getElementById('cptt-cust-msg');
+          if (firstName) firstName = firstName.trim();
+          if (lastName) lastName = lastName.trim();
+          if (phone) phone = phone.trim();
+
+          if (!firstName || !lastName || !phone) {
+            if (msg) { msg.textContent = 'وارد کردن نام، نام خانوادگی و شماره موبایل الزامی است.'; msg.style.color = '#ef4444'; }
+            return;
+          }
+          if (msg) { msg.textContent = 'در حال ثبت...'; msg.style.color = '#475569'; }
+
+          var ajax = (window.CPTT_EXPERT && CPTT_EXPERT.ajax) ? CPTT_EXPERT.ajax : '';
+          var nonce = (window.CPTT_EXPERT && CPTT_EXPERT.nonce) ? CPTT_EXPERT.nonce : '';
+
+          var fd = new FormData();
+          fd.append('action', 'cptt_expert_create_customer');
+          fd.append('nonce', nonce);
+          fd.append('first_name', firstName);
+          fd.append('last_name', lastName);
+          fd.append('phone', phone);
+
+          fetch(ajax, { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+              if (res.success) {
+                if (msg) { msg.textContent = 'مشتری با موفقیت ثبت شد!'; msg.style.color = '#047857'; }
+
+                // Add to ALL client selects on page
+                document.querySelectorAll('select[name="client_user_id"]').forEach(function(sel) {
+                  var existing = sel.querySelector('option[value="' + res.data.ID + '"]');
+                  if (!existing) {
+                    var opt = document.createElement('option');
+                    opt.value = res.data.ID;
+                    opt.textContent = res.data.display_name;
+                    sel.appendChild(opt);
+                  }
+                });
+
+                // Select in triggering select
+                if (_activeClientSelect) {
+                  _activeClientSelect.value = res.data.ID;
+                }
+
+                setTimeout(function() {
+                  custModal.style.display = 'none';
+                  var fn = document.getElementById('cptt-cust-firstname');
+                  var ln = document.getElementById('cptt-cust-lastname');
+                  var ph = document.getElementById('cptt-cust-phone');
+                  if (fn) fn.value = '';
+                  if (ln) ln.value = '';
+                  if (ph) ph.value = '';
+                  if (msg) msg.textContent = '';
+                  _activeClientSelect = null;
+                }, 1200);
+              } else {
+                if (msg) { msg.textContent = (res.data || 'خطا در ثبت مشتری'); msg.style.color = '#ef4444'; }
+              }
+            })
+            .catch(function() {
+              if (msg) { msg.textContent = 'خطای شبکه'; msg.style.color = '#ef4444'; }
+            });
+        }
+      });
+
+      // Close on backdrop click
+      custModal.addEventListener('click', function(e) {
+        if (e.target === custModal) {
+          custModal.style.display = 'none';
+          _activeClientSelect = null;
+        }
       });
     }
-
-    // Close on backdrop click
-    custModal.addEventListener('click', function(e) {
-      if (e.target === custModal) {
-        custModal.style.display = 'none';
-        _activeClientSelect = null;
-      }
-    });
-
-    custSubmit.addEventListener('click', function() {
-      var fullname = (document.getElementById('cptt-cust-fullname') || {}).value;
-      var phone = (document.getElementById('cptt-cust-phone') || {}).value;
-      var msg = document.getElementById('cptt-cust-msg');
-      if (fullname) fullname = fullname.trim();
-      if (phone) phone = phone.trim();
-
-      if (!fullname || !phone) {
-        if (msg) { msg.textContent = 'نام و شماره موبایل الزامی است.'; msg.style.color = '#ef4444'; }
-        return;
-      }
-      if (msg) { msg.textContent = 'در حال ثبت...'; msg.style.color = '#475569'; }
-
-      var ajax = (window.CPTT_EXPERT && CPTT_EXPERT.ajax) ? CPTT_EXPERT.ajax : '';
-      var nonce = (window.CPTT_EXPERT && CPTT_EXPERT.nonce) ? CPTT_EXPERT.nonce : '';
-
-      var fd = new FormData();
-      fd.append('action', 'cptt_expert_create_customer');
-      fd.append('nonce', nonce);
-      fd.append('full_name', fullname);
-      fd.append('phone', phone);
-
-      fetch(ajax, { method: 'POST', body: fd })
-        .then(function(r) { return r.json(); })
-        .then(function(res) {
-          if (res.success) {
-            if (msg) { msg.textContent = 'مشتری با موفقیت ثبت شد!'; msg.style.color = '#047857'; }
-
-            // Add to ALL client selects on page
-            document.querySelectorAll('select[name="client_user_id"]').forEach(function(sel) {
-              // Remove trigger option temporarily
-              var existing = sel.querySelector('option[value="' + res.data.ID + '"]');
-              if (!existing) {
-                var opt = document.createElement('option');
-                opt.value = res.data.ID;
-                opt.textContent = res.data.display_name + ' (' + res.data.user_email + ')';
-                sel.appendChild(opt);
-              }
-            });
-
-            // Select in triggering select
-            if (_activeClientSelect) {
-              _activeClientSelect.value = res.data.ID;
-            }
-
-            setTimeout(function() {
-              custModal.style.display = 'none';
-              var fn = document.getElementById('cptt-cust-fullname');
-              var ph = document.getElementById('cptt-cust-phone');
-              if (fn) fn.value = '';
-              if (ph) ph.value = '';
-              if (msg) msg.textContent = '';
-              _activeClientSelect = null;
-            }, 1200);
-          } else {
-            if (msg) { msg.textContent = (res.data || 'خطا در ثبت مشتری'); msg.style.color = '#ef4444'; }
-          }
-        })
-        .catch(function() {
-          if (msg) { msg.textContent = 'خطای شبکه'; msg.style.color = '#ef4444'; }
-        });
-    });
+  }
   }
 
   /* =========================================================
@@ -2250,6 +2268,16 @@
             .then(function(r){ return r.json(); })
             .then(function(j){
               if (!j || !j.success) return;
+
+              // Update the hidden last_update input in the form to prevent concurrent edit conflicts
+              if (j.data && j.data.last_update) {
+                var form = card ? card.querySelector('.cptt-expert-project-form') : null;
+                if (form) {
+                  var lastUpInput = form.querySelector('input[name="loaded_last_update"]');
+                  if (lastUpInput) lastUpInput.value = j.data.last_update;
+                }
+              }
+
               // در صورت نیاز آواتار را با پاسخ سرور هم به‌روزرسانی کن
               var avs = (j.data && j.data.avatars) ? j.data.avatars : null;
               if (!avs || !avs.length || !modal._stepEl) return;

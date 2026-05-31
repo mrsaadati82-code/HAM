@@ -118,6 +118,52 @@ class CPTT_Report {
 		// Get toggles
 		$toggles = class_exists('CPTT_Settings') && method_exists('CPTT_Settings', 'get_branding_toggles') ? CPTT_Settings::get_branding_toggles() : [];
 
+		$style_settings = class_exists('CPTT_Settings') ? CPTT_Settings::get_styles() : [];
+		$font_family_opt = !empty($style_settings['font_family']) ? $style_settings['font_family'] : 'vazir';
+		$base_url_font = CPTT_URL . 'assets/fonts/';
+		$font_faces_css = '';
+		$font_stack_css = "'Vazirmatn', Tahoma, sans-serif";
+
+		if ($font_family_opt === 'dana') {
+			$font_faces_css = "
+				@font-face { font-family: 'Dana'; src: url('{$base_url_font}Dana/Dana-FaNum-Regular.ttf') format('truetype'); font-weight: 400; }
+				@font-face { font-family: 'Dana'; src: url('{$base_url_font}Dana/Dana-FaNum-Medium.ttf') format('truetype'); font-weight: 500; }
+				@font-face { font-family: 'Dana'; src: url('{$base_url_font}Dana/Dana-FaNum-Bold.ttf') format('truetype'); font-weight: 700; }
+			";
+			$font_stack_css = "'Dana', Tahoma, sans-serif";
+		} elseif ($font_family_opt === 'iransans') {
+			$font_faces_css = "
+				@font-face { font-family: 'IranSans'; src: url('{$base_url_font}iransans/IRANSansWeb(FaNum).woff2') format('woff2'); font-weight: 400; }
+				@font-face { font-family: 'IranSans'; src: url('{$base_url_font}iransans/IRANSansWeb(FaNum)_Medium.woff2') format('woff2'); font-weight: 500; }
+				@font-face { font-family: 'IranSans'; src: url('{$base_url_font}iransans/IRANSansWeb(FaNum)_Bold.woff2') format('woff2'); font-weight: 700; }
+			";
+			$font_stack_css = "'IranSans', Tahoma, sans-serif";
+		} elseif ($font_family_opt === 'iranyekan') {
+			$font_faces_css = "
+				@font-face { font-family: 'IranYekan'; src: url('{$base_url_font}iranyekan/IRANYekanX-Regular.woff2') format('woff2'); font-weight: 400; }
+				@font-face { font-family: 'IranYekan'; src: url('{$base_url_font}iranyekan/IRANYekanX-Bold.woff2') format('woff2'); font-weight: 700; }
+			";
+			$font_stack_css = "'IranYekan', Tahoma, sans-serif";
+		} elseif ($font_family_opt === 'kalameh') {
+			$font_faces_css = "
+				@font-face { font-family: 'Kalameh'; src: url('{$base_url_font}kalameh/KalamehWebFaNum-Medium.woff2') format('woff2'); font-weight: 400; }
+				@font-face { font-family: 'Kalameh'; src: url('{$base_url_font}kalameh/KalamehWebFaNum-Bold.woff2') format('woff2'); font-weight: 700; }
+			";
+			$font_stack_css = "'Kalameh', Tahoma, sans-serif";
+		} elseif ($font_family_opt === 'peyda') {
+			$font_faces_css = "
+				@font-face { font-family: 'Peyda'; src: url('{$base_url_font}peyda/PeydaWeb-Regular.woff') format('woff'); font-weight: 400; }
+				@font-face { font-family: 'Peyda'; src: url('{$base_url_font}peyda/PeydaWeb-Bold.woff') format('woff'); font-weight: 700; }
+			";
+			$font_stack_css = "'Peyda', Tahoma, sans-serif";
+		} else {
+			$font_faces_css = "
+				@font-face { font-family: 'Vazirmatn'; src: url('{$base_url_font}Vazirmatn-Regular.ttf') format('truetype'); font-weight: 400; }
+				@font-face { font-family: 'Vazirmatn'; src: url('{$base_url_font}Vazirmatn-Bold.ttf') format('truetype'); font-weight: 700; }
+			";
+			$font_stack_css = "'Vazirmatn', Tahoma, sans-serif";
+		}
+
 		header('Content-Type: text/html; charset=utf-8');
 		?>
 <!doctype html>
@@ -127,6 +173,7 @@ class CPTT_Report {
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title><?php echo esc_html('گزارش پروژه - ' . $title); ?></title>
 	<style>
+		<?php echo $font_faces_css; ?>
 		:root{
 			--primary: <?php echo esc_html($primary); ?>;
 			--primary-light: rgba(99, 102, 241, 0.08);
@@ -136,11 +183,11 @@ class CPTT_Report {
 			--bg: #f8fafc;
 			--white: #ffffff;
 		}
-		*{ box-sizing:border-box; margin: 0; padding: 0; }
+		*{ box-sizing:border-box; margin: 0; padding: 0; font-family: <?php echo $font_stack_css; ?> !important; }
 		body{
 			background: var(--bg);
 			color: var(--text);
-			font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+			font-family: <?php echo $font_stack_css; ?> !important;
 			font-size: 13px;
 			line-height: 1.7;
 			padding: 20px 10px;
@@ -660,6 +707,52 @@ class CPTT_Report {
 		// Get toggles
 		$toggles = class_exists('CPTT_Settings') && method_exists('CPTT_Settings', 'get_branding_toggles') ? CPTT_Settings::get_branding_toggles() : [];
 
+		$style_settings = class_exists('CPTT_Settings') ? CPTT_Settings::get_styles() : [];
+		$font_family_opt = !empty($style_settings['font_family']) ? $style_settings['font_family'] : 'vazir';
+		$base_url_font = CPTT_URL . 'assets/fonts/';
+		$font_faces_css = '';
+		$font_stack_css = "'Vazirmatn', Tahoma, sans-serif";
+
+		if ($font_family_opt === 'dana') {
+			$font_faces_css = "
+				@font-face { font-family: 'Dana'; src: url('{$base_url_font}Dana/Dana-FaNum-Regular.ttf') format('truetype'); font-weight: 400; }
+				@font-face { font-family: 'Dana'; src: url('{$base_url_font}Dana/Dana-FaNum-Medium.ttf') format('truetype'); font-weight: 500; }
+				@font-face { font-family: 'Dana'; src: url('{$base_url_font}Dana/Dana-FaNum-Bold.ttf') format('truetype'); font-weight: 700; }
+			";
+			$font_stack_css = "'Dana', Tahoma, sans-serif";
+		} elseif ($font_family_opt === 'iransans') {
+			$font_faces_css = "
+				@font-face { font-family: 'IranSans'; src: url('{$base_url_font}iransans/IRANSansWeb(FaNum).woff2') format('woff2'); font-weight: 400; }
+				@font-face { font-family: 'IranSans'; src: url('{$base_url_font}iransans/IRANSansWeb(FaNum)_Medium.woff2') format('woff2'); font-weight: 500; }
+				@font-face { font-family: 'IranSans'; src: url('{$base_url_font}iransans/IRANSansWeb(FaNum)_Bold.woff2') format('woff2'); font-weight: 700; }
+			";
+			$font_stack_css = "'IranSans', Tahoma, sans-serif";
+		} elseif ($font_family_opt === 'iranyekan') {
+			$font_faces_css = "
+				@font-face { font-family: 'IranYekan'; src: url('{$base_url_font}iranyekan/IRANYekanX-Regular.woff2') format('woff2'); font-weight: 400; }
+				@font-face { font-family: 'IranYekan'; src: url('{$base_url_font}iranyekan/IRANYekanX-Bold.woff2') format('woff2'); font-weight: 700; }
+			";
+			$font_stack_css = "'IranYekan', Tahoma, sans-serif";
+		} elseif ($font_family_opt === 'kalameh') {
+			$font_faces_css = "
+				@font-face { font-family: 'Kalameh'; src: url('{$base_url_font}kalameh/KalamehWebFaNum-Medium.woff2') format('woff2'); font-weight: 400; }
+				@font-face { font-family: 'Kalameh'; src: url('{$base_url_font}kalameh/KalamehWebFaNum-Bold.woff2') format('woff2'); font-weight: 700; }
+			";
+			$font_stack_css = "'Kalameh', Tahoma, sans-serif";
+		} elseif ($font_family_opt === 'peyda') {
+			$font_faces_css = "
+				@font-face { font-family: 'Peyda'; src: url('{$base_url_font}peyda/PeydaWeb-Regular.woff') format('woff'); font-weight: 400; }
+				@font-face { font-family: 'Peyda'; src: url('{$base_url_font}peyda/PeydaWeb-Bold.woff') format('woff'); font-weight: 700; }
+			";
+			$font_stack_css = "'Peyda', Tahoma, sans-serif";
+		} else {
+			$font_faces_css = "
+				@font-face { font-family: 'Vazirmatn'; src: url('{$base_url_font}Vazirmatn-Regular.ttf') format('truetype'); font-weight: 400; }
+				@font-face { font-family: 'Vazirmatn'; src: url('{$base_url_font}Vazirmatn-Bold.ttf') format('truetype'); font-weight: 700; }
+			";
+			$font_stack_css = "'Vazirmatn', Tahoma, sans-serif";
+		}
+
 		header('Content-Type: text/html; charset=utf-8');
 		?>
 <!doctype html>
@@ -669,6 +762,7 @@ class CPTT_Report {
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title><?php echo esc_html($invoice_short . ' - ' . $title); ?></title>
 	<style>
+		<?php echo $font_faces_css; ?>
 		:root{
 			--primary: <?php echo esc_html($primary); ?>;
 			--text: #1e293b;
@@ -677,11 +771,11 @@ class CPTT_Report {
 			--bg: #f8fafc;
 			--white: #ffffff;
 		}
-		*{ box-sizing:border-box; margin: 0; padding: 0; }
+		*{ box-sizing:border-box; margin: 0; padding: 0; font-family: <?php echo $font_stack_css; ?> !important; }
 		body{
 			background: var(--bg);
 			color: var(--text);
-			font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+			font-family: <?php echo $font_stack_css; ?> !important;
 			font-size: 13px;
 			line-height: 1.7;
 			padding: 20px 10px;

@@ -754,41 +754,59 @@ class CPTT_Payment {
 		if ($type === 'card') {
 			$cards = isset($gw['cards']) && is_array($gw['cards']) ? $gw['cards'] : [];
 			?>
-			<div class="pay-page__section-title">💳 کارت‌به‌کارت</div>
+			<div class="pay-page__section-title" style="font-size:15px; color:#1e1b4b; font-weight:900; margin-bottom:12px; display:flex; align-items:center; gap:6px;">💳 کارت‌های بانکی جهت واریز</div>
 			<?php if (!empty($gw['note'])): ?>
-				<div class="pay-page__notice pay-page__notice--info"><?php echo esc_html($gw['note']); ?></div>
+				<div class="pay-page__notice pay-page__notice--info" style="border-radius:14px; box-shadow:0 4px 12px rgba(99, 102, 241, 0.05); border:1px solid rgba(99,102,241,0.15); margin-bottom:18px;"><?php echo esc_html($gw['note']); ?></div>
 			<?php endif; ?>
 
 			<?php if (empty($cards)): ?>
 				<div class="pay-page__notice pay-page__notice--err">شماره کارتی برای این روش تعریف نشده است.</div>
 			<?php else: ?>
-				<div class="pay-cards">
+				<div class="pay-cards" style="display:grid; gap:16px; margin-bottom:20px;">
 					<?php foreach ($cards as $c):
 						$num     = (string)($c['number'] ?? '');
-						$num_fmt = trim(chunk_split($num, 4, '-'), '-');
+						$num_fmt = trim(chunk_split($num, 4, ' '), ' ');
 					?>
-						<div class="pay-card">
-							<div class="pay-card__top">
-								<span class="pay-card__bank"><?php echo esc_html($c['bank'] ?? '—'); ?></span>
-								<button type="button" class="pay-card__copy" data-num="<?php echo esc_attr($num); ?>" title="کپی شماره کارت">📋 کپی</button>
+						<div class="card-mockup">
+							<div class="card-mockup__top">
+								<span class="card-mockup__bank">🏛️ <?php echo esc_html($c['bank'] ?? 'بانک مقصد'); ?></span>
+								<span class="card-mockup__logo">💳</span>
 							</div>
-							<div class="pay-card__num"><?php echo esc_html($num_fmt ?: '—'); ?></div>
-							<div class="pay-card__owner">👤 <?php echo esc_html($c['owner'] ?? '—'); ?></div>
+							<div class="card-mockup__chip"></div>
+							<div class="card-mockup__num"><?php echo esc_html($num_fmt ?: '—'); ?></div>
+							<div class="card-mockup__bottom">
+								<div class="card-mockup__owner">
+									<small style="display:block; font-size:10px; opacity:0.75; margin-bottom:2px; font-weight:normal;">صاحب حساب</small>
+									👤 <?php echo esc_html($c['owner'] ?? '—'); ?>
+								</div>
+								<button type="button" class="pay-card__copy-btn" data-num="<?php echo esc_attr($num); ?>" style="background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.25); color:#fff; border-radius:10px; padding:6px 12px; cursor:pointer; font-family:inherit; font-size:12px; font-weight:bold; display:inline-flex; align-items:center; gap:4px; transition:all 0.2s;">📋 کپی شماره کارت</button>
+							</div>
 						</div>
 					<?php endforeach; ?>
 				</div>
 				<script>
 				document.addEventListener('click', function(e){
-					var b = e.target.closest('.pay-card__copy'); if (!b) return;
+					var b = e.target.closest('.pay-card__copy-btn'); if (!b) return;
 					var n = b.getAttribute('data-num') || '';
 					if (!n) return;
-					try { navigator.clipboard.writeText(n); b.textContent = '✅ کپی شد'; setTimeout(function(){ b.textContent='📋 کپی'; }, 1500); } catch(e) { b.textContent='کپی نشد'; }
+					try { 
+						navigator.clipboard.writeText(n); 
+						var prevText = b.innerHTML;
+						b.innerHTML = '✨ کپی شد!'; 
+						b.style.background = '#10b981';
+						b.style.borderColor = '#059669';
+						setTimeout(function(){ 
+							b.innerHTML = prevText; 
+							b.style.background = 'rgba(255,255,255,0.18)';
+							b.style.borderColor = 'rgba(255,255,255,0.25)';
+						}, 1500); 
+					} catch(e) { b.textContent='خطا در کپی'; }
 				});
 				</script>
 			<?php endif; ?>
 
-			<div class="pay-page__section-title" style="margin-top:24px;">📤 آپلود رسید پرداخت</div>
-			<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data" class="pay-form">
+			<div class="pay-page__section-title" style="margin-top:28px; font-size:15px; color:#1e1b4b; font-weight:900; margin-bottom:12px; display:flex; align-items:center; gap:6px;">📤 آپلود رسید و جزئیات پرداخت</div>
+			<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data" class="pay-form" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:24px; padding:20px; box-shadow:0 10px 30px rgba(15,23,42,0.04); display:grid; gap:16px;">
 				<input type="hidden" name="action"     value="cptt_submit_card_receipt">
 				<input type="hidden" name="project_id" value="<?php echo esc_attr($pid); ?>">
 				<input type="hidden" name="amount"     value="<?php echo esc_attr($amount); ?>">
@@ -796,19 +814,73 @@ class CPTT_Payment {
 				<?php wp_nonce_field(self::NONCE_RCPT . '_' . $pid, 'nonce'); ?>
 
 				<label class="pay-field">
-					<span>مبلغ پرداختی</span>
-					<input type="text" name="paid_amount" value="<?php echo esc_attr(number_format($amount)); ?>" inputmode="numeric">
+					<span style="font-size:13px; font-weight:bold; color:#475569; margin-bottom:4px;">مبلغ پرداختی (ریال/تومان)</span>
+					<input type="text" name="paid_amount" value="<?php echo esc_attr(number_format($amount)); ?>" inputmode="numeric" style="padding:12px 14px; border:1px solid #cbd5e1; border-radius:12px; font-family:inherit; font-size:14px; width:100%; font-weight:bold; color:#1e293b; background:#f8fafc;">
 				</label>
+				
+				<div class="pay-field">
+					<span style="font-size:13px; font-weight:bold; color:#475569; margin-bottom:6px;">تصویر رسید پرداخت <span style="color:#ef4444">*</span></span>
+					<div class="file-dropzone" id="cptt-dropzone" style="border:2px dashed #cbd5e1; border-radius:16px; background:#f8fafc; padding:32px 16px; text-align:center; cursor:pointer; transition:all 0.3s ease; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;">
+						<div class="file-dropzone__icon" style="font-size:42px;">📁</div>
+						<div class="file-dropzone__text" style="font-size:13px; font-weight:bold; color:#334155;">تصویر رسید را اینجا بکشید یا کلیک کنید</div>
+						<div class="file-dropzone__subtext" style="font-size:11px; color:#94a3b8;">فرمت‌های مجاز: JPG, PNG, PDF (حداکثر ۵ مگابایت)</div>
+						<input type="file" name="receipt" id="receipt-file" accept="image/*,.pdf" required style="display:none;">
+						
+						<div class="file-dropzone__preview" id="receipt-preview" style="display:none; margin-top:12px; flex-direction:column; align-items:center; gap:8px;">
+							<img src="" id="receipt-img" style="max-height:100px; border-radius:10px; box-shadow:0 8px 20px rgba(0,0,0,0.1); border:2px solid #fff; display:block;">
+							<span id="receipt-filename" style="font-size:11px; font-weight:bold; color:#475569;"></span>
+						</div>
+					</div>
+				</div>
+
+				<script>
+				(function(){
+					var dz = document.getElementById('cptt-dropzone');
+					var fileInp = document.getElementById('receipt-file');
+					var preview = document.getElementById('receipt-preview');
+					var img = document.getElementById('receipt-img');
+					var filename = document.getElementById('receipt-filename');
+
+					if (dz && fileInp) {
+						dz.addEventListener('click', function(){ fileInp.click(); });
+						dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.style.borderColor='#6366f1'; dz.style.background='#f0f5ff'; });
+						dz.addEventListener('dragleave', function(){ dz.style.borderColor='#cbd5e1'; dz.style.background='#f8fafc'; });
+						dz.addEventListener('drop', function(e){
+							e.preventDefault();
+							dz.style.borderColor='#cbd5e1'; dz.style.background='#f8fafc';
+							if (e.dataTransfer.files.length) {
+								fileInp.files = e.dataTransfer.files;
+								handleFileChange();
+							}
+						});
+						fileInp.addEventListener('change', handleFileChange);
+					}
+
+					function handleFileChange() {
+						var file = fileInp.files[0];
+						if (file) {
+							filename.textContent = file.name;
+							preview.style.display = 'flex';
+							if (file.type.match('image.*')) {
+								var reader = new FileReader();
+								reader.onload = function(e){ img.src = e.target.result; img.style.display='block'; };
+								reader.readAsDataURL(file);
+							} else {
+								img.style.display = 'none';
+							}
+						} else {
+							preview.style.display = 'none';
+						}
+					}
+				})();
+				</script>
+
 				<label class="pay-field">
-					<span>تصویر رسید (الزامی)</span>
-					<input type="file" name="receipt" accept="image/*,.pdf" required>
-				</label>
-				<label class="pay-field pay-field--wide">
-					<span>توضیح (اختیاری)</span>
-					<textarea name="note" rows="2" placeholder="شماره پیگیری، ساعت واریز و..."></textarea>
+					<span style="font-size:13px; font-weight:bold; color:#475569; margin-bottom:4px;">توضیحات (اختیاری)</span>
+					<textarea name="note" rows="3" placeholder="شماره پیگیری، ساعت واریز، چهار رقم آخر کارت و..." style="padding:12px 14px; border:1px solid #cbd5e1; border-radius:12px; font-family:inherit; font-size:13.5px; width:100%; min-height:80px; box-sizing:border-box;"></textarea>
 				</label>
 
-				<button type="submit" class="pay-submit">📨 ثبت رسید برای تایید مدیر</button>
+				<button type="submit" class="pay-submit" style="background:linear-gradient(135deg, #10b981, #059669); color:#fff; border:none; border-radius:14px; padding:14px; font-weight:900; font-size:15px; cursor:pointer; font-family:inherit; width:100%; transition:all 0.2s; box-shadow:0 8px 24px rgba(16, 185, 129, 0.2); margin-top:8px;">📨 ثبت رسید و ارسال جهت تایید</button>
 			</form>
 			<?php
 		} else {
@@ -821,15 +893,15 @@ class CPTT_Payment {
 				'_wpnonce'   => wp_create_nonce(self::NONCE_PAY . '_' . $pid),
 			], admin_url('admin-post.php'));
 			?>
-			<div class="pay-page__section-title"><?php echo esc_html($tdef['icon'] . ' ' . ($gw['name'] ?: $tdef['label'])); ?></div>
+			<div class="pay-page__section-title" style="font-size:15px; color:#1e1b4b; font-weight:900; margin-bottom:12px; display:flex; align-items:center; gap:6px;"><?php echo esc_html($tdef['icon'] . ' ' . ($gw['name'] ?: $tdef['label'])); ?></div>
 			<?php if (!empty($gw['note'])): ?>
-				<div class="pay-page__notice pay-page__notice--info"><?php echo esc_html($gw['note']); ?></div>
+				<div class="pay-page__notice pay-page__notice--info" style="border-radius:14px; box-shadow:0 4px 12px rgba(99, 102, 241, 0.05); border:1px solid rgba(99,102,241,0.15); margin-bottom:18px;"><?php echo esc_html($gw['note']); ?></div>
 			<?php endif; ?>
 
-			<div class="pay-online">
-				<div class="pay-online__amount">مبلغ: <b><?php echo esc_html(number_format($amount)); ?></b></div>
-				<a href="<?php echo esc_url($start_url); ?>" class="pay-submit pay-submit--online">🚀 پرداخت آنلاین در <?php echo esc_html($tdef['label']); ?></a>
-				<small class="pay-online__hint">به صفحه‌ی <?php echo esc_html($tdef['label']); ?> منتقل می‌شوید. پس از پرداخت به این صفحه بازمی‌گردید.</small>
+			<div class="pay-online" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:24px; padding:24px; box-shadow:0 10px 30px rgba(15,23,42,0.04); text-align:center;">
+				<div class="pay-online__amount" style="font-size:14px; color:#475569; margin-bottom:16px;">مبلغ قابل پرداخت: <b style="font-size:18px; color:#1e1b4b; font-weight:900;"><?php echo esc_html(number_format($amount)); ?></b> <?php echo esc_html($s['currency_label']); ?></div>
+				<a href="<?php echo esc_url($start_url); ?>" class="pay-submit pay-submit--online" style="background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; border:none; border-radius:14px; padding:14px; font-weight:900; font-size:15px; cursor:pointer; font-family:inherit; text-decoration:none; display:block; text-align:center; transition:all 0.2s; box-shadow:0 8px 24px rgba(99, 102, 241, 0.2);">🚀 پرداخت آنلاین امن</a>
+				<small class="pay-online__hint" style="display:block; margin-top:12px; color:#94a3b8; font-size:11.5px;">شما به درگاه رسمی و امن منتقل می‌شوید و پس از اتمام پرداخت مجدداً به سایت باز خواهید گشت.</small>
 			</div>
 			<?php
 		}
@@ -1425,64 +1497,193 @@ class CPTT_Payment {
 
 	private function print_pay_css() { ?>
 		*{box-sizing:border-box;}
-		body{margin:0;padding:20px 12px;font-family:Tahoma,Vazirmatn,sans-serif;background:linear-gradient(135deg,#f1f5f9 0%, #e0e7ff 50%, #ddd6fe 100%);min-height:100vh;}
-		.pay-page{display:flex;justify-content:center;align-items:flex-start;}
-		.pay-page__shell{width:100%;max-width:560px;background:#fff;border-radius:28px;padding:26px;box-shadow:0 30px 80px rgba(15,23,42,.18);}
-		.pay-page__brand{display:flex;gap:14px;align-items:center;padding-bottom:18px;border-bottom:1px dashed #e5e7eb;margin-bottom:18px;}
-		.pay-page__logo{width:54px;height:54px;border-radius:18px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 8px 20px rgba(79,70,229,.4);}
-		.pay-page__title{font-size:20px;font-weight:900;color:#0f172a;}
-		.pay-page__sub{font-size:13px;color:#64748b;margin-top:2px;}
+		body{margin:0;padding:40px 12px;font-family:Tahoma,Vazirmatn,sans-serif;background:linear-gradient(135deg, #f1f5f9 0%, #e0e7ff 50%, #ddd6fe 100%);min-height:100vh;display:flex;justify-content:center;align-items:flex-start;}
+		.pay-page{width:100%;max-width:560px;display:flex;justify-content:center;}
+		.pay-page__shell{width:100%;background:#ffffff;border-radius:32px;padding:30px;box-shadow:0 30px 80px rgba(15,23,42,.15);border:1px solid rgba(255,255,255,0.7);transition:all 0.3s ease;}
+		.pay-page__brand{display:flex;gap:16px;align-items:center;padding-bottom:20px;border-bottom:1px dashed #e2e8f0;margin-bottom:20px;}
+		.pay-page__logo{width:56px;height:56px;border-radius:20px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 10px 25px rgba(99,102,241,.35);animation:pulse 2s infinite;}
+		@keyframes pulse {
+			0% { transform: scale(1); }
+			50% { transform: scale(1.03); }
+			100% { transform: scale(1); }
+		}
+		.pay-page__title{font-size:22px;font-weight:900;color:#1e1b4b;}
+		.pay-page__sub{font-size:13px;color:#64748b;margin-top:4px;}
 
-		.pay-page__project{background:#f8fafc;border-radius:14px;padding:12px 16px;margin-bottom:14px;}
-		.pay-page__project-name{font-weight:800;color:#0f172a;font-size:15px;}
-		.pay-page__project-meta{font-size:12px;color:#64748b;margin-top:3px;}
+		.pay-page__project{background:#f8fafc;border:1px solid #f1f5f9;border-radius:18px;padding:14px 18px;margin-bottom:16px;}
+		.pay-page__project-name{font-weight:900;color:#0f172a;font-size:16px;}
+		.pay-page__project-meta{font-size:12px;color:#64748b;margin-top:4px;}
 
-		.pay-page__amount{background:linear-gradient(135deg,#0f172a,#4f46e5);color:#fff;border-radius:18px;padding:20px;margin-bottom:18px;text-align:center;box-shadow:0 12px 30px rgba(79,70,229,.3);}
-		.pay-page__amount-label{font-size:12.5px;opacity:.8;margin-bottom:6px;}
-		.pay-page__amount-value{font-size:34px;font-weight:900;}
-		.pay-page__amount-value span{font-size:15px;opacity:.85;margin-right:6px;font-weight:600;}
+		.pay-page__amount{background:linear-gradient(135deg,#1e1b4b,#4f46e5);color:#fff;border-radius:20px;padding:24px;margin-bottom:20px;text-align:center;box-shadow:0 12px 30px rgba(79,70,229,.25);position:relative;overflow:hidden;}
+		.pay-page__amount::before {
+			content:''; position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+			transform:translateX(-100%); animation:shimmer 3s infinite;
+		}
+		@keyframes shimmer {
+			100% { transform: translateX(100%); }
+		}
+		.pay-page__amount-label{font-size:13px;opacity:.85;margin-bottom:6px;font-weight:bold;}
+		.pay-page__amount-value{font-size:36px;font-weight:900;letter-spacing:1px;}
+		.pay-page__amount-value span{font-size:16px;opacity:.9;margin-right:6px;font-weight:bold;}
 
-		.pay-page__notice{padding:12px 14px;border-radius:12px;margin-bottom:14px;font-size:13.5px;font-weight:700;}
-		.pay-page__notice--info{background:#dbeafe;color:#1e40af;}
-		.pay-page__notice--ok{background:#dcfce7;color:#166534;}
-		.pay-page__notice--err{background:#fee2e2;color:#991b1b;}
+		.pay-page__notice{padding:14px 18px;border-radius:16px;margin-bottom:18px;font-size:14px;font-weight:bold;line-height:1.6;}
+		.pay-page__notice--info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;}
+		.pay-page__notice--ok{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;}
+		.pay-page__notice--err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;}
 
-		.pay-page__section-title{font-size:13px;color:#475569;font-weight:800;margin-bottom:10px;}
+		.pay-page__section-title{font-size:14px;color:#334155;font-weight:900;margin-bottom:12px;}
 
-		.pay-page__gws{display:grid;gap:10px;margin-bottom:14px;}
-		.pay-gw{display:flex;gap:14px;align-items:center;background:#fff;border:1.5px solid #e5e7eb;border-radius:16px;padding:14px;text-decoration:none;color:inherit;transition:all .2s;border-right:5px solid var(--c, #4f46e5);}
-		.pay-gw:hover{transform:translateY(-2px);border-color:var(--c, #4f46e5);box-shadow:0 8px 20px rgba(15,23,42,.08);}
-		.pay-gw__icon{width:48px;height:48px;border-radius:14px;background:color-mix(in srgb, var(--c) 14%, white);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+		.pay-page__gws{display:grid;gap:12px;margin-bottom:16px;}
+		.pay-gw{display:flex;gap:16px;align-items:center;background:#fff;border:1.5px solid #e2e8f0;border-radius:18px;padding:16px;text-decoration:none;color:inherit;transition:all .25s cubic-bezier(0.4, 0, 0.2, 1);border-right:6px solid var(--c, #4f46e5);box-shadow:0 4px 6px -1px rgba(0, 0, 0, 0.02);}
+		.pay-gw:hover{transform:translateY(-3px);border-color:var(--c, #4f46e5);box-shadow:0 12px 20px -5px rgba(0, 0, 0, 0.08);}
+		.pay-gw__icon{width:50px;height:50px;border-radius:16px;background:color-mix(in srgb, var(--c) 14%, white);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
 		.pay-gw__body{flex:1;}
-		.pay-gw__name{font-weight:900;color:#0f172a;font-size:14.5px;}
-		.pay-gw__desc{font-size:12px;color:#64748b;margin-top:2px;}
-		.pay-gw__arrow{color:var(--c, #4f46e5);font-size:22px;font-weight:900;}
+		.pay-gw__name{font-weight:900;color:#1e293b;font-size:15px;}
+		.pay-gw__desc{font-size:12px;color:#64748b;margin-top:4px;}
+		.pay-gw__arrow{color:var(--c, #4f46e5);font-size:24px;font-weight:900;transition:transform 0.2s;}
+		.pay-gw:hover .pay-gw__arrow{transform:translateX(-4px);}
 
-		.pay-cards{display:grid;gap:10px;margin-bottom:14px;}
-		.pay-card{background:linear-gradient(135deg,#111827,#374151);color:#fff;border-radius:16px;padding:16px;box-shadow:0 8px 20px rgba(15,23,42,.18);}
-		.pay-card__top{display:flex;justify-content:space-between;align-items:center;font-size:12px;opacity:.85;margin-bottom:12px;}
-		.pay-card__copy{background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:8px;padding:4px 10px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;}
-		.pay-card__copy:hover{background:rgba(255,255,255,.28);}
-		.pay-card__num{font-family:monospace;font-size:20px;letter-spacing:3px;font-weight:800;text-align:center;margin:8px 0;direction:ltr;}
-		.pay-card__owner{font-size:13px;text-align:center;opacity:.9;}
+		/* Card Mockup */
+		.card-mockup {
+			background: linear-gradient(135deg, #1e1b4b 0%, #311042 50%, #4c1d95 100%);
+			border-radius: 20px;
+			padding: 24px;
+			color: #fff;
+			position: relative;
+			overflow: hidden;
+			box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+			margin-bottom: 8px;
+			aspect-ratio: 1.586/1;
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+			transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+		}
+		.card-mockup:hover {
+			transform: translateY(-5px) rotate(1deg);
+			box-shadow: 0 20px 40px rgba(124, 58, 237, 0.25);
+		}
+		.card-mockup::before {
+			content: '';
+			position: absolute;
+			top: -50%;
+			left: -50%;
+			width: 200%;
+			height: 200%;
+			background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 80%);
+			pointer-events: none;
+		}
+		.card-mockup__chip {
+			width: 48px;
+			height: 38px;
+			background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+			border-radius: 8px;
+			position: relative;
+			overflow: hidden;
+			box-shadow: inset 0 1px 3px rgba(255,255,255,0.5);
+			margin: 10px 0;
+		}
+		.card-mockup__chip::after {
+			content: '';
+			position: absolute;
+			inset: 4px;
+			border: 1px solid rgba(0,0,0,0.15);
+			border-radius: 4px;
+		}
+		.card-mockup__top {
+			display: flex;
+			justify-content: space-between;
+			align-items: flex-start;
+		}
+		.card-mockup__bank {
+			font-size: 16px;
+			font-weight: 900;
+			text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+		}
+		.card-mockup__num {
+			font-size: 24px;
+			font-weight: bold;
+			font-family: monospace, sans-serif;
+			letter-spacing: 3px;
+			text-align: center;
+			text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+			direction: ltr;
+		}
+		.card-mockup__bottom {
+			display: flex;
+			justify-content: space-between;
+			align-items: flex-end;
+		}
+		.card-mockup__owner {
+			font-size: 14px;
+			font-weight: 800;
+			text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+		}
+		.card-mockup__logo {
+			font-size: 26px;
+			opacity: 0.9;
+		}
 
-		.pay-form{display:grid;gap:10px;background:#f8fafc;border-radius:16px;padding:14px;}
-		.pay-field{display:flex;flex-direction:column;gap:5px;}
-		.pay-field--wide{}
-		.pay-field span{font-size:12px;font-weight:700;color:#475569;}
-		.pay-field input,.pay-field textarea{padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;font-family:inherit;font-size:13px;background:#fff;}
-		.pay-field input:focus,.pay-field textarea:focus{outline:none;border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.15);}
-		.pay-submit{background:linear-gradient(135deg,#16a34a,#059669);color:#fff;border:none;border-radius:12px;padding:14px;font-weight:900;font-size:14.5px;cursor:pointer;font-family:inherit;margin-top:6px;box-shadow:0 6px 18px rgba(22,163,74,.3);}
-		.pay-submit:hover{transform:translateY(-1px);}
-		.pay-submit--online{background:linear-gradient(135deg,#4f46e5,#7c3aed);box-shadow:0 6px 18px rgba(79,70,229,.3);display:block;text-align:center;text-decoration:none;}
+		/* Custom File Dropzone */
+		.file-dropzone {
+			border: 2px dashed #cbd5e1;
+			border-radius: 16px;
+			background: #f8fafc;
+			padding: 30px 20px;
+			text-align: center;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 12px;
+			position: relative;
+		}
+		.file-dropzone:hover {
+			border-color: #6366f1;
+			background: #f0f5ff;
+			box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08);
+		}
+		.file-dropzone__icon {
+			font-size: 40px;
+			transition: all 0.3s ease;
+		}
+		.file-dropzone:hover .file-dropzone__icon {
+			transform: translateY(-4px) scale(1.1);
+		}
+		.file-dropzone__text {
+			font-size: 13px;
+			font-weight: 700;
+			color: #475569;
+		}
+		.file-dropzone__subtext {
+			font-size: 11px;
+			color: #94a3b8;
+		}
+		.file-dropzone__preview {
+			margin-top: 10px;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 8px;
+			animation: slideUp 0.3s ease;
+		}
+		.file-dropzone__preview img {
+			max-height: 120px;
+			border-radius: 12px;
+			box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+			object-fit: contain;
+			border: 2px solid #fff;
+		}
+		@keyframes slideUp {
+			from { opacity: 0; transform: translateY(10px); }
+			to { opacity: 1; transform: translateY(0); }
+		}
 
-		.pay-online{background:#f8fafc;border-radius:16px;padding:18px;text-align:center;}
-		.pay-online__amount{margin-bottom:14px;color:#475569;font-size:13px;}
-		.pay-online__amount b{color:#0f172a;font-size:16px;}
-		.pay-online__hint{display:block;margin-top:10px;color:#94a3b8;font-size:11.5px;}
-
-		.pay-page__back{text-align:center;margin-top:16px;}
-		.pay-page__back a{color:#4338ca;text-decoration:none;font-size:13px;font-weight:700;}
-		.pay-page__footer{text-align:center;color:#94a3b8;font-size:11px;margin-top:18px;padding-top:14px;border-top:1px dashed #e5e7eb;}
+		.pay-page__back{text-align:center;margin-top:20px;}
+		.pay-page__back a{color:#4f46e5;text-decoration:none;font-size:13px;font-weight:800;transition:all 0.2s;}
+		.pay-page__back a:hover{color:#4338ca;}
+		.pay-page__footer{text-align:center;color:#94a3b8;font-size:11px;margin-top:24px;padding-top:16px;border-top:1px dashed #e2e8f0;}
 	<?php }
 }

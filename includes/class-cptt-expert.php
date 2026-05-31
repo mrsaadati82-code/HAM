@@ -553,7 +553,7 @@ class CPTT_Expert {
 
 				$title = sanitize_text_field($row['title'] ?? '');
 				$desc = wp_kses_post($row['desc'] ?? '');
-				$qty = isset($row['qty']) ? max(1, (int)$row['qty']) : (int)($old_step['qty'] ?? 1);
+				$qty = isset($row['qty']) ? max(0.01, (float)$row['qty']) : (float)($old_step['qty'] ?? 1.0);
 				$unit_price = isset($row['unit_price']) ? (float)str_replace(",", "", (string)$row['unit_price']) : (float)($old_step['unit_price'] ?? 0);
 				$cost = isset($row['cost']) ? (float)str_replace(",", "", (string)$row['cost']) : ($unit_price * $qty);
 				$paid = isset($row['paid']) ? (float)str_replace(",", "", (string)$row['paid']) : 0;
@@ -880,7 +880,7 @@ class CPTT_Expert {
 			if (!$av) $av = get_avatar_url($eid);
 			$avatars[] = ['id' => $eid, 'name' => $u->display_name, 'avatar' => $av];
 		}
-		wp_send_json_success(['expert_ids' => $expert_ids, 'avatars' => $avatars]);
+		wp_send_json_success(['expert_ids' => $expert_ids, 'avatars' => $avatars, 'last_update' => $now]);
 	}
 
 	private function project_card_data($project_id) {
@@ -1087,7 +1087,6 @@ class CPTT_Expert {
 					$is_first = false;
 				$toggle_assigned_ids = isset($step['assigned_expert_ids']) && is_array($step['assigned_expert_ids']) ? array_values(array_filter(array_unique(array_map('intval',$step['assigned_expert_ids'])))) : [];
 				if (empty($toggle_assigned_ids) && !empty($step['assigned_expert_id'])) $toggle_assigned_ids = [(int)$step['assigned_expert_id']];
-					if (empty($toggle_assigned_ids) && class_exists('CPTT_Core')) $toggle_assigned_ids = CPTT_Core::get_project_expert_ids($project_id);
 				?>
 				<div class="cptt-expert-step <?php echo $is_first ? 'is-open' : ''; ?>" data-step-id="<?php echo esc_attr($step_id); ?>" draggable="true">
 					<button type="button" class="cptt-expert-step__toggle" aria-expanded="<?php echo $is_first ? 'true' : 'false'; ?>">
@@ -1122,7 +1121,7 @@ class CPTT_Expert {
 							</label>
 							<label>
 								<span>تعداد</span>
-								<input type="number" min="1" name="steps[<?php echo esc_attr($step_id); ?>][qty]" value="<?php echo esc_attr((int)($step['qty'] ?? 1)); ?>">
+								<input type="number" step="any" min="0.01" name="steps[<?php echo esc_attr($step_id); ?>][qty]" value="<?php echo esc_attr((float)($step['qty'] ?? 1.0)); ?>">
 							</label>
 							<input type="hidden" name="steps[<?php echo esc_attr($step_id); ?>][unit_price]" value="<?php echo esc_attr((float)($step['unit_price'] ?? 0)); ?>">
 							<label>
@@ -2458,8 +2457,8 @@ class CPTT_Expert {
 				if ($st_title === '') continue;
 
 				$fee = isset($posted_fees[$i]) ? (float)str_replace(",", "", (string)$posted_fees[$i]) : 0;
-				$qty = isset($posted_qty[$i]) ? (int)$posted_qty[$i] : 1;
-				if ($qty < 1) $qty = 1;
+				$qty = isset($posted_qty[$i]) ? (float)$posted_qty[$i] : 1.0;
+				if ($qty < 0.01) $qty = 1.0;
 				$cost = $fee * $qty;
 				$paid = isset($posted_paids[$i]) ? (float)str_replace(",", "", (string)$posted_paids[$i]) : 0;
 
@@ -2570,12 +2569,15 @@ class CPTT_Expert {
 		check_ajax_referer('cptt_expert_nonce', 'nonce');
 		if (!$this->current_user_can_view_dashboard()) wp_send_json_error('no_access', 403);
 
-		$full_name = sanitize_text_field($_POST['full_name'] ?? '');
+		$first_name = sanitize_text_field($_POST['first_name'] ?? '');
+		$last_name = sanitize_text_field($_POST['last_name'] ?? '');
 		$phone = sanitize_text_field($_POST['phone'] ?? '');
 
-		if ($full_name === '' || $phone === '') {
-			wp_send_json_error('نام و شماره موبایل الزامی است.', 400);
+		if ($first_name === '' || $last_name === '' || $phone === '') {
+			wp_send_json_error('نام، نام خانوادگی و شماره موبایل الزامی است.', 400);
 		}
+
+		$full_name = trim($first_name . ' ' . $last_name);
 
 		// Clean phone number (keep only digits)
 		$phone = preg_replace('/\D/', '', $phone);
@@ -2603,9 +2605,6 @@ class CPTT_Expert {
 		}
 
 		$user_id = (int)$user_id;
-		$name_parts = preg_split('/\s+/', trim($full_name), 2);
-		$first_name = $name_parts[0] ?? $full_name;
-		$last_name = $name_parts[1] ?? '';
 		wp_update_user([
 			'ID' => $user_id,
 			'display_name' => $full_name,
@@ -2823,10 +2822,14 @@ class CPTT_Expert {
 					<h3>👤 ثبت مشتری جدید</h3>
 					<button type="button" id="cptt-cust-close" style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#475569;padding:0;box-shadow:none;min-width:0;margin:0;line-height:1;">×</button>
 				</div>
-				<div class="cptt-ncm-body">
+				<div class="cptt-ncm-body" style="display: grid; gap: 12px;">
 					<div class="cptt-ncm-field">
-						<label for="cptt-cust-fullname">نام و نام خانوادگی <span style="color:#ef4444">*</span></label>
-						<input type="text" id="cptt-cust-fullname" placeholder="مثال: علیرضا محمدی" autocomplete="name">
+						<label for="cptt-cust-firstname">نام <span style="color:#ef4444">*</span></label>
+						<input type="text" id="cptt-cust-firstname" placeholder="مثال: علیرضا" autocomplete="given-name">
+					</div>
+					<div class="cptt-ncm-field">
+						<label for="cptt-cust-lastname">نام خانوادگی <span style="color:#ef4444">*</span></label>
+						<input type="text" id="cptt-cust-lastname" placeholder="مثال: محمدی" autocomplete="family-name">
 					</div>
 					<div class="cptt-ncm-field">
 						<label for="cptt-cust-phone">شماره موبایل <span style="color:#ef4444">*</span></label>
@@ -3009,7 +3012,7 @@ class CPTT_Expert {
 					var html = '<div class="cptt-create-finance-row" id="' + rowId + '" style="display:grid; grid-template-columns: 2.2fr 1.2fr 80px 1.4fr 1.4fr auto; gap:6px; align-items:center; margin-bottom:5px;">' +
 						'  <div class="cptt-bf"><span class="cptt-bf-lbl">عنوان مرحله</span><input type="text" name="create_step_titles[]" value="' + escapeHtml(title) + '" placeholder="عنوان مرحله" style="font-size:13px; padding:8px 10px; min-height:38px; height:38px; border-radius:10px; border:1px solid #cbd5e1; box-sizing:border-box; width:100%;" /></div>' +
 						'  <div class="cptt-bf"><span class="cptt-bf-lbl">مبلغ فی (ریال)</span><input type="text" class="cptt-create-step-fee cptt-num-format" name="create_step_fees[]" value="' + formatWithCommas(fee) + '" placeholder="مبلغ فی" style="font-size:13px; padding:8px 10px; min-height:38px; height:38px; border-radius:10px; border:1px solid #cbd5e1; box-sizing:border-box; width:100%;" /></div>' +
-						'  <div class="cptt-bf cptt-bf--qty"><span class="cptt-bf-lbl">تعداد</span><input type="number" class="cptt-create-step-qty" name="create_step_qty[]" value="' + qty + '" min="1" placeholder="تعداد" style="font-size:13px; padding:8px 10px; min-height:38px; height:38px; border-radius:10px; border:1px solid #cbd5e1; box-sizing:border-box; width:100%; text-align:center;" /></div>' +
+						'  <div class="cptt-bf cptt-bf--qty"><span class="cptt-bf-lbl">تعداد</span><input type="number" step="any" class="cptt-create-step-qty" name="create_step_qty[]" value="' + qty + '" min="0.01" placeholder="تعداد" style="font-size:13px; padding:8px 10px; min-height:38px; height:38px; border-radius:10px; border:1px solid #cbd5e1; box-sizing:border-box; width:100%; text-align:center;" /></div>' +
 						'  <div class="cptt-bf cptt-bf--total"><span class="cptt-bf-lbl">مبلغ کل</span><input type="text" class="cptt-create-step-cost" readonly style="font-size:13px; padding:8px 10px; min-height:38px; height:38px; border-radius:10px; border:1px solid #cbd5e1; box-sizing:border-box; width:100%; background:#f1f5f9; font-weight:700;" value="' + formatWithCommas(fee * qty) + '" /></div>' +
 						'  <div class="cptt-bf"><span class="cptt-bf-lbl">پرداختی (ریال)</span><input type="text" class="cptt-create-step-paid cptt-num-format" name="create_step_paids[]" value="' + formatWithCommas(paid) + '" placeholder="پرداختی" style="font-size:13px; padding:8px 10px; min-height:38px; height:38px; border-radius:10px; border:1px solid #cbd5e1; box-sizing:border-box; width:100%;" /></div>' +
 						'  <button type="button" class="cptt-create-remove-finance-row" style="color:#ef4444; background:#fee2e2; border:none; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; font-weight:bold; padding:0; line-height:1;">×</button>' +
@@ -3044,8 +3047,8 @@ class CPTT_Expert {
 
 				function calculateRowTotal(row) {
 					var fee = parseFromCommas(row.querySelector('.cptt-create-step-fee').value);
-					var qty = parseInt(row.querySelector('.cptt-create-step-qty').value) || 1;
-					if (qty < 1) qty = 1;
+					var qty = parseFloat(row.querySelector('.cptt-create-step-qty').value) || 1.0;
+					if (qty < 0.01) qty = 1.0;
 					row.querySelector('.cptt-create-step-cost').value = formatWithCommas(fee * qty);
 					calculateFromStepBreakdown();
 				}
@@ -3568,7 +3571,7 @@ class CPTT_Expert {
 						</div>
 						<?php if ($_proj_label): ?><span class="cptt-expertStatusBadge cptt-projectLabelBadge" <?php echo $_status_style; ?>><?php echo esc_html($_status_text); ?></span><?php endif; ?>
 					</div>
-					<div class="cptt-expertCard__progress"><span style="width:<?php echo esc_attr($data['progress']['percent']); ?>%"></span></div>
+					<?php /* <div class="cptt-expertCard__progress"><span style="width:<?php echo esc_attr($data['progress']['percent']); ?>%"></span></div> */ ?>
 
 					<?php if (!empty($_tl_steps)): ?>
 					<div class="cptt-publicTimeline cptt-expertCardTimeline" style="--cptt-hub-progress:<?php echo esc_attr(number_format((float)$_tl_progress, 2, '.', '')); ?>%;">
