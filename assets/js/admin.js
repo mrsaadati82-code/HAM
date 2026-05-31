@@ -771,3 +771,4 @@ jQuery(function($){
   // v5.4.17: دکمه‌های اکسل/PDF از UI حذف شدند (طبق درخواست). handlerها نگه‌داشته نشدند.
   setTimeout(window.cpttRenderAccountingCharts, 300);
 });
+

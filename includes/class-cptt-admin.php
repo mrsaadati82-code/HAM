@@ -25,6 +25,7 @@ class CPTT_Admin {
 		add_action('wp_ajax_cptt_step_settle', [$this, 'ajax_step_settle']);
 		add_action('wp_ajax_cptt_step_settlement_adjust', [$this, 'ajax_step_settlement_adjust']);
 		add_action('wp_ajax_cptt_manual_expert_payment', [$this, 'ajax_manual_expert_payment']);
+		add_action('wp_ajax_cptt_manual_expert_payment_adjust', [$this, 'ajax_manual_expert_payment_adjust']);
 	}
 	public function reorder_menu() {
 		global $submenu;
@@ -51,6 +52,7 @@ class CPTT_Admin {
 		wp_enqueue_style('cptt-admin', CPTT_URL . 'assets/css/admin.css', [], CPTT_VERSION);
 		wp_enqueue_script('jquery-ui-sortable');
 		wp_enqueue_script('cptt-admin', CPTT_URL . 'assets/js/admin.js', ['jquery','jquery-ui-sortable'], CPTT_VERSION, true);
+		wp_localize_script('cptt-admin', 'CPTT_CURRENCY', class_exists('CPTT_Currency') ? ['unit'=>CPTT_Currency::current_unit(), 'label'=>CPTT_Currency::label(), 'factor'=>CPTT_Currency::from_base(1), 'decimals'=>(int)CPTT_Currency::get_settings()['decimals']] : ['unit'=>'toman','label'=>'تومان','factor'=>1,'decimals'=>0]);
 		wp_localize_script('cptt-admin', 'CPTT_ADMIN', [
 			'ajax'=>admin_url('admin-ajax.php'),
 			'nonce'=>wp_create_nonce('cptt_admin_nonce'),
@@ -691,38 +693,56 @@ class CPTT_Admin {
 				foreach ($stps as $sk => $st) {
 					$paid = (float)($st['paid'] ?? 0);
 					if ($paid <= 0) continue;
-					$ae_id = isset($st['assigned_expert_id']) ? (int)$st['assigned_expert_id'] : 0;
-					// اگر کارشناس مرحله مشخص نیست، فقط اولین کارشناس پروژه را پیشنهاد می‌کنیم.
-					if (!$ae_id) {
+					$assigned_ids = isset($st['assigned_expert_ids']) && is_array($st['assigned_expert_ids']) ? array_values(array_filter(array_unique(array_map('intval', $st['assigned_expert_ids'])))) : [];
+					if (empty($assigned_ids) && !empty($st['assigned_expert_id'])) $assigned_ids = [(int)$st['assigned_expert_id']];
+					if (empty($assigned_ids)) {
 						$_eids = class_exists('CPTT_Core') ? CPTT_Core::get_project_expert_ids($proj->ID) : [];
-						if (!empty($_eids)) $ae_id = (int)$_eids[0];
+						if (!empty($_eids)) $assigned_ids = [(int)$_eids[0]];
 					}
-					$exp_to_expert = (float)($st['expert_paid'] ?? 0);
-					$admin_received = (float)($st['admin_received'] ?? 0);
-					$settled = !empty($st['step_settled']) ? 1 : 0;
-					$settle_at_fa = isset($st['settle_at_fa']) ? (string)$st['settle_at_fa'] : '';
+					if (empty($assigned_ids)) $assigned_ids = [0];
+					$per_expert = (isset($st['expert_settlements']) && is_array($st['expert_settlements'])) ? $st['expert_settlements'] : [];
+					$primary_id = !empty($st['assigned_expert_id']) ? (int)$st['assigned_expert_id'] : (int)$assigned_ids[0];
+					$pool_paid_to_experts = 0;
+					if (!empty($per_expert)) {
+						foreach ($assigned_ids as $_pid) { $pool_paid_to_experts += (float)($per_expert[(string)$_pid]['expert_paid'] ?? 0); }
+					} else {
+						$pool_paid_to_experts = (float)($st['expert_paid'] ?? 0);
+					}
+					$pool_remaining = max(0, $paid - $pool_paid_to_experts);
 					$step_id = isset($st['id']) ? (string)$st['id'] : (string)$sk;
 					$step_title = (string)($st['title'] ?? '—');
-					$sum_paid += $paid;
-					if ($settled) {
-						$sum_to_expert += $exp_to_expert;
-						$sum_to_admin  += $admin_received;
-					} else {
-						$sum_unsettled_to_expert += $exp_to_expert; // مبلغی که قبلاً صرفا به کارشناس واریز شده بدون تسویه نهایی
+					foreach ($assigned_ids as $ae_id) {
+						$key = (string)$ae_id;
+						$has_own = isset($per_expert[$key]) && is_array($per_expert[$key]);
+						$exp_to_expert = $has_own ? (float)($per_expert[$key]['expert_paid'] ?? 0) : (($ae_id === $primary_id) ? (float)($st['expert_paid'] ?? 0) : 0);
+						$admin_received = $has_own ? (float)($per_expert[$key]['admin_received'] ?? 0) : (($ae_id === $primary_id) ? (float)($st['admin_received'] ?? 0) : 0);
+						$settled = $has_own ? (!empty($per_expert[$key]['step_settled']) ? 1 : 0) : (($ae_id === $primary_id && !empty($st['step_settled'])) ? 1 : 0);
+						$settle_at_fa = $has_own ? (string)($per_expert[$key]['settle_at_fa'] ?? '') : (($ae_id === $primary_id) ? (string)($st['settle_at_fa'] ?? '') : '');
+						$other_paid = max(0, $pool_paid_to_experts - $exp_to_expert);
+						$other_names = [];
+						foreach ($assigned_ids as $_oid) { if ((int)$_oid === (int)$ae_id) continue; if ((float)($per_expert[(string)$_oid]['expert_paid'] ?? 0) > 0) { $_ou = get_user_by('id', (int)$_oid); $other_names[] = $_ou ? $_ou->display_name : ('#'.(int)$_oid); } }
+						$other_label = $other_paid > 0 ? ('تسویه شده با ' . (!empty($other_names) ? implode('، ', $other_names) : 'کارشناسان دیگر')) : 'تسویه شده با کارشناسان دیگر';
+						$sum_paid += $paid;
+						if ($settled) { $sum_to_expert += $exp_to_expert; $sum_to_admin += $admin_received; }
+						else { $sum_unsettled_to_expert += $exp_to_expert; }
+						$step_settlement_rows[] = [
+							'project_id' => (int)$proj->ID,
+							'project_title' => get_the_title($proj),
+							'step_id' => $step_id,
+							'step_title' => $step_title,
+							'expert_id' => $ae_id,
+							'expert_name' => $ae_id ? (($u=get_user_by('id',$ae_id))?$u->display_name:'—') : '—',
+							'paid' => $paid,
+							'exp_to_expert' => $exp_to_expert,
+							'admin_received' => $admin_received,
+							'pool_paid_to_experts' => $pool_paid_to_experts,
+							'pool_remaining' => $pool_remaining,
+							'other_paid' => $other_paid,
+							'other_label' => $other_label,
+							'settled' => $settled,
+							'settle_at_fa' => $settle_at_fa,
+						];
 					}
-					$step_settlement_rows[] = [
-						'project_id' => (int)$proj->ID,
-						'project_title' => get_the_title($proj),
-						'step_id' => $step_id,
-						'step_title' => $step_title,
-						'expert_id' => $ae_id,
-						'expert_name' => $ae_id ? (($u=get_user_by('id',$ae_id))?$u->display_name:'—') : '—',
-						'paid' => $paid,
-						'exp_to_expert' => $exp_to_expert,
-						'admin_received' => $admin_received,
-						'settled' => $settled,
-						'settle_at_fa' => $settle_at_fa,
-					];
 				}
 			}
 			?>
@@ -735,7 +755,7 @@ class CPTT_Admin {
 				<div class="cptt-acct-kpi" style="flex:1; min-width:160px;"><div class="cptt-acct-kpi__body"><div class="cptt-acct-kpi__label">پرداخت به کارشناس بدون تسویه نهایی</div><div class="cptt-acct-kpi__value" style="font-size:16px; color:#b45309;"><?php echo number_format($sum_unsettled_to_expert); ?> <small>تومان</small></div></div></div>
 			</div>
 
-			<?php $settle_experts = []; foreach (get_users(['role__in'=>['cptt_expert','administrator']]) as $_eu) { $settle_experts[(int)$_eu->ID]=['name'=>$_eu->display_name,'count'=>0,'remain'=>0]; } foreach ($step_settlement_rows as $_sr) { if (!empty($_sr['settled'])) continue; $eid=(int)$_sr['expert_id']; if(!$eid) continue; if(!isset($settle_experts[$eid])) $settle_experts[$eid]=['name'=>$_sr['expert_name'],'count'=>0,'remain'=>0]; $settle_experts[$eid]['count']++; $settle_experts[$eid]['remain'] += max(0, (float)$_sr['paid'] - (float)$_sr['exp_to_expert']); } ?>
+			<?php $settle_experts = []; foreach (get_users(['role__in'=>['cptt_expert','administrator']]) as $_eu) { $settle_experts[(int)$_eu->ID]=['name'=>$_eu->display_name,'count'=>0,'remain'=>0]; } foreach ($step_settlement_rows as $_sr) { if (!empty($_sr['settled'])) continue; $eid=(int)$_sr['expert_id']; if(!$eid) continue; if(!isset($settle_experts[$eid])) $settle_experts[$eid]=['name'=>$_sr['expert_name'],'count'=>0,'remain'=>0]; $settle_experts[$eid]['count']++; $settle_experts[$eid]['remain'] += max(0, (float)($_sr['pool_remaining'] ?? ((float)$_sr['paid'] - (float)$_sr['exp_to_expert']))); } ?>
 			<div class="cptt-settle-expert-cards" id="cptt-settle-expert-cards">
 				<?php foreach ($settle_experts as $eid=>$sx): $av=''; $aid=(int)get_user_meta($eid,'cptt_expert_avatar_id',true); if($aid)$av=wp_get_attachment_image_url($aid,'thumbnail'); if(!$av)$av=get_avatar_url($eid,['size'=>64]); ?>
 				<button type="button" class="cptt-settle-expert-card" data-expert="<?php echo esc_attr($eid); ?>"><img src="<?php echo esc_url($av); ?>" alt=""><span><b><?php echo esc_html($sx['name']); ?></b><small><?php echo number_format($sx['count']); ?> مرحله — مانده <?php echo number_format($sx['remain']); ?></small></span></button>
@@ -761,13 +781,13 @@ class CPTT_Admin {
 						<?php if (empty($step_settlement_rows)): ?>
 							<tr><td colspan="8" style="text-align:center; padding:20px;">هیچ مرحله‌ای با دریافتی برای تسویه ثبت نشده است.</td></tr>
 						<?php else: foreach ($step_settlement_rows as $rr): if (!empty($rr['settled'])) continue;
-							$remain_paid = max(0, $rr['paid'] - $rr['exp_to_expert']);
+							$remain_paid = max(0, (float)($rr['pool_remaining'] ?? ($rr['paid'] - $rr['exp_to_expert'])));
 							$status_html = $rr['settled']
 								? '<span class="cptt-chip cptt-chip--completed" style="background:rgba(34,197,94,0.12); color:#065f46; border:1px solid rgba(34,197,94,0.22);">✓ تسویه شده'.($rr['settle_at_fa']?' — '.esc_html($rr['settle_at_fa']):'').'</span>'
 								: ($rr['exp_to_expert']>0 ? '<span class="cptt-chip" style="background:rgba(245,158,11,0.12); color:#92400e; border:1px solid rgba(245,158,11,0.22);">⏳ پرداخت به کارشناس — بدون تسویه نهایی</span>' : '<span class="cptt-chip cptt-chip--in_progress">تسویه نشده</span>');
 						?>
 							<tr class="cptt-step-settle-row" style="display:none" data-expert="<?php echo esc_attr($rr['expert_id']); ?>">
-								<td><input type="checkbox" class="cptt-settle-row-check" data-project-id="<?php echo esc_attr($rr['project_id']); ?>" data-step-id="<?php echo esc_attr($rr['step_id']); ?>" data-expert-id="<?php echo esc_attr($rr['expert_id']); ?>" data-amount="<?php echo esc_attr(max(0, $rr['paid'] - $rr['exp_to_expert'])); ?>"></td>
+								<td><input type="checkbox" class="cptt-settle-row-check" data-project-id="<?php echo esc_attr($rr['project_id']); ?>" data-step-id="<?php echo esc_attr($rr['step_id']); ?>" data-expert-id="<?php echo esc_attr($rr['expert_id']); ?>" data-amount="<?php echo esc_attr($remain_paid); ?>"></td>
 								<td>
 									<a href="<?php echo esc_url(get_edit_post_link($rr['project_id'])); ?>" style="font-weight:800; color:#0f172a; text-decoration:none;"><?php echo esc_html($rr['project_title']); ?></a>
 									<div style="color:#64748b; font-size:12px;">مرحله: <?php echo esc_html($rr['step_title']); ?></div>
@@ -785,7 +805,9 @@ class CPTT_Admin {
 										data-step-title="<?php echo esc_attr($rr['step_title']); ?>"
 										data-project-title="<?php echo esc_attr($rr['project_title']); ?>"
 										data-paid="<?php echo esc_attr($rr['paid']); ?>"
-										data-already-paid="<?php echo esc_attr($rr['exp_to_expert']); ?>"
+										data-already-paid="<?php echo esc_attr((float)($rr['other_paid'] ?? 0)); ?>"
+						data-remain="<?php echo esc_attr($remain_paid); ?>"
+						data-other-label="<?php echo esc_attr($rr['other_label'] ?? 'تسویه شده با کارشناسان دیگر'); ?>"
 										data-expert-id="<?php echo esc_attr($rr['expert_id']); ?>"
 										data-expert-name="<?php echo esc_attr($rr['expert_name']); ?>"
 										style="background:#2563eb; color:#fff; border:none; padding:6px 14px; font-weight:bold; border-radius:6px; cursor:pointer;">💳 تسویه</button>
@@ -836,13 +858,13 @@ class CPTT_Admin {
 					// (Rough sort since we have mixing formats, but better than nothing)
 					
 					foreach ($settled_history as $rr): $srch=mb_strtolower(($rr['project_title']??'').' '.($rr['step_title']??'').' '.($rr['expert_name']??'')); ?>
-					<tr class="cptt-settled-history-row" data-search="<?php echo esc_attr($srch); ?>">
+					<tr class="cptt-settled-history-row" data-expert="<?php echo esc_attr((int)($rr['expert_id'] ?? 0)); ?>" data-search="<?php echo esc_attr($srch); ?>">
 						<td><b><?php echo esc_html($rr['project_title']); ?></b><br><small><?php echo esc_html($rr['step_title']); ?></small></td>
 						<td><?php echo esc_html($rr['expert_name']); ?></td>
-						<td><?php if(!empty($rr['is_manual'])): ?><b><?php echo number_format($rr['exp_to_expert']); ?></b><?php else: ?><input type="text" class="cptt-settle-edit-amount" value="<?php echo esc_attr(number_format($rr['exp_to_expert'])); ?>" style="width:110px"><?php endif; ?></td>
+						<td><input type="text" class="<?php echo !empty($rr['is_manual']) ? 'cptt-manual-edit-amount' : 'cptt-settle-edit-amount'; ?>" value="<?php echo esc_attr(number_format($rr['exp_to_expert'])); ?>" style="width:110px"></td>
 						<td><?php echo number_format($rr['admin_received']); ?></td>
 						<td><?php echo esc_html($rr['settle_at_fa']); ?></td>
-						<td><?php if(empty($rr['is_manual'])): ?><button type="button" class="button cptt-settle-edit" data-project-id="<?php echo esc_attr($rr['project_id']); ?>" data-step-id="<?php echo esc_attr($rr['step_id']); ?>">ذخیره</button> <button type="button" class="button button-link-delete cptt-settle-delete" data-project-id="<?php echo esc_attr($rr['project_id']); ?>" data-step-id="<?php echo esc_attr($rr['step_id']); ?>">حذف</button><?php else: ?><span class="cptt-chip cptt-chip--completed">پرداخت دستی</span><?php endif; ?></td>
+						<td><?php if(empty($rr['is_manual'])): ?><button type="button" class="button cptt-settle-edit" data-project-id="<?php echo esc_attr($rr['project_id']); ?>" data-step-id="<?php echo esc_attr($rr['step_id']); ?>" data-expert-id="<?php echo esc_attr((int)($rr['expert_id'] ?? 0)); ?>">ذخیره</button> <button type="button" class="button button-link-delete cptt-settle-delete" data-project-id="<?php echo esc_attr($rr['project_id']); ?>" data-step-id="<?php echo esc_attr($rr['step_id']); ?>" data-expert-id="<?php echo esc_attr((int)($rr['expert_id'] ?? 0)); ?>">حذف</button><?php else: ?><button type="button" class="button cptt-manual-edit" data-ledger-id="<?php echo esc_attr($rr['ledger_id']); ?>">ذخیره</button> <button type="button" class="button button-link-delete cptt-manual-delete" data-ledger-id="<?php echo esc_attr($rr['ledger_id']); ?>">حذف</button><?php endif; ?></td>
 					</tr>
 					<?php endforeach; ?>
 					</tbody></table>
@@ -878,7 +900,7 @@ class CPTT_Admin {
 
 					<div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:14px;">
 						<div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;"><span>دریافتی این مرحله:</span><b id="cptt-step-settle-paid" style="color:#0f172a;">0</b></div>
-						<div style="display:flex; justify-content:space-between; font-size:13px;"><span>قبلاً به کارشناس پرداخت‌شده:</span><b id="cptt-step-settle-already" style="color:#2563eb;">0</b></div>
+						<div style="display:flex; justify-content:space-between; font-size:13px;"><span id="cptt-step-settle-already-label">تسویه شده با کارشناسان دیگر:</span><b id="cptt-step-settle-already" style="color:#2563eb;">0</b></div><div style="display:flex; justify-content:space-between; font-size:13px; margin-top:4px;"><span>مانده قابل تسویه:</span><b id="cptt-step-settle-remain" style="color:#dc2626;">0</b></div>
 					</div>
 
 					<label style="display:block; font-weight:800; margin-bottom:6px; color:#0f172a; font-size:13px;">پرداخت به کارشناس (تومان)</label>
@@ -901,6 +923,8 @@ class CPTT_Admin {
 				var info = document.getElementById('cptt-step-settle-info');
 				var paidEl = document.getElementById('cptt-step-settle-paid');
 				var alreadyEl = document.getElementById('cptt-step-settle-already');
+				var alreadyLabelEl = document.getElementById('cptt-step-settle-already-label');
+				var remainEl = document.getElementById('cptt-step-settle-remain');
 				var amountEl = document.getElementById('cptt-step-settle-amount');
 				var msgEl = document.getElementById('cptt-step-settle-msg');
 				var btnF = document.getElementById('cptt-step-settle-final');
@@ -911,20 +935,20 @@ class CPTT_Admin {
 				var mp=document.getElementById('cptt-manual-payment-modal'), mpo=document.getElementById('cptt-manual-payment-open'), mpc=document.getElementById('cptt-manual-payment-close'), mps=document.getElementById('cptt-manual-payment-save');
 				if(mpo&&mp) mpo.addEventListener('click',function(){ var active=document.querySelector('.cptt-settle-expert-card.is-active[data-expert]:not([data-expert=""])'); var sel=document.getElementById('cptt-manual-payment-expert'); if(active&&sel) sel.value=active.dataset.expert; mp.style.display='flex'; });
 				if(mpc&&mp) mpc.addEventListener('click',function(){mp.style.display='none';}); if(mp) mp.addEventListener('click',function(e){if(e.target===mp)mp.style.display='none';});
-				if(mps) mps.addEventListener('click',function(){ var fd=new FormData(); fd.append('action','cptt_manual_expert_payment'); fd.append('nonce',(window.cpttAdminNonce||'')); fd.append('expert_id',document.getElementById('cptt-manual-payment-expert').value); fd.append('amount',document.getElementById('cptt-manual-payment-amount').value); fd.append('note',document.getElementById('cptt-manual-payment-note').value); fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:fd}).then(r=>r.json()).then(function(j){ if(j&&j.success) location.reload(); else alert((j&&j.data)?j.data:'خطا'); }); });
+				if(mps) mps.addEventListener('click',function(){ var fd=new FormData(); fd.append('action','cptt_manual_expert_payment'); fd.append('nonce',(window.cpttAdminNonce||(window.CPTT_ADMIN&&CPTT_ADMIN.nonce)||'')); fd.append('expert_id',document.getElementById('cptt-manual-payment-expert').value); fd.append('amount',document.getElementById('cptt-manual-payment-amount').value); fd.append('note',document.getElementById('cptt-manual-payment-note').value); fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:fd}).then(r=>r.json()).then(function(j){ if(j&&j.success) location.reload(); else alert((j&&j.data)?j.data:'خطا'); }); });
 
 				var hist = document.getElementById('cptt-settled-history-modal');
 				var histOpen = document.getElementById('cptt-settled-history-open');
 				var histClose = document.getElementById('cptt-settled-history-close');
-				if (histOpen && hist) histOpen.addEventListener('click', function(){ hist.style.display='flex'; });
+				if (histOpen && hist) histOpen.addEventListener('click', function(){ var active=document.querySelector('.cptt-settle-expert-card.is-active[data-expert]:not([data-expert=""])'); var eid=active?String(active.dataset.expert||''):''; hist.dataset.activeExpert=eid; document.querySelectorAll('.cptt-settled-history-row').forEach(function(r){ r.style.display=(!eid || String(r.dataset.expert||'')===eid)?'':'none'; }); hist.style.display='flex'; });
 				if (histClose && hist) histClose.addEventListener('click', function(){ hist.style.display='none'; });
 				if (hist) hist.addEventListener('click', function(e){ if(e.target===hist) hist.style.display='none'; });
 				var hSearch=document.getElementById('cptt-settled-history-search');
-				if(hSearch) hSearch.addEventListener('input', function(){ var q=this.value.toLowerCase(); document.querySelectorAll('.cptt-settled-history-row').forEach(function(r){ r.style.display=((r.dataset.search||'').toLowerCase().indexOf(q)>-1)?'':'none'; }); });
+				if(hSearch) hSearch.addEventListener('input', function(){ var q=this.value.toLowerCase(); var eid=hist?(hist.dataset.activeExpert||''):''; document.querySelectorAll('.cptt-settled-history-row').forEach(function(r){ var okExpert=(!eid || String(r.dataset.expert||'')===eid); var okSearch=((r.dataset.search||'').toLowerCase().indexOf(q)>-1); r.style.display=(okExpert&&okSearch)?'':'none'; }); });
 
 				document.addEventListener('click', function(e){ var c=e.target.closest('.cptt-settle-expert-card'); if(!c) return; document.querySelectorAll('.cptt-settle-expert-card').forEach(function(x){x.classList.remove('is-active')}); c.classList.add('is-active'); var id=c.dataset.expert||''; document.querySelectorAll('.cptt-step-settle-row').forEach(function(r){ r.style.display=(id&&r.dataset.expert===id)?'':'none'; }); });
 				var chkAll=document.getElementById('cptt-settle-check-all');
-				if(chkAll) chkAll.addEventListener('change', function(){ document.querySelectorAll('.cptt-step-settle-row:not([style*="display: none"]) .cptt-settle-row-check').forEach(function(ch){ ch.checked=chkAll.checked; }); });
+				if(chkAll) chkAll.addEventListener('change', function(){ var active=document.querySelector('.cptt-settle-expert-card.is-active[data-expert]:not([data-expert=""])'); var eid=active?String(active.dataset.expert||''):''; document.querySelectorAll('.cptt-settle-row-check').forEach(function(ch){ var row=ch.closest('.cptt-step-settle-row'); var visible=row && row.style.display !== 'none' && (!eid || String(row.dataset.expert||'')===eid); ch.checked = visible ? chkAll.checked : false; }); });
 
 				var bulk=document.getElementById('cptt-bulk-settle-selected');
 				var bulkModal=document.getElementById('cptt-bulk-settle-modal');
@@ -935,7 +959,7 @@ class CPTT_Admin {
 				var bulkMsg=document.getElementById('cptt-bulk-settle-msg');
 
 				if(bulk) bulk.addEventListener('click', function(){
-					var checked=Array.from(document.querySelectorAll('.cptt-settle-row-check:checked'));
+					var checked=Array.from(document.querySelectorAll('.cptt-settle-row-check:checked')).filter(function(ch){ var row=ch.closest('.cptt-step-settle-row'); return row && row.style.display !== 'none'; });
 					if(!checked.length){ alert('هیچ ردیفی انتخاب نشده است.'); return; }
 					
 					var html = ''; var total = 0;
@@ -958,9 +982,9 @@ class CPTT_Admin {
 
 				if(bulkCancel) bulkCancel.addEventListener('click', function(){ bulkModal.style.display='none'; });
 				
-				$(document).on('input', '.cptt-bulk-amount', function(){
+				jQuery(document).on('input', '.cptt-bulk-amount', function(){
 					var sum = 0;
-					$('.cptt-bulk-amount').each(function(){ sum += toNum($(this).val()); });
+					jQuery('.cptt-bulk-amount').each(function(){ sum += toNum(jQuery(this).val()); });
 					bulkTotal.textContent = sum.toLocaleString('en-US') + ' تومان';
 				});
 
@@ -974,7 +998,7 @@ class CPTT_Admin {
 						var amount = toNum(r.querySelector('.cptt-bulk-amount').value);
 						var fd = new FormData();
 						fd.append('action','cptt_step_settle');
-						fd.append('nonce', (window.cpttAdminNonce||''));
+						fd.append('nonce', (window.cpttAdminNonce||(window.CPTT_ADMIN&&CPTT_ADMIN.nonce)||''));
 						fd.append('project_id', r.dataset.pid);
 						fd.append('step_id', r.dataset.sid);
 						fd.append('expert_id', r.dataset.eid);
@@ -990,29 +1014,36 @@ class CPTT_Admin {
 				document.addEventListener('click', function(e){
 					var eb=e.target.closest('.cptt-settle-edit,.cptt-settle-delete'); if(!eb) return;
 					if(eb.classList.contains('cptt-settle-delete') && !confirm('این تسویه حذف شود؟')) return;
-					var tr=eb.closest('tr'); var fd=new FormData(); fd.append('action','cptt_step_settlement_adjust'); fd.append('nonce',(window.cpttAdminNonce||'')); fd.append('project_id',eb.dataset.projectId); fd.append('step_id',eb.dataset.stepId); fd.append('mode', eb.classList.contains('cptt-settle-delete')?'delete':'edit'); if(tr){ var inp=tr.querySelector('.cptt-settle-edit-amount'); if(inp) fd.append('amount', inp.value); }
+					var tr=eb.closest('tr'); var fd=new FormData(); fd.append('action','cptt_step_settlement_adjust'); fd.append('nonce',(window.cpttAdminNonce||(window.CPTT_ADMIN&&CPTT_ADMIN.nonce)||'')); fd.append('project_id',eb.dataset.projectId); fd.append('step_id',eb.dataset.stepId); fd.append('mode', eb.classList.contains('cptt-settle-delete')?'delete':'edit'); fd.append('expert_id', eb.dataset.expertId||''); if(tr){ var inp=tr.querySelector('.cptt-settle-edit-amount'); if(inp) fd.append('amount', inp.value); }
+					fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:fd}).then(function(r){return r.json();}).then(function(j){ if(j&&j.success) location.reload(); else alert((j&&j.data)?j.data:'خطا'); });
+				});
+
+				document.addEventListener('click', function(e){
+					var mb=e.target.closest('.cptt-manual-edit,.cptt-manual-delete'); if(!mb) return;
+					if(mb.classList.contains('cptt-manual-delete') && !confirm('این پرداخت دستی حذف شود؟')) return;
+					var tr=mb.closest('tr'); var fd=new FormData(); fd.append('action','cptt_manual_expert_payment_adjust'); fd.append('nonce',(window.cpttAdminNonce||(window.CPTT_ADMIN&&CPTT_ADMIN.nonce)||'')); fd.append('ledger_id',mb.dataset.ledgerId); fd.append('mode', mb.classList.contains('cptt-manual-delete')?'delete':'edit'); if(tr){ var inp=tr.querySelector('.cptt-manual-edit-amount'); if(inp) fd.append('amount', inp.value); }
 					fetch(ajaxurl,{method:'POST',credentials:'same-origin',body:fd}).then(function(r){return r.json();}).then(function(j){ if(j&&j.success) location.reload(); else alert((j&&j.data)?j.data:'خطا'); });
 				});
 
 				var ctx = {};
-				function openModal(d){ ctx = d; info.innerHTML = 'پروژه: <b>'+d.projectTitle+'</b><br>مرحله: <b>'+d.stepTitle+'</b><br>کارشناس: <b>'+d.expertName+'</b>'; paidEl.textContent = Number(d.paid).toLocaleString('en-US'); alreadyEl.textContent = Number(d.already).toLocaleString('en-US'); amountEl.value = ''; msgEl.textContent=''; modal.style.display='flex'; }
+				function openModal(d){ ctx = d; info.innerHTML = 'پروژه: <b>'+d.projectTitle+'</b><br>مرحله: <b>'+d.stepTitle+'</b><br>کارشناس فعلی: <b>'+d.expertName+'</b>'; paidEl.textContent = Number(d.paid).toLocaleString('en-US'); if(alreadyLabelEl) alreadyLabelEl.textContent = d.otherLabel || 'تسویه شده با کارشناسان دیگر'; alreadyEl.textContent = Number(d.already).toLocaleString('en-US'); if(remainEl) remainEl.textContent = Number(d.remain).toLocaleString('en-US'); amountEl.value = ''; amountEl.placeholder = 'حداکثر ' + Number(d.remain).toLocaleString('en-US'); msgEl.textContent=''; modal.style.display='flex'; }
 				function closeModal(){ modal.style.display='none'; }
 				function toNum(v){ return parseFloat(String(v||'').replace(/[,\s]/g,''))||0; }
 				document.addEventListener('click', function(e){
 					var btn = e.target.closest('.cptt-step-settle-btn'); if (!btn) return;
-					openModal({ projectId: btn.dataset.projectId, projectTitle: btn.dataset.projectTitle, stepId: btn.dataset.stepId, stepTitle: btn.dataset.stepTitle, expertId: btn.dataset.expertId, expertName: btn.dataset.expertName, paid: toNum(btn.dataset.paid), already: toNum(btn.dataset.alreadyPaid) });
+					openModal({ projectId: btn.dataset.projectId, projectTitle: btn.dataset.projectTitle, stepId: btn.dataset.stepId, stepTitle: btn.dataset.stepTitle, expertId: btn.dataset.expertId, expertName: btn.dataset.expertName, paid: toNum(btn.dataset.paid), already: toNum(btn.dataset.alreadyPaid), remain: toNum(btn.dataset.remain), otherLabel: btn.dataset.otherLabel || '' });
 				});
 				btnC.addEventListener('click', closeModal);
 				modal.addEventListener('click', function(e){ if (e.target===modal) closeModal(); });
 				function submit(mode){
 					var amount = toNum(amountEl.value);
-					var maxAmount = ctx.paid - ctx.already;
-					if (amount <= 0) { msgEl.style.color='#dc2626'; msgEl.textContent='لطفا مبلغ پرداخت به کارشناس را وارد کنید.'; return; }
+					var maxAmount = ctx.remain;
+					if (amount < 0) { msgEl.style.color='#dc2626'; msgEl.textContent='مبلغ پرداخت به کارشناس نمی‌تواند منفی باشد.'; return; }
 					if (amount > maxAmount + 0.001) { msgEl.style.color='#dc2626'; msgEl.textContent='مبلغ پرداختی نمی‌تواند از مانده‌ی این مرحله بیشتر باشد.'; return; }
 					btnF.disabled = btnP.disabled = true; msgEl.style.color='#475569'; msgEl.textContent='در حال ذخیره...';
 					var fd = new FormData();
 					fd.append('action','cptt_step_settle');
-					fd.append('nonce', (window.cpttAdminNonce||''));
+					fd.append('nonce', (window.cpttAdminNonce||(window.CPTT_ADMIN&&CPTT_ADMIN.nonce)||''));
 					fd.append('project_id', ctx.projectId);
 					fd.append('step_id', ctx.stepId);
 					fd.append('expert_id', ctx.expertId);
@@ -1762,8 +1793,8 @@ class CPTT_Admin {
 			$checklist=isset($s['checklist'])?$this->normalize_checklist($s['checklist']):[];
 			$user_tasks=isset($s['user_tasks'])?$this->normalize_user_tasks($s['user_tasks']):[];
 			
-            $cost = isset($s['cost']) ? (float)str_replace(",", "", $s['cost']) : 0;
-            $paid = isset($s['paid']) ? (float)str_replace(",", "", $s['paid']) : 0;
+            $cost = isset($s['cost']) ? (class_exists('CPTT_Currency') ? CPTT_Currency::parse_input($s['cost']) : (float)str_replace(",", "", $s['cost'])) : 0;
+            $paid = isset($s['paid']) ? (class_exists('CPTT_Currency') ? CPTT_Currency::parse_input($s['paid']) : (float)str_replace(",", "", $s['paid'])) : 0;
             // تسویه مالی مرحله دیگر وضعیت اجرایی را خودکار «انجام‌شده» نمی‌کند.
 
 			if ($title===''&&$desc===''&&empty($checklist)&&empty($user_tasks)) continue;
@@ -1897,7 +1928,7 @@ class CPTT_Admin {
 			foreach ($steps as &$_ns) {
 				$_sid = (string)($_ns['id'] ?? '');
 				if ($_sid !== '' && isset($old_by_id_settle[$_sid])) {
-					foreach (['admin_received','step_settled','settle_at','settle_at_fa','settled_by'] as $_pk) {
+					foreach (['admin_received','step_settled','settle_at','settle_at_fa','settled_by','expert_settlements'] as $_pk) {
 						if (isset($old_by_id_settle[$_sid][$_pk])) $_ns[$_pk] = $old_by_id_settle[$_sid][$_pk];
 					}
 				}
@@ -2041,12 +2072,35 @@ class CPTT_Admin {
 		wp_send_json_success();
 	}
 
+	public function ajax_manual_expert_payment_adjust() {
+		if (!current_user_can('edit_cptt_projects')) wp_send_json_error('دسترسی ندارید.', 403);
+		check_ajax_referer('cptt_admin_nonce', 'nonce');
+		global $wpdb;
+		$ledger_id = absint($_POST['ledger_id'] ?? 0);
+		$mode = sanitize_key((string)($_POST['mode'] ?? 'edit'));
+		$amount = isset($_POST['amount']) ? (float)str_replace([',',' '], '', (string)$_POST['amount']) : 0;
+		$table = $wpdb->prefix . 'cptt_ledger';
+		if (!$ledger_id) wp_send_json_error('شناسه پرداخت نامعتبر است.', 400);
+		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id=%d AND type=%s", $ledger_id, 'expert_manual_payout'));
+		if (!$row) wp_send_json_error('پرداخت دستی یافت نشد.', 404);
+		if ($mode === 'delete') {
+			$wpdb->delete($table, ['id' => $ledger_id], ['%d']);
+			if (class_exists('CPTT_Core')) CPTT_Core::activity_log('user', (int)$row->user_id, 'manual_expert_payment_delete', 'حذف پرداخت دستی کارشناس');
+			wp_send_json_success();
+		}
+		if ($amount <= 0) wp_send_json_error('مبلغ نامعتبر است.', 400);
+		$wpdb->update($table, ['amount' => -abs($amount)], ['id' => $ledger_id], ['%f'], ['%d']);
+		if (class_exists('CPTT_Core')) CPTT_Core::activity_log('user', (int)$row->user_id, 'manual_expert_payment_edit', 'ویرایش پرداخت دستی کارشناس: ' . number_format($amount));
+		wp_send_json_success();
+	}
+
 	public function ajax_step_settlement_adjust() {
 		if (!current_user_can('edit_cptt_projects')) wp_send_json_error('دسترسی ندارید.', 403);
 		check_ajax_referer('cptt_admin_nonce', 'nonce');
 		$project_id = absint($_POST['project_id'] ?? 0);
 		$step_id = sanitize_text_field((string)($_POST['step_id'] ?? ''));
 		$mode = sanitize_key((string)($_POST['mode'] ?? 'edit'));
+		$expert_id = absint($_POST['expert_id'] ?? 0);
 		$amount = isset($_POST['amount']) ? (float)str_replace([',',' '], '', (string)$_POST['amount']) : 0;
 		if (!$project_id || $step_id === '') wp_send_json_error('اطلاعات نامعتبر.', 400);
 		$steps = get_post_meta($project_id, '_cptt_steps', true);
@@ -2057,30 +2111,35 @@ class CPTT_Admin {
 			if ($sid !== $step_id) continue;
 			$found = true;
 			$paid = (float)($st['paid'] ?? 0);
-			if ($mode === 'delete') {
-				$steps[$i]['expert_paid'] = 0;
-				$steps[$i]['admin_received'] = 0;
-				$steps[$i]['step_settled'] = 0;
-				unset($steps[$i]['settle_at'], $steps[$i]['settle_at_fa'], $steps[$i]['settled_by']);
-			} else {
-				if ($amount < 0 || $amount > $paid) wp_send_json_error('مبلغ نامعتبر است.', 400);
-				$steps[$i]['expert_paid'] = $amount;
-				$steps[$i]['expert_share'] = max((float)($steps[$i]['expert_share'] ?? 0), $amount);
-				$steps[$i]['admin_received'] = max(0, $paid - $amount);
-				$steps[$i]['step_settled'] = 1;
-				if (empty($steps[$i]['settle_at'])) {
+			$assigned_ids = isset($st['assigned_expert_ids']) && is_array($st['assigned_expert_ids']) ? array_values(array_filter(array_unique(array_map('intval', $st['assigned_expert_ids'])))) : [];
+			if (empty($assigned_ids) && !empty($st['assigned_expert_id'])) $assigned_ids = [(int)$st['assigned_expert_id']];
+			if (!$expert_id && !empty($assigned_ids)) $expert_id = (int)$assigned_ids[0];
+			if ($expert_id) {
+				if (!isset($steps[$i]['expert_settlements']) || !is_array($steps[$i]['expert_settlements'])) $steps[$i]['expert_settlements'] = [];
+				if (empty($steps[$i]['expert_settlements']) && !empty($steps[$i]['expert_paid'])) { $_primary = !empty($st['assigned_expert_id']) ? (int)$st['assigned_expert_id'] : (!empty($assigned_ids) ? (int)$assigned_ids[0] : 0); if ($_primary) $steps[$i]['expert_settlements'][(string)$_primary] = ['expert_paid'=>(float)($st['expert_paid'] ?? 0), 'admin_received'=>(float)($st['admin_received'] ?? 0), 'step_settled'=>!empty($st['step_settled'])?1:0, 'settle_at'=>($st['settle_at'] ?? 0), 'settle_at_fa'=>($st['settle_at_fa'] ?? '')]; }
+				$key = (string)$expert_id;
+				if ($mode === 'delete') {
+					$steps[$i]['expert_settlements'][$key] = ['expert_paid'=>0,'admin_received'=>0,'step_settled'=>0];
+				} else {
+					$pool_other = 0;
+					foreach (($assigned_ids ?: [$expert_id]) as $_pid) { if ((int)$_pid !== (int)$expert_id) $pool_other += (float)($steps[$i]['expert_settlements'][(string)$_pid]['expert_paid'] ?? 0); }
+					if ($amount < 0 || ($pool_other + $amount) > $paid + 0.001) wp_send_json_error('مبلغ نامعتبر است.', 400);
 					$now = (int)current_time('timestamp', true);
-					$steps[$i]['settle_at'] = $now;
-					$steps[$i]['settle_at_fa'] = class_exists('CPTT_Core') ? CPTT_Core::jalali_datetime($now) : date('Y-m-d H:i', $now);
+					$steps[$i]['expert_settlements'][$key] = ['expert_paid'=>$amount,'admin_received'=>max(0, $paid - ($pool_other + $amount)),'step_settled'=>1,'settle_at'=>$now,'settle_at_fa'=>(class_exists('CPTT_Core') ? CPTT_Core::jalali_datetime($now) : date('Y-m-d H:i', $now)),'settled_by'=>(int)get_current_user_id()];
 				}
-				$steps[$i]['settled_by'] = (int)get_current_user_id();
+				$all_for_step = true;
+				foreach (($assigned_ids ?: [$expert_id]) as $_eid) { if (empty($steps[$i]['expert_settlements'][(string)$_eid]['step_settled'])) { $all_for_step = false; break; } }
+				$steps[$i]['step_settled'] = $all_for_step ? 1 : 0;
+			} else {
+				if ($mode === 'delete') { $steps[$i]['expert_paid'] = 0; $steps[$i]['admin_received'] = 0; $steps[$i]['step_settled'] = 0; unset($steps[$i]['settle_at'], $steps[$i]['settle_at_fa'], $steps[$i]['settled_by']); }
+				else { if ($amount < 0 || $amount > $paid) wp_send_json_error('مبلغ نامعتبر است.', 400); $steps[$i]['expert_paid'] = $amount; $steps[$i]['expert_share'] = max((float)($steps[$i]['expert_share'] ?? 0), $amount); $steps[$i]['admin_received'] = max(0, $paid - $amount); $steps[$i]['step_settled'] = 1; if (empty($steps[$i]['settle_at'])) { $now = (int)current_time('timestamp', true); $steps[$i]['settle_at'] = $now; $steps[$i]['settle_at_fa'] = class_exists('CPTT_Core') ? CPTT_Core::jalali_datetime($now) : date('Y-m-d H:i', $now); } $steps[$i]['settled_by'] = (int)get_current_user_id(); }
 			}
 			break;
 		}
 		if (!$found) wp_send_json_error('مرحله یافت نشد.', 404);
 		update_post_meta($project_id, '_cptt_steps', $steps);
 		$all_settled = true; $has_any_paid = false;
-		foreach ($steps as $st) { if ((float)($st['paid'] ?? 0) > 0) { $has_any_paid = true; if (empty($st['step_settled'])) { $all_settled = false; break; } } }
+		foreach ($steps as $st) { if ((float)($st['paid'] ?? 0) > 0) { $has_any_paid = true; $ids = isset($st['assigned_expert_ids']) && is_array($st['assigned_expert_ids']) ? array_values(array_filter(array_unique(array_map('intval',$st['assigned_expert_ids'])))) : []; if (empty($ids) && !empty($st['assigned_expert_id'])) $ids=[(int)$st['assigned_expert_id']]; if (!empty($ids) && isset($st['expert_settlements']) && is_array($st['expert_settlements'])) { foreach ($ids as $_eid) { if (empty($st['expert_settlements'][(string)$_eid]['step_settled'])) { $all_settled=false; break 2; } } } elseif (empty($st['step_settled'])) { $all_settled = false; break; } } }
 		update_post_meta($project_id, '_cptt_is_settled', ($has_any_paid && $all_settled) ? 1 : 0);
 		wp_send_json_success();
 	}
@@ -2175,26 +2234,39 @@ class CPTT_Admin {
 			$found = true;
 
 			$paid = (float)($st['paid'] ?? 0);
-			$already_expert = (float)($st['expert_paid'] ?? 0);
-			$already_admin  = (float)($st['admin_received'] ?? 0);
-			$max_payable = max(0, $paid - $already_expert);
-			if ($amount > $max_payable + 0.001) wp_send_json_error('مبلغ از مانده‌ی این مرحله بیشتر است.', 400);
-
-			$new_expert = $already_expert + $amount;
-			$steps[$i]['expert_paid'] = $new_expert;
-			// expert_share را برای backward-compatibility هم‌سان نگه می‌داریم (تجمعی برابر expert_paid)
-			$steps[$i]['expert_share'] = max((float)($steps[$i]['expert_share'] ?? 0), $new_expert);
-			if ($expert_id) $steps[$i]['assigned_expert_id'] = $expert_id;
-
-			if ($mode === 'final') {
-				$steps[$i]['admin_received'] = $already_admin + max(0, $paid - $new_expert);
-				$steps[$i]['step_settled'] = 1;
-				$now = (int) current_time('timestamp', true);
-				$steps[$i]['settle_at'] = $now;
-				$steps[$i]['settle_at_fa'] = class_exists('CPTT_Core') ? CPTT_Core::jalali_datetime($now) : date('Y-m-d H:i', $now);
-				$steps[$i]['settled_by'] = (int) get_current_user_id();
+			$assigned_ids = isset($st['assigned_expert_ids']) && is_array($st['assigned_expert_ids']) ? array_values(array_filter(array_unique(array_map('intval', $st['assigned_expert_ids'])))) : [];
+			if (empty($assigned_ids) && !empty($st['assigned_expert_id'])) $assigned_ids = [(int)$st['assigned_expert_id']];
+			if (!$expert_id && !empty($assigned_ids)) $expert_id = (int)$assigned_ids[0];
+			if ($expert_id) {
+				if (!isset($steps[$i]['expert_settlements']) || !is_array($steps[$i]['expert_settlements'])) $steps[$i]['expert_settlements'] = [];
+				if (empty($steps[$i]['expert_settlements']) && !empty($steps[$i]['expert_paid'])) { $_primary = !empty($st['assigned_expert_id']) ? (int)$st['assigned_expert_id'] : (!empty($assigned_ids) ? (int)$assigned_ids[0] : 0); if ($_primary) $steps[$i]['expert_settlements'][(string)$_primary] = ['expert_paid'=>(float)($st['expert_paid'] ?? 0), 'admin_received'=>(float)($st['admin_received'] ?? 0), 'step_settled'=>!empty($st['step_settled'])?1:0, 'settle_at'=>($st['settle_at'] ?? 0), 'settle_at_fa'=>($st['settle_at_fa'] ?? '')]; }
+				$key = (string)$expert_id;
+				$old_expert_row = isset($steps[$i]['expert_settlements'][$key]) && is_array($steps[$i]['expert_settlements'][$key]) ? $steps[$i]['expert_settlements'][$key] : [];
+				$already_expert = (float)($old_expert_row['expert_paid'] ?? 0);
+				$already_admin = (float)($old_expert_row['admin_received'] ?? 0);
+				$pool_paid_to_experts = 0;
+				foreach (($assigned_ids ?: [$expert_id]) as $_pid) { $pool_paid_to_experts += (float)($steps[$i]['expert_settlements'][(string)$_pid]['expert_paid'] ?? 0); }
+				$max_payable = max(0, $paid - $pool_paid_to_experts);
+				if ($amount > $max_payable + 0.001) wp_send_json_error('مبلغ از مانده‌ی این مرحله بیشتر است.', 400);
+				$new_expert = $already_expert + $amount;
+				$steps[$i]['expert_settlements'][$key]['expert_paid'] = $new_expert;
+				$steps[$i]['expert_settlements'][$key]['expert_share'] = max((float)($old_expert_row['expert_share'] ?? 0), $new_expert);
+				if ($mode === 'final') {
+					$steps[$i]['expert_settlements'][$key]['admin_received'] = $already_admin + max(0, $paid - ($pool_paid_to_experts + $amount));
+					$steps[$i]['expert_settlements'][$key]['step_settled'] = 1;
+					$now = (int) current_time('timestamp', true);
+					$steps[$i]['expert_settlements'][$key]['settle_at'] = $now;
+					$steps[$i]['expert_settlements'][$key]['settle_at_fa'] = class_exists('CPTT_Core') ? CPTT_Core::jalali_datetime($now) : date('Y-m-d H:i', $now);
+					$steps[$i]['expert_settlements'][$key]['settled_by'] = (int)get_current_user_id();
+				} else {
+					$steps[$i]['expert_settlements'][$key]['step_settled'] = 0;
+				}
+				$all_for_step = true;
+				foreach (($assigned_ids ?: [$expert_id]) as $_eid) { if (empty($steps[$i]['expert_settlements'][(string)$_eid]['step_settled'])) { $all_for_step = false; break; } }
+				$steps[$i]['step_settled'] = $all_for_step ? 1 : 0;
+				if (count($assigned_ids) <= 1 || (int)($st['assigned_expert_id'] ?? 0) === $expert_id) { $steps[$i]['expert_paid'] = $new_expert; $steps[$i]['expert_share'] = max((float)($steps[$i]['expert_share'] ?? 0), $new_expert); if ($mode === 'final') { $steps[$i]['admin_received'] = $steps[$i]['expert_settlements'][$key]['admin_received']; $steps[$i]['settle_at'] = $steps[$i]['expert_settlements'][$key]['settle_at'] ?? 0; $steps[$i]['settle_at_fa'] = $steps[$i]['expert_settlements'][$key]['settle_at_fa'] ?? ''; $steps[$i]['settled_by'] = (int)get_current_user_id(); } }
 			} else {
-				$steps[$i]['step_settled'] = 0;
+				$already_expert = (float)($st['expert_paid'] ?? 0); $already_admin  = (float)($st['admin_received'] ?? 0); $max_payable = max(0, $paid - $already_expert); if ($amount > $max_payable + 0.001) wp_send_json_error('مبلغ از مانده‌ی این مرحله بیشتر است.', 400); $new_expert = $already_expert + $amount; $steps[$i]['expert_paid'] = $new_expert; $steps[$i]['expert_share'] = max((float)($steps[$i]['expert_share'] ?? 0), $new_expert); if ($mode === 'final') { $steps[$i]['admin_received'] = $already_admin + max(0, $paid - $new_expert); $steps[$i]['step_settled'] = 1; $now = (int) current_time('timestamp', true); $steps[$i]['settle_at'] = $now; $steps[$i]['settle_at_fa'] = class_exists('CPTT_Core') ? CPTT_Core::jalali_datetime($now) : date('Y-m-d H:i', $now); $steps[$i]['settled_by'] = (int) get_current_user_id(); } else { $steps[$i]['step_settled'] = 0; }
 			}
 			break;
 		}
@@ -2208,7 +2280,10 @@ class CPTT_Admin {
 		foreach ($steps as $st) {
 			if ((float)($st['paid'] ?? 0) > 0) {
 				$has_any_paid = true;
-				if (empty($st['step_settled'])) { $all_settled = false; break; }
+				$ids = isset($st['assigned_expert_ids']) && is_array($st['assigned_expert_ids']) ? array_values(array_filter(array_unique(array_map('intval',$st['assigned_expert_ids'])))) : [];
+				if (empty($ids) && !empty($st['assigned_expert_id'])) $ids=[(int)$st['assigned_expert_id']];
+				if (!empty($ids) && isset($st['expert_settlements']) && is_array($st['expert_settlements'])) { foreach ($ids as $_eid) { if (empty($st['expert_settlements'][(string)$_eid]['step_settled'])) { $all_settled=false; break 2; } } }
+				elseif (empty($st['step_settled'])) { $all_settled = false; break; }
 			}
 		}
 		update_post_meta($project_id, '_cptt_is_settled', ($has_any_paid && $all_settled) ? 1 : 0);

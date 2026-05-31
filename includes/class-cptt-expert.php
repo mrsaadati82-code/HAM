@@ -1,6 +1,20 @@
 <?php
 if ( ! defined('ABSPATH') ) exit;
 
+if (!function_exists('get_expert_mood_emoji')) {
+	function get_expert_mood_emoji($user_id) {
+		$user_id = (int)$user_id;
+		if (!$user_id) return '';
+		$today = current_time('Y-m-d');
+		if ((string)get_user_meta($user_id, 'pm_last_mood_check', true) !== $today) return '';
+		$mood = (int)get_user_meta($user_id, 'pm_current_mood', true);
+		$defaults = [1 => '😟', 2 => '😐', 3 => '😄'];
+		$custom = get_user_meta($user_id, 'pm_mood_emojis', true);
+		if (!is_array($custom)) $custom = [];
+		return isset($defaults[$mood]) ? (string)($custom[$mood] ?? $defaults[$mood]) : '';
+	}
+}
+
 class CPTT_Expert {
 	private function get_persian_day_of_week($timestamp) {
 		$days = ['یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه', 'شنبه'];
@@ -54,6 +68,8 @@ class CPTT_Expert {
 		add_action('wp_ajax_cptt_expert_delete_step', [$this, 'ajax_delete_step']);
 		add_action('wp_ajax_cptt_expert_save_profile', [$this, 'ajax_save_own_profile']);
 		add_action('wp_ajax_cptt_expert_upload_avatar', [$this, 'ajax_upload_avatar']);
+		add_action('wp_ajax_cptt_expert_save_mood', [$this, 'ajax_save_mood']);
+		add_action('wp_ajax_cptt_expert_save_theme', [$this, 'ajax_save_theme']);
 		add_action('admin_init', [$this, 'redirect_experts_from_admin'], 1);
 		add_filter('body_class', [$this, 'add_isolation_body_class']);
 	}
@@ -109,6 +125,7 @@ class CPTT_Expert {
 
 	public function register_assets() {
 		wp_register_script('cptt-expert', CPTT_URL . 'assets/js/expert.js', [], CPTT_VERSION, true);
+		wp_localize_script('cptt-expert', 'CPTT_CURRENCY', class_exists('CPTT_Currency') ? ['unit'=>CPTT_Currency::current_unit(), 'label'=>CPTT_Currency::label(), 'factor'=>CPTT_Currency::from_base(1), 'decimals'=>(int)CPTT_Currency::get_settings()['decimals']] : ['unit'=>'toman','label'=>'تومان','factor'=>1,'decimals'=>0]);
 		wp_localize_script('cptt-expert', 'CPTT_EXPERT', [
 			'ajax' => admin_url('admin-ajax.php'),
 			'nonce' => wp_create_nonce('cptt_expert_nonce'),
@@ -116,6 +133,7 @@ class CPTT_Expert {
 			'publicHubUrl' => self::public_hub_url(),
 			'dashboardLoginUrl' => wp_login_url(self::dashboard_url()),
 			'wpUserId' => get_current_user_id(),
+			'userTheme' => is_user_logged_in() ? (string)get_user_meta(get_current_user_id(), 'cptt_expert_dashboard_theme', true) : '',
 			'texts' => [
 				'saving' => 'در حال ذخیره...',
 				'saved' => 'تغییرات با موفقیت ذخیره شد.',
@@ -408,8 +426,8 @@ class CPTT_Expert {
 				'title' => sanitize_text_field($row['title'] ?? ''),
 				'desc' => wp_kses_post($row['desc'] ?? ''),
 				'due_at_local' => sanitize_text_field($row['due_at_local'] ?? ''),
-				'cost' => isset($row['cost']) ? (float)str_replace(",", "", (string)$row['cost']) : 0,
-				'paid' => isset($row['paid']) ? (float)str_replace(",", "", (string)$row['paid']) : 0,
+				'cost' => isset($row['cost']) ? (class_exists('CPTT_Currency') ? CPTT_Currency::parse_input($row['cost']) : (float)str_replace(",", "", (string)$row['cost'])) : 0,
+				'paid' => isset($row['paid']) ? (class_exists('CPTT_Currency') ? CPTT_Currency::parse_input($row['paid']) : (float)str_replace(",", "", (string)$row['paid'])) : 0,
 				'expert_share' => isset($row['expert_share']) ? (float)str_replace(",", "", (string)$row['expert_share']) : 0,
 				'expert_paid' => isset($row['expert_paid']) ? (float)str_replace(",", "", (string)$row['expert_paid']) : 0,
 				'checklist' => $checklist,
@@ -555,8 +573,8 @@ class CPTT_Expert {
 				$desc = wp_kses_post($row['desc'] ?? '');
 				$qty = isset($row['qty']) ? max(0.01, (float)$row['qty']) : (float)($old_step['qty'] ?? 1.0);
 				$unit_price = isset($row['unit_price']) ? (float)str_replace(",", "", (string)$row['unit_price']) : (float)($old_step['unit_price'] ?? 0);
-				$cost = isset($row['cost']) ? (float)str_replace(",", "", (string)$row['cost']) : ($unit_price * $qty);
-				$paid = isset($row['paid']) ? (float)str_replace(",", "", (string)$row['paid']) : 0;
+				$cost = isset($row['cost']) ? (class_exists('CPTT_Currency') ? CPTT_Currency::parse_input($row['cost']) : (float)str_replace(",", "", (string)$row['cost'])) : ($unit_price * $qty);
+				$paid = isset($row['paid']) ? (class_exists('CPTT_Currency') ? CPTT_Currency::parse_input($row['paid']) : (float)str_replace(",", "", (string)$row['paid'])) : 0;
 				$expert_share = isset($row['expert_share']) ? (float)str_replace(",", "", (string)$row['expert_share']) : 0;
 				$expert_paid = isset($row['expert_paid']) ? (float)str_replace(",", "", (string)$row['expert_paid']) : 0;
 
@@ -720,6 +738,9 @@ class CPTT_Expert {
 					$step_data['updated_at'] = ($old_status !== $status) ? $now : ($old_step['updated_at'] ?? $now);
 					$step_data['updated_at_fa'] = ($old_status !== $status) ? (class_exists('CPTT_Core') ? CPTT_Core::jalali_datetime($now) : date('Y-m-d H:i', $now)) : ($old_step['updated_at_fa'] ?? '');
 					$step_data['updated_by'] = ($old_status !== $status) ? $user_id : ($old_step['updated_by'] ?? $user_id);
+					foreach (['admin_received','step_settled','settle_at','settle_at_fa','settled_by','expert_settlements'] as $_pk) {
+						if (array_key_exists($_pk, $old_step)) $step_data[$_pk] = $old_step[$_pk];
+					}
 				} else {
 					$step_data['updated_at'] = $now;
 					$step_data['updated_at_fa'] = class_exists('CPTT_Core') ? CPTT_Core::jalali_datetime($now) : date('Y-m-d H:i', $now);
@@ -1406,6 +1427,7 @@ class CPTT_Expert {
 		$title = get_user_meta($user->ID, 'cptt_expert_title', true);
 		$bio = get_user_meta($user->ID, 'cptt_expert_short_bio', true);
 		$specialties = get_user_meta($user->ID, 'cptt_expert_specialties', true);
+		$mood_emojis = $this->get_mood_emojis($user->ID);
 		?>
 		<h2>اطلاعات ویترین کارشناس</h2>
 		<table class="form-table" role="presentation">
@@ -1421,6 +1443,10 @@ class CPTT_Expert {
 				<th><label for="cptt_expert_specialties">تخصص‌ها</label></th>
 				<td><input type="text" id="cptt_expert_specialties" name="cptt_expert_specialties" value="<?php echo esc_attr($specialties); ?>" class="regular-text"><p class="description">با ویرگول جدا کنید. مثال: طراحی سایت، سئو، پشتیبانی</p></td>
 			</tr>
+			<tr>
+				<th>ایموجی وضعیت روزانه</th>
+				<td><input type="text" name="pm_mood_emoji_1" value="<?php echo esc_attr($mood_emojis[1]); ?>" style="width:60px;text-align:center"> بد &nbsp; <input type="text" name="pm_mood_emoji_2" value="<?php echo esc_attr($mood_emojis[2]); ?>" style="width:60px;text-align:center"> معمولی &nbsp; <input type="text" name="pm_mood_emoji_3" value="<?php echo esc_attr($mood_emojis[3]); ?>" style="width:60px;text-align:center"> عالی</td>
+			</tr>
 		</table>
 		<input type="hidden" name="cptt_expert_profile_fields_present" value="1">
 		<?php
@@ -1433,6 +1459,7 @@ class CPTT_Expert {
 		update_user_meta($user_id, 'cptt_expert_short_bio', sanitize_textarea_field($_POST['cptt_expert_short_bio'] ?? ''));
 		update_user_meta($user_id, 'cptt_expert_specialties', sanitize_text_field($_POST['cptt_expert_specialties'] ?? ''));
 		if (isset($_POST['cptt_expert_avatar_id'])) update_user_meta($user_id, 'cptt_expert_avatar_id', absint($_POST['cptt_expert_avatar_id']));
+		update_user_meta($user_id, 'pm_mood_emojis', [1 => sanitize_text_field($_POST['pm_mood_emoji_1'] ?? '😟'), 2 => sanitize_text_field($_POST['pm_mood_emoji_2'] ?? '😐'), 3 => sanitize_text_field($_POST['pm_mood_emoji_3'] ?? '😄')]);
 	}
 
 	private function get_expert_avatar_url($user_id, $size = 160) {
@@ -2473,11 +2500,11 @@ class CPTT_Expert {
 				$st_title = sanitize_text_field($st_title);
 				if ($st_title === '') continue;
 
-				$fee = isset($posted_fees[$i]) ? (float)str_replace(",", "", (string)$posted_fees[$i]) : 0;
+				$fee = isset($posted_fees[$i]) ? (class_exists('CPTT_Currency') ? CPTT_Currency::parse_input($posted_fees[$i]) : (float)str_replace(",", "", (string)$posted_fees[$i])) : 0;
 				$qty = isset($posted_qty[$i]) ? (float)$posted_qty[$i] : 1.0;
 				if ($qty < 0.01) $qty = 1.0;
 				$cost = $fee * $qty;
-				$paid = isset($posted_paids[$i]) ? (float)str_replace(",", "", (string)$posted_paids[$i]) : 0;
+				$paid = isset($posted_paids[$i]) ? (class_exists('CPTT_Currency') ? CPTT_Currency::parse_input($posted_paids[$i]) : (float)str_replace(",", "", (string)$posted_paids[$i])) : 0;
 
 				$total_price += $cost;
 				$paid_amount += $paid;
@@ -2602,16 +2629,27 @@ class CPTT_Expert {
 			wp_send_json_error('شماره موبایل معتبر نیست.', 400);
 		}
 
-		// Check if username (phone) already exists
-		if (username_exists($phone)) {
-			$existing_user = get_user_by('login', $phone);
-			if ($existing_user) {
-				wp_send_json_success([
-					'ID' => $existing_user->ID,
-					'display_name' => $existing_user->display_name,
-					'user_email' => '',
-				]);
+		// Check if this phone already belongs to a customer/user. We still return success
+		// so the UI can auto-select the existing customer, but we include a clear message.
+		$existing_user = username_exists($phone) ? get_user_by('login', $phone) : null;
+		if (!$existing_user) {
+			$phone_variants = array_values(array_unique([$phone, '0' . ltrim($phone, '0'), ltrim($phone, '0')]));
+			foreach (['billing_phone', 'cptt_phone', 'cptt_user_phone', 'mobile'] as $meta_key) {
+				foreach ($phone_variants as $pv) {
+					if ($pv === '') continue;
+					$users = get_users(['meta_key' => $meta_key, 'meta_value' => $pv, 'number' => 1, 'fields' => 'all']);
+					if (!empty($users)) { $existing_user = $users[0]; break 2; }
+				}
 			}
+		}
+		if ($existing_user) {
+			wp_send_json_success([
+				'ID' => (int)$existing_user->ID,
+				'display_name' => $existing_user->display_name,
+				'user_email' => $existing_user->user_email,
+				'existing' => true,
+				'message' => 'این شماره قبلاً ثبت‌نام شده بود؛ مشتری موجود انتخاب شد.',
+			]);
 		}
 
 		$password = wp_generate_password(12, true, false);
@@ -2837,28 +2875,63 @@ class CPTT_Expert {
 			<div class="cptt-new-customer-modal-dialog">
 				<div class="cptt-ncm-header">
 					<h3>👤 ثبت مشتری جدید</h3>
-					<button type="button" id="cptt-cust-close" style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#475569;padding:0;box-shadow:none;min-width:0;margin:0;line-height:1;">×</button>
+					<button type="button" id="cptt-cust-close" onclick="window.cpttQuickCustomerClose&&window.cpttQuickCustomerClose(event)" style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#475569;padding:0;box-shadow:none;min-width:0;margin:0;line-height:1;">×</button>
 				</div>
 				<div class="cptt-ncm-body" style="display: grid; gap: 12px;">
 					<div class="cptt-ncm-field">
-						<label for="cptt-cust-firstname">نام <span style="color:#ef4444">*</span></label>
+						<label for="cptt-cust-firstname">نام</label>
 						<input type="text" id="cptt-cust-firstname" placeholder="مثال: علیرضا" autocomplete="given-name">
 					</div>
 					<div class="cptt-ncm-field">
-						<label for="cptt-cust-lastname">نام خانوادگی <span style="color:#ef4444">*</span></label>
+						<label for="cptt-cust-lastname">نام خانوادگی</label>
 						<input type="text" id="cptt-cust-lastname" placeholder="مثال: محمدی" autocomplete="family-name">
 					</div>
 					<div class="cptt-ncm-field">
-						<label for="cptt-cust-phone">شماره موبایل <span style="color:#ef4444">*</span></label>
+						<label for="cptt-cust-phone">شماره موبایل</label>
 						<input type="tel" id="cptt-cust-phone" placeholder="مثال: ۰۹۱۲۳۴۵۶۷۸۹" autocomplete="tel">
 					</div>
 				</div>
 				<div id="cptt-cust-msg"></div>
 				<div class="cptt-ncm-footer">
-					<button type="button" id="cptt-cust-submit" class="cptt-btn cptt-btn--primary">✔ ثبت مشتری</button>
+					<button type="button" id="cptt-cust-submit" onclick="window.cpttQuickCustomerSubmit&&window.cpttQuickCustomerSubmit(event)" class="cptt-btn cptt-btn--primary">✔ ثبت مشتری</button>
 				</div>
 			</div>
 		</div>
+
+		<script>
+		(function(){
+			if (window.cpttQuickCustomerFallbackReady) return;
+			window.cpttQuickCustomerFallbackReady = true;
+			function modal(){ return document.getElementById('cptt-new-customer-modal'); }
+			function parentModal(){ return document.getElementById('cptt-new-project-modal'); }
+			window.cpttQuickCustomerClose = function(ev){
+				if(ev){ ev.preventDefault(); ev.stopPropagation(); }
+				var m=modal(); if(m){ m.style.display='none'; m.setAttribute('aria-hidden','true'); }
+				var p=parentModal(); if(p){ p.style.filter=''; p.style.pointerEvents=''; p.classList.remove('cptt-modal-blurred-behind'); }
+			};
+			window.cpttQuickCustomerSubmit = function(ev){
+				if(ev){ ev.preventDefault(); ev.stopPropagation(); }
+				var btn=document.getElementById('cptt-cust-submit'), msg=document.getElementById('cptt-cust-msg');
+				if(btn && btn.disabled) return;
+				var fn=(document.getElementById('cptt-cust-firstname')||{}).value||'';
+				var ln=(document.getElementById('cptt-cust-lastname')||{}).value||'';
+				var ph=(document.getElementById('cptt-cust-phone')||{}).value||'';
+				fn=fn.trim(); ln=ln.trim(); ph=ph.trim();
+				if(!fn||!ln||!ph){ if(msg){msg.textContent='نام، نام خانوادگی و شماره موبایل الزامی است.'; msg.style.color='#ef4444';} return; }
+				if(btn) btn.disabled=true; if(msg){msg.textContent='در حال ثبت مشتری...'; msg.style.color='#475569';}
+				var fd=new FormData(); fd.append('action','cptt_expert_create_customer'); fd.append('nonce',(window.CPTT_EXPERT&&CPTT_EXPERT.nonce)||''); fd.append('first_name',fn); fd.append('last_name',ln); fd.append('phone',ph);
+				fetch((window.CPTT_EXPERT&&CPTT_EXPERT.ajax)||'',{method:'POST',credentials:'same-origin',body:fd}).then(function(r){return r.json();}).then(function(j){
+					if(btn) btn.disabled=false;
+					if(j&&j.success){
+						document.querySelectorAll('select[name="client_user_id"]').forEach(function(sel){ var opt=sel.querySelector('option[value="'+j.data.ID+'"]'); if(!opt){ opt=document.createElement('option'); opt.value=j.data.ID; opt.textContent=j.data.display_name; opt.dataset.search=(j.data.display_name||'')+' '+ph; sel.appendChild(opt); } sel.value=String(j.data.ID); sel.dispatchEvent(new Event('change',{bubbles:true})); });
+						if(msg){msg.textContent=(j.data&&j.data.message)||'مشتری انتخاب شد.'; msg.style.color=(j.data&&j.data.existing)?'#b45309':'#047857';}
+						setTimeout(function(){ window.cpttQuickCustomerClose(); }, 450);
+					}else{ if(msg){msg.textContent=(j&&j.data)?j.data:'خطا در ثبت مشتری'; msg.style.color='#ef4444';} }
+				}).catch(function(){ if(btn) btn.disabled=false; if(msg){msg.textContent='خطای شبکه یا اتصال به AJAX'; msg.style.color='#ef4444';} });
+			};
+			document.addEventListener('click',function(e){ if(e.target&&e.target.closest&&e.target.closest('#cptt-cust-close')) window.cpttQuickCustomerClose(e); if(e.target&&e.target.closest&&e.target.closest('#cptt-cust-submit')) window.cpttQuickCustomerSubmit(e); }, true);
+		})();
+		</script>
 
 		<script>
 		(function() {
@@ -3213,6 +3286,80 @@ class CPTT_Expert {
 		<?php
 	}
 
+	private function should_show_mood_modal($user_id) {
+		$user_id = (int)$user_id;
+		if (!$user_id || !$this->current_user_can_view_dashboard()) return false;
+		return (string)get_user_meta($user_id, 'pm_last_mood_check', true) !== current_time('Y-m-d');
+	}
+
+	private function get_mood_emojis($user_id) {
+		$defaults = [1 => '😟', 2 => '😐', 3 => '😄'];
+		$custom = get_user_meta((int)$user_id, 'pm_mood_emojis', true);
+		if (!is_array($custom)) $custom = [];
+		return [
+			1 => sanitize_text_field($custom[1] ?? $defaults[1]),
+			2 => sanitize_text_field($custom[2] ?? $defaults[2]),
+			3 => sanitize_text_field($custom[3] ?? $defaults[3]),
+		];
+	}
+
+	private function render_mood_modal($user_id) {
+		if (!$this->should_show_mood_modal($user_id)) return;
+		$emojis = $this->get_mood_emojis($user_id);
+		?>
+		<div class="cptt-moodOverlay" id="cptt-mood-modal" data-em1="<?php echo esc_attr($emojis[1]); ?>" data-em2="<?php echo esc_attr($emojis[2]); ?>" data-em3="<?php echo esc_attr($emojis[3]); ?>" aria-modal="true" role="dialog">
+			<div class="cptt-moodCard" data-mood="2">
+				<div class="cptt-moodInfo">i</div>
+				<div class="cptt-moodTop">امروز حال و حوصله‌ات چطوره؟</div>
+				<svg class="cptt-moodFace" viewBox="0 0 220 150" aria-hidden="true">
+					<g id="cptt-mood-eyes">
+						<circle id="cptt-mood-eye-l" cx="76" cy="58" r="18"></circle>
+						<circle id="cptt-mood-eye-r" cx="144" cy="58" r="18"></circle>
+					</g>
+					<path id="cptt-mood-mouth" d="M82 105 Q110 105 138 105" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"></path>
+				</svg>
+				<div class="cptt-moodEmoji" id="cptt-mood-emoji"><?php echo esc_html($emojis[2]); ?></div>
+				<div class="cptt-moodText" id="cptt-mood-text">بد نیستم/معمولی</div>
+				<div class="cptt-moodSliderWrap">
+					<input type="range" min="1" max="3" step="0.01" value="2" id="cptt-mood-range" class="cptt-moodRange" dir="ltr">
+					<div class="cptt-moodTicks"><span>بد</span><span>بد نیستم</span><span>عالی</span></div>
+				</div>
+				<input type="text" id="cptt-mood-note" class="cptt-moodNote" placeholder="یادداشت اختیاری؛ مثلاً امروز سرم شلوغه" hidden>
+				<div class="cptt-moodActions"><button type="button" class="cptt-moodNoteBtn" id="cptt-mood-note-toggle">یادداشت</button><button type="button" class="cptt-moodSubmit" id="cptt-mood-submit">ثبت حال امروز ←</button></div>
+				<div class="cptt-moodMsg" id="cptt-mood-msg"></div>
+			</div>
+		</div>
+		<?php
+	}
+
+	public function ajax_save_theme() {
+		if (!is_user_logged_in()) wp_send_json_error('login_required', 401);
+		check_ajax_referer('cptt_expert_nonce', 'nonce');
+		if (!$this->current_user_can_view_dashboard()) wp_send_json_error('no_access', 403);
+		$theme = sanitize_key((string)($_POST['theme'] ?? 'classic'));
+		$allowed = ['classic','skeuo','three-d','glass','neumorph','minimal','dark'];
+		if (!in_array($theme, $allowed, true)) $theme = 'classic';
+		update_user_meta(get_current_user_id(), 'cptt_expert_dashboard_theme', $theme);
+		wp_send_json_success(['theme' => $theme]);
+	}
+
+	public function ajax_save_mood() {
+		if (!is_user_logged_in()) wp_send_json_error('login_required', 401);
+		check_ajax_referer('cptt_expert_nonce', 'nonce');
+		if (!$this->current_user_can_view_dashboard()) wp_send_json_error('no_access', 403);
+		$uid = (int)get_current_user_id();
+		$mood = isset($_POST['mood']) ? absint($_POST['mood']) : 2;
+		if (!in_array($mood, [1,2,3], true)) $mood = 2;
+		$note = sanitize_text_field((string)($_POST['note'] ?? ''));
+		$closed = !empty($_POST['closed']) ? 1 : 0;
+		update_user_meta($uid, 'pm_last_mood_check', current_time('Y-m-d'));
+		update_user_meta($uid, 'pm_current_mood', $mood);
+		update_user_meta($uid, 'pm_current_mood_note', $note);
+		update_user_meta($uid, 'pm_current_mood_closed', $closed);
+		update_user_meta($uid, 'pm_current_mood_at', current_time('mysql'));
+		wp_send_json_success(['emoji' => get_expert_mood_emoji($uid)]);
+	}
+
 	public function ajax_save_own_profile() {
 		if (!is_user_logged_in()) wp_send_json_error('login_required', 401);
 		check_ajax_referer('cptt_expert_nonce', 'nonce');
@@ -3225,6 +3372,7 @@ class CPTT_Expert {
 		$email = sanitize_email($_POST['email'] ?? '');
 		$avatar_id = absint($_POST['avatar_id'] ?? 0);
 		$password = $_POST['password'] ?? '';
+		$mood_emojis = [1 => sanitize_text_field($_POST['mood_emoji_1'] ?? '😟'), 2 => sanitize_text_field($_POST['mood_emoji_2'] ?? '😐'), 3 => sanitize_text_field($_POST['mood_emoji_3'] ?? '😄')];
 		$update = ['ID' => $uid];
 		if ($display_name) $update['display_name'] = $display_name;
 		if ($email && is_email($email)) $update['user_email'] = $email;
@@ -3234,6 +3382,7 @@ class CPTT_Expert {
 		update_user_meta($uid, 'cptt_expert_short_bio', $bio);
 		update_user_meta($uid, 'cptt_expert_specialties', $specialties);
 		if ($avatar_id) update_user_meta($uid, 'cptt_expert_avatar_id', $avatar_id);
+		update_user_meta($uid, 'pm_mood_emojis', $mood_emojis);
 		wp_send_json_success(['message' => 'پروفایل با موفقیت ذخیره شد.']);
 	}
 
@@ -3286,6 +3435,7 @@ class CPTT_Expert {
 		ob_start();
 		?>
 		<div class="cptt-wrap cptt-expertWrap cptt-v2-scope" dir="rtl">
+			<?php $this->render_mood_modal($user_id); ?>
 			<div class="cptt-expertLayout">
 				<aside class="cptt-expertSidebar">
 
@@ -3300,6 +3450,15 @@ class CPTT_Expert {
 							<svg class="cptt-svg-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
 							<svg class="cptt-svg-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
 						</button>
+						<select class="cptt-theme-select" title="انتخاب تم داشبورد" aria-label="انتخاب تم داشبورد">
+							<option value="classic">پیش‌فرض</option>
+							<option value="skeuo">اسکئومورفیسم</option>
+							<option value="three-d">سه‌بعدی</option>
+							<option value="glass">گلس مورفیسم</option>
+							<option value="neumorph">نئومورفیک</option>
+							<option value="minimal">مینیمال</option>
+							<option value="dark">تاریک</option>
+						</select>
 						<div class="cptt-notification-bell" style="margin-bottom:0;">
 							<?php
 								global $wpdb;
@@ -3348,7 +3507,7 @@ class CPTT_Expert {
 								$curr_avatar = $this->get_expert_avatar_url($current_user->ID);
 								if (!$curr_avatar) $curr_avatar = get_avatar_url($current_user->ID);
 							?>
-							<img src="<?php echo esc_url($curr_avatar); ?>" alt="avatar" style="width:65px; height:65px; border-radius:50%; object-fit:cover;">
+							<span class="cptt-moodAvatarWrap"><img src="<?php echo esc_url($curr_avatar); ?>" alt="avatar" style="width:65px; height:65px; border-radius:50%; object-fit:cover;"><?php if (function_exists('get_expert_mood_emoji') && get_expert_mood_emoji($current_user->ID)): ?><b class="cptt-moodAvatarBadge"><?php echo esc_html(get_expert_mood_emoji($current_user->ID)); ?></b><?php endif; ?></span>
 							<div>
 								<strong><?php echo esc_html($current_user->display_name); ?></strong>
 								<span style="display:block; font-size:12px; color:#666;"><?php echo esc_html($current_user->user_email); ?></span>
@@ -3383,7 +3542,7 @@ class CPTT_Expert {
 								if (!$oe_avatar) $oe_avatar = get_avatar_url($oe->ID);
 							?>
 							<div class="cptt-expert-list-item" data-expert-id="<?php echo esc_attr($oe->ID); ?>">
-								<img src="<?php echo esc_url($oe_avatar); ?>" alt="<?php echo esc_attr($oe->display_name); ?>">
+								<span class="cptt-moodAvatarWrap cptt-moodAvatarWrap--small"><img src="<?php echo esc_url($oe_avatar); ?>" alt="<?php echo esc_attr($oe->display_name); ?>"><?php if (function_exists('get_expert_mood_emoji') && get_expert_mood_emoji($oe->ID)): ?><b class="cptt-moodAvatarBadge"><?php echo esc_html(get_expert_mood_emoji($oe->ID)); ?></b><?php endif; ?></span>
 								<span><?php echo esc_html($oe->display_name); ?></span><small style="font-size:11px;color:#666;"><?php echo esc_html($this->get_user_role_label($oe->ID)); ?></small>
 							</div>
 							<?php endforeach; ?>
@@ -3403,7 +3562,7 @@ class CPTT_Expert {
 									if (!$oe_avatar) $oe_avatar = get_avatar_url($oe->ID);
 								?>
 								<div class="cptt-expert-list-item" data-expert-id="<?php echo esc_attr($oe->ID); ?>">
-									<img src="<?php echo esc_url($oe_avatar); ?>" alt="<?php echo esc_attr($oe->display_name); ?>">
+									<span class="cptt-moodAvatarWrap cptt-moodAvatarWrap--small"><img src="<?php echo esc_url($oe_avatar); ?>" alt="<?php echo esc_attr($oe->display_name); ?>"><?php if (function_exists('get_expert_mood_emoji') && get_expert_mood_emoji($oe->ID)): ?><b class="cptt-moodAvatarBadge"><?php echo esc_html(get_expert_mood_emoji($oe->ID)); ?></b><?php endif; ?></span>
 									<span><?php echo esc_html($oe->display_name); ?></span>
 								</div>
 								<?php endforeach; ?>
@@ -3702,6 +3861,7 @@ class CPTT_Expert {
 			$cur_specialties = (string)get_user_meta($current_user->ID, 'cptt_expert_specialties', true);
 			$cur_avatar_id = (int)get_user_meta($current_user->ID, 'cptt_expert_avatar_id', true);
 			$cur_avatar_url = $cur_avatar_id ? wp_get_attachment_image_url($cur_avatar_id, 'medium') : $this->get_expert_avatar_url($current_user->ID, 80);
+			$cur_mood_emojis = $this->get_mood_emojis($current_user->ID);
 			?>
 			<div class="cptt-editProfileModal" id="cptt-edit-profile-modal" hidden>
 				<div class="cptt-editProfileModal__backdrop" id="cptt-edit-profile-backdrop"></div>
@@ -3726,6 +3886,7 @@ class CPTT_Expert {
 							<label><span>سمت / عنوان</span><input type="text" name="title" value="<?php echo esc_attr($cur_title); ?>" placeholder="مثلاً کارشناس طراحی سایت"></label>
 							<label><span>تخصص‌ها (با کاما جدا کنید)</span><input type="text" name="specialties" value="<?php echo esc_attr($cur_specialties); ?>" placeholder="طراحی سایت، سئو، پشتیبانی"></label>
 							<label class="cptt-editProfile__fullWidth"><span>بیوگرافی کوتاه</span><textarea name="bio" rows="3" placeholder="چند جمله درباره خودتان..."><?php echo esc_textarea($cur_bio); ?></textarea></label>
+							<div class="cptt-editProfile__fullWidth cptt-moodEmojiSettings"><span>ایموجی‌های وضعیت روزانه</span><label>بد <input type="text" name="mood_emoji_1" value="<?php echo esc_attr($cur_mood_emojis[1]); ?>"></label><label>معمولی <input type="text" name="mood_emoji_2" value="<?php echo esc_attr($cur_mood_emojis[2]); ?>"></label><label>عالی <input type="text" name="mood_emoji_3" value="<?php echo esc_attr($cur_mood_emojis[3]); ?>"></label></div>
 							<label class="cptt-editProfile__fullWidth"><span>رمز عبور جدید (اگر نمی‌خواهید تغییر دهید خالی بگذارید)</span><input type="password" name="password" value="" autocomplete="new-password"></label>
 						</div>
 						<div class="cptt-editProfile__actions">

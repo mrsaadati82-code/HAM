@@ -1428,3 +1428,10 @@ body.cptt-dark .cptt-step__label { color: #f1f5f9; }
 body.cptt-dark .cptt-cl li { color: #cbd5e1; }
 body.cptt-dark .cptt-ut-title { color: #f1f5f9; }
 body.cptt-dark .cptt-ut-desc { color: #94a3b8; }
+
+/* v5.4.20 compact hub filters */
+.cptt-hubFilters{grid-template-columns:minmax(180px,1.45fr) repeat(5,minmax(105px,.85fr)) auto!important;gap:8px!important;padding:12px!important;align-items:end!important;}
+.cptt-hubFilters input,.cptt-hubFilters select{padding:8px 9px!important;min-height:38px!important;border-radius:10px!important;font-size:12px!important;box-sizing:border-box!important;}
+.cptt-hubFilters .cptt-btn{height:38px!important;min-height:38px!important;padding:8px 12px!important;border-radius:10px!important;font-size:12px!important;white-space:nowrap!important;}
+@media (max-width:1350px){.cptt-hubFilters{grid-template-columns:repeat(4,minmax(0,1fr))!important}.cptt-hubFilters .cptt-btn{grid-column:auto!important}}
+@media (max-width:720px){.cptt-hubFilters{grid-template-columns:1fr!important}.cptt-hubFilters .cptt-btn{grid-column:1/-1!important;width:100%!important}}

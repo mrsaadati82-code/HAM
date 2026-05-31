@@ -255,6 +255,17 @@ class CPTT_Core {
 		]);
 
 
+		register_post_type('cptt_order_form', [
+			'labels' => [
+				'name' => 'فرم‌های سفارش','singular_name' => 'فرم سفارش','add_new_item' => 'افزودن فرم سفارش',
+				'edit_item' => 'ویرایش فرم سفارش','menu_name' => 'فرم‌های سفارش',
+			],
+			'public' => false,'show_ui' => false,'show_in_menu' => false,
+			'supports' => ['title'],'has_archive' => false,'show_in_rest' => false,
+			'publicly_queryable' => false,'exclude_from_search' => true,
+		]);
+
+
 		register_post_type('cptt_payment_receipt', [
 			'labels' => ['name'=>'رسیدهای پرداخت','singular_name'=>'رسید پرداخت','menu_name'=>'رسیدهای پرداخت'],
 			'public'=>false,'show_ui'=>false,'show_in_menu'=>false,'supports'=>['title'],'has_archive'=>false,'show_in_rest'=>false,

@@ -21,7 +21,30 @@ class CPTT_Currency {
 	}
 
 	private function __construct() {
-		// چیزی برای hook کردن نیست؛ همه‌چیز static است
+		// صفحه مستقل حذف شد؛ تنظیمات واحد مالی داخل تب تنظیمات افزونه نمایش داده می‌شود.
+	}
+
+	public function menu() {
+		add_submenu_page('edit.php?post_type=cptt_project', 'واحد مالی', '💱 واحد مالی', 'manage_options', 'cptt-currency', [$this, 'page']);
+	}
+
+	public function page() {
+		if (!current_user_can('manage_options')) return;
+		if (!empty($_POST['cptt_currency_nonce']) && wp_verify_nonce($_POST['cptt_currency_nonce'], 'cptt_save_currency')) {
+			self::save_settings($_POST);
+			echo '<div class="notice notice-success"><p>تنظیمات واحد مالی ذخیره شد.</p></div>';
+		}
+		$s = self::get_settings();
+		?>
+		<div class="wrap" dir="rtl"><h1>💱 واحد مالی افزونه</h1>
+		<p>مبنای ذخیره داخلی افزونه تومان است. با تغییر واحد، نمایش و ورودی‌های مالی به واحد انتخابی تبدیل می‌شوند؛ ریال ↔ تومان با ضریب ۱۰ محاسبه می‌شود.</p>
+		<form method="post" style="background:#fff;border:1px solid #dcdcde;border-radius:14px;padding:18px;max-width:680px;">
+		<?php wp_nonce_field('cptt_save_currency','cptt_currency_nonce'); ?>
+		<table class="form-table"><tr><th>واحد فعال</th><td><select name="unit">
+		<option value="toman" <?php selected($s['unit'],'toman'); ?>>تومان</option><option value="rial" <?php selected($s['unit'],'rial'); ?>>ریال</option><option value="usd" <?php selected($s['unit'],'usd'); ?>>دلار</option><option value="eur" <?php selected($s['unit'],'eur'); ?>>یورو</option>
+		</select></td></tr><tr><th>نرخ دلار به تومان</th><td><input name="usd_rate" value="<?php echo esc_attr($s['usd_rate']); ?>"></td></tr><tr><th>نرخ یورو به تومان</th><td><input name="eur_rate" value="<?php echo esc_attr($s['eur_rate']); ?>"></td></tr><tr><th>اعشار نمایش</th><td><input type="number" min="0" max="4" name="decimals" value="<?php echo esc_attr($s['decimals']); ?>"></td></tr></table>
+		<p><button class="button button-primary">ذخیره تنظیمات</button></p></form></div>
+		<?php
 	}
 
 	/* =========================================================
@@ -132,5 +155,9 @@ class CPTT_Currency {
 		$clean = preg_replace('/[^0-9\.\-]/', '', (string)$input_str);
 		if ($clean === '' || $clean === '-' || $clean === '.') return 0;
 		return self::to_base((float)$clean, $unit);
+	}
+
+	public static function input_value($amount_toman, $unit = null) {
+		return self::number($amount_toman, $unit);
 	}
 }

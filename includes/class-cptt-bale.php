@@ -396,6 +396,14 @@ class CPTT_Bale {
 
 			// === v5.4.7: New Order Flow ===
 			if ($data === 'cust_new_order')             { $this->order_start($chat_id, $msg_id, $user); return; }
+			if ($data === 'cust_products')              { $this->cust_products_cats($chat_id, $msg_id, $user); return; }
+			if (strpos($data, 'cust_prod_cat_') === 0)  { $this->cust_products_list($chat_id, $msg_id, (int)substr($data, 14), $user); return; }
+			if (strpos($data, 'cust_prod_view_') === 0) { $this->cust_product_view($chat_id, $msg_id, (int)substr($data, 15), $user); return; }
+			if (strpos($data, 'cust_prod_order_') === 0){ $this->cust_product_order($chat_id, $msg_id, (int)substr($data, 16), $user); return; }
+			if (strpos($data, 'cust_prod_pay_') === 0){ $this->cust_product_payment_pick($chat_id, $msg_id, $user, substr($data, 14)); return; }
+			if (strpos($data, 'order_custom_select_') === 0) { $this->order_custom_select($chat_id, $msg_id, $user, (int)substr($data, 20)); return; }
+			if ($data === 'order_custom_file_done')    { $this->order_custom_file_done($chat_id, $msg_id, $user); return; }
+			if (strpos($data, 'order_custom_pay_') === 0) { $this->order_custom_payment_pick($chat_id, $msg_id, $user, substr($data, 17)); return; }
 			if ($data === 'order_type_onsite')          { $this->order_pick_type($chat_id, $msg_id, $user, 'onsite'); return; }
 			if ($data === 'order_type_ship')            { $this->order_pick_type($chat_id, $msg_id, $user, 'ship'); return; }
 			if ($data === 'order_skip_desc')            { $this->order_skip_desc($chat_id, $msg_id, $user); return; }
@@ -546,7 +554,21 @@ class CPTT_Bale {
 			return true;
 		}
 
-		// === v5.4.7: Order flow states ===
+		// === v5.4.25: Dynamic order form states ===
+		if ($s === 'cust_prod_pay_receipt') {
+			$this->cust_product_payment_receipt($chat_id, $msg_id ?? 0, $user, $text, $file_id, $file_name);
+			return true;
+		}
+		if ($s === 'order_custom_pay_receipt') {
+			$this->order_custom_payment_receipt($chat_id, $msg_id ?? 0, $user, $text, $file_id, $file_name);
+			return true;
+		}
+		if ($s === 'order_custom_wait') {
+			$this->order_custom_receive($chat_id, $msg_id ?? 0, $user, $text, $file_id, $file_name);
+			return true;
+		}
+
+				// === v5.4.7: Order flow states ===
 		if ($s === 'order_wait_desc') {
 			if ($text === '') return true;
 			$d['description'] = sanitize_textarea_field($text);
@@ -684,7 +706,7 @@ class CPTT_Bale {
 			];
 			$kb[] = [['text' => '⚙ تنظیمات اعلان‌های من', 'callback_data' => 'expert_notif_settings']];
 		} else {
-			$kb[] = [['text' => '🛒 ثبت سفارش جدید', 'callback_data' => 'cust_new_order']];
+			$kb[] = [['text' => '📋 فرم سفارش اختصاصی', 'callback_data' => 'cust_new_order'], ['text' => '🛍 محصولات', 'callback_data' => 'cust_products']];
 			$kb[] = [['text' => '📁 پروژه‌های من', 'callback_data' => 'cust_projects']];
 			$kb[] = [
 				['text' => '📝 تسک‌های در انتظار من', 'callback_data' => 'cust_tasks'],
@@ -1898,8 +1920,80 @@ class CPTT_Bale {
 	 * v5.4.7 — NEW ORDER FLOW (Customer-side)
 	 * ==================================================================== */
 
+	private function cust_products_cats($chat_id, $msg_id, $user) {
+		if (!taxonomy_exists('product_cat')) { $this->edit_or_send($chat_id,$msg_id,'فروشگاه/دسته‌بندی محصول فعال نیست.', $this->kb_back()); return; }
+		$terms = get_terms(['taxonomy'=>'product_cat','hide_empty'=>true,'number'=>30]);
+		$kb=[]; foreach ($terms as $t) $kb[] = [['text'=>'🔹 '.$t->name, 'callback_data'=>'cust_prod_cat_'.$t->term_id]];
+		$kb[] = [['text'=>'↩ بازگشت','callback_data'=>'back_to_menu']];
+		$this->edit_or_send($chat_id,$msg_id,"🛍 *دسته‌بندی محصولات*\n\nیک دسته‌بندی را انتخاب کنید:", ['inline_keyboard'=>$kb]);
+	}
+	private function cust_products_list($chat_id, $msg_id, $cat_id, $user) {
+		$args=['post_type'=>'product','post_status'=>'publish','posts_per_page'=>20,'tax_query'=>[['taxonomy'=>'product_cat','field'=>'term_id','terms'=>[$cat_id]]]];
+		$q=new WP_Query($args); $kb=[]; foreach($q->posts as $p){ $kb[]=[['text'=>'▫️ '.get_the_title($p), 'callback_data'=>'cust_prod_view_'.$p->ID]]; }
+		$kb[]=[['text'=>'↩ دسته‌بندی‌ها','callback_data'=>'cust_products']];
+		$this->edit_or_send($chat_id,$msg_id,"🛍 *محصولات*\n\nمحصول موردنظر را انتخاب کنید:", ['inline_keyboard'=>$kb]);
+	}
+	private function cust_product_view($chat_id, $msg_id, $product_id, $user) {
+		$p=get_post($product_id); if(!$p || $p->post_type!=='product'){ $this->edit_or_send($chat_id,$msg_id,'محصول پیدا نشد.', $this->kb_back()); return; }
+		$price=''; if(function_exists('wc_get_product')){ $pr=wc_get_product($product_id); if($pr) $price=$pr->get_price(); }
+		$price_txt = $price!=='' ? (class_exists('CPTT_Currency') ? CPTT_Currency::format((float)$price) : number_format((float)$price).' تومان') : 'نامشخص';
+		$msg="🛍 *".esc_html(get_the_title($p))."*\n\n".$this->shorten(wp_strip_all_tags($p->post_excerpt ?: $p->post_content),500)."\n\n💰 قیمت: *{$price_txt}*";
+		$this->edit_or_send($chat_id,$msg_id, $msg, ['inline_keyboard'=>[[['text'=>'✅ ثبت سفارش این محصول','callback_data'=>'cust_prod_order_'.$product_id]],[['text'=>'↩ محصولات','callback_data'=>'cust_products']]]]);
+	}
+	private function cust_product_order($chat_id, $msg_id, $product_id, $user) {
+		$p=get_post($product_id); if(!$p || $p->post_type!=='product'){ $this->edit_or_send($chat_id,$msg_id,'محصول پیدا نشد.', $this->kb_back()); return; }
+		if (class_exists('CPTT_Form_Builder')) {
+			$form = CPTT_Form_Builder::get_form_for_product($product_id);
+			if ($form && !empty($form['fields']) && (!empty($form['target_product_id']) || !empty($form['target_cat_id']))) {
+				$d = ['custom'=>1,'form_id'=>(int)$form['id'],'form_title'=>(string)$form['title'],'idx'=>0,'answers'=>[],'files'=>[],'product_id'=>$product_id,'_append_payment'=>1];
+				$this->set_state($chat_id, 'order_custom_wait', $d);
+				$this->order_custom_ask($chat_id, $msg_id, $user);
+				return;
+			}
+		}
+		$gws = class_exists('CPTT_Payment') ? CPTT_Payment::enabled_gateways() : [];
+		if (empty($gws)) { $this->edit_or_send($chat_id,$msg_id,'هیچ روش پرداخت فعالی تعریف نشده است. لطفاً با پشتیبانی تماس بگیرید.', $this->kb_back()); return; }
+		$this->set_state($chat_id, 'cust_product_pay_pick', ['product_id'=>$product_id]);
+		$kb=[]; foreach($gws as $g) $kb[]=[['text'=>'💳 '.($g['name'] ?: $g['type']), 'callback_data'=>'cust_prod_pay_'.$g['id']]];
+		$kb[]=[['text'=>'↩ بازگشت به محصول','callback_data'=>'cust_prod_view_'.$product_id]];
+		$this->edit_or_send($chat_id,$msg_id,"💳 *پرداخت سفارش محصول*\n\nبرای ثبت سفارش «".esc_html(get_the_title($p))."» ابتدا روش پرداخت را انتخاب کنید:", ['inline_keyboard'=>$kb]);
+	}
+	private function cust_product_payment_pick($chat_id, $msg_id, $user, $gid) {
+		$state=$this->get_state($chat_id); $d=($state && is_array($state['d']??null))?$state['d']:[]; $pid=(int)($d['product_id']??0); $p=get_post($pid); if(!$p){$this->edit_or_send($chat_id,$msg_id,'محصول پیدا نشد.',$this->kb_back());return;}
+		$gw=class_exists('CPTT_Payment')?CPTT_Payment::find_gateway($gid):null; if(!$gw){$this->edit_or_send($chat_id,$msg_id,'روش پرداخت پیدا نشد.',$this->kb_back());return;}
+		$amount=0; if(function_exists('wc_get_product')){ $pr=wc_get_product($pid); if($pr) $amount=(float)$pr->get_price(); }
+		if(($gw['type']??'')==='card'){
+			$msg="💳 *".esc_html($gw['name'])."*\n\n".esc_html($gw['note']??'پس از واریز، رسید را ارسال کنید.')."\n";
+			foreach(($gw['cards']??[]) as $c) $msg.="\n`".($c['number']??'')."`\n".esc_html(($c['owner']??'').' '.($c['bank']??''))."\n";
+			$this->set_state($chat_id,'cust_prod_pay_receipt',['product_id'=>$pid,'gateway_id'=>$gid,'amount'=>$amount]);
+			$this->edit_or_send($chat_id,$msg_id,$msg."\n📎 لطفاً تصویر رسید یا شماره پیگیری را ارسال کنید.", ['inline_keyboard'=>[[['text'=>'✖ انصراف','callback_data'=>'order_cancel']]]]); return;
+		}
+		$url = class_exists('CPTT_Payment') ? CPTT_Payment::payment_url(0, $amount) : home_url('/');
+		$this->edit_or_send($chat_id,$msg_id,"🌐 برای پرداخت آنلاین سفارش محصول روی دکمه زیر بزنید. پس از پرداخت موفق، سفارش نهایی می‌شود.", ['inline_keyboard'=>[[['text'=>'پرداخت آنلاین','url'=>$url]],[['text'=>'↩ بازگشت','callback_data'=>'cust_prod_view_'.$pid]]]]);
+	}
+	private function cust_product_payment_receipt($chat_id,$msg_id,$user,$text,$file_id,$file_name){
+		$state=$this->get_state($chat_id); $d=($state&&is_array($state['d']??null))?$state['d']:[]; $pid=(int)($d['product_id']??0); $p=get_post($pid); if(!$p){self::send_message($chat_id,'محصول پیدا نشد.');return;}
+		$files=[]; $receipt=''; if($file_id!==''){ $res=self::download_to_media($file_id,$file_name); if(!is_wp_error($res)){ $files[]=['id'=>(int)$res['id'],'url'=>(string)$res['url'],'name'=>(string)$res['name']]; $receipt='رسید آپلود شد: '.$res['name']; }} if($receipt===''&&trim($text)!=='') $receipt='رسید متنی: '.sanitize_text_field($text); if($receipt===''){self::send_message($chat_id,'لطفاً رسید یا شماره پیگیری را ارسال کنید.');return;}
+		$now=(int)current_time('timestamp',true); $created=class_exists('CPTT_Core')?CPTT_Core::jalali_datetime($now):date('Y-m-d H:i',$now);
+		$order_id=wp_insert_post(['post_type'=>'cptt_order','post_status'=>'publish','post_title'=>'سفارش محصول #'.date('ymd-Hi',$now).' — '.$user->display_name,'post_author'=>(int)$user->ID]);
+		update_post_meta($order_id,'_cptt_order_client_id',(int)$user->ID); update_post_meta($order_id,'_cptt_order_type','product'); update_post_meta($order_id,'_cptt_order_product_id',$pid); update_post_meta($order_id,'_cptt_order_description','سفارش محصول: '.get_the_title($p).'\n'.$receipt); update_post_meta($order_id,'_cptt_order_status','payment_pending'); update_post_meta($order_id,'_cptt_order_files',$files); update_post_meta($order_id,'_cptt_order_created_at_fa',$created);
+		$this->clear_state($chat_id); $this->order_notify_staff($order_id,$user);
+		$this->edit_or_send($chat_id,$msg_id,"✅ رسید دریافت شد و سفارش محصول در انتظار تأیید مدیر ثبت شد.\nشناسه سفارش: `{$order_id}`", ['inline_keyboard'=>[[['text'=>'📦 سفارش‌های من','callback_data'=>'cust_orders']],[['text'=>'🏠 منوی اصلی','callback_data'=>'back_to_menu']]]]);
+	}
+
+
 	/** صفحه‌ی اول: انتخاب نوع سفارش (حضوری / با ارسال) */
 	private function order_start($chat_id, $msg_id, $user) {
+		if (class_exists('CPTT_Form_Builder')) {
+			$form = CPTT_Form_Builder::get_active_form();
+			if (!$form && !get_option('cptt_order_form_disabled', 0)) { $aid=(int)get_option('cptt_active_order_form_id',0); if($aid) $form=CPTT_Form_Builder::get_form($aid); }
+			if ($form && !empty($form['fields'])) {
+				$d = ['custom'=>1,'form_id'=>(int)$form['id'],'form_title'=>(string)$form['title'],'idx'=>0,'answers'=>[],'files'=>[]];
+				$this->set_state($chat_id, 'order_custom_wait', $d);
+				$this->order_custom_ask($chat_id, $msg_id, $user);
+				return;
+			}
+		}
 		$this->set_state($chat_id, 'order_pick_type', []);
 		$msg  = "🛒 *ثبت سفارش جدید*\n\n";
 		$msg .= "سلام " . esc_html($user->display_name) . " عزیز 👋\n";
@@ -2030,6 +2124,113 @@ class CPTT_Bale {
 		$this->edit_or_send($chat_id, $msg_id, $msg, $kb);
 	}
 
+	private function order_custom_fields($d) {
+		if (!class_exists('CPTT_Form_Builder')) return [];
+		$form = CPTT_Form_Builder::get_form((int)($d['form_id'] ?? 0));
+		$fields = ($form && !empty($form['fields']) && is_array($form['fields'])) ? $form['fields'] : [];
+		if (!empty($d['_append_payment'])) {
+			$has_payment = false; foreach ($fields as $_f) { if (($_f['type'] ?? '') === 'payment') { $has_payment = true; break; } }
+			if (!$has_payment) { $fields[] = ['id'=>'auto_product_payment','type'=>'payment','label'=>'پرداخت سفارش محصول','required'=>1,'amount'=>'','allow_later'=>0]; }
+		}
+		return $fields;
+	}
+	private function order_custom_ask($chat_id, $msg_id, $user) {
+		$state = $this->get_state($chat_id); $d = ($state && is_array($state['d'] ?? null)) ? $state['d'] : [];
+		$fields = $this->order_custom_fields($d); $idx = (int)($d['idx'] ?? 0);
+		if ($idx >= count($fields)) { $this->order_custom_confirm($chat_id, $msg_id, $user, $d); return; }
+		$f = $fields[$idx]; $type = $f['type'] ?? 'text'; $label = $f['label'] ?? 'فیلد'; $req = !empty($f['required']);
+		if ($type === 'intro') { $d = $this->order_custom_store_answer($d, $f, 'نمایش داده شد'); $this->set_state($chat_id, 'order_custom_wait', $d); self::send_message($chat_id, !empty($f['message']) ? (string)$f['message'] : ('✨ ' . $label)); $this->order_custom_ask($chat_id, 0, $user); return; }
+		if ($type === 'confirm') { $this->order_custom_confirm($chat_id, $msg_id, $user, $d); return; }
+		$msg = "🛒 *" . esc_html($d['form_title'] ?? 'فرم سفارش') . "*\n\n";
+		$msg .= "مرحله " . ($idx+1) . " از " . count($fields) . "\n";
+		$msg .= "*" . esc_html($label) . "*" . ($req ? "  _اجباری_" : "  _اختیاری_") . "\n";
+		if (!empty($f['help'])) $msg .= esc_html($f['help']) . "\n";
+		$kb = ['inline_keyboard' => []];
+		if (in_array($type, ['select','buttons','multi'], true)) {
+			$options = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', (string)($f['options'] ?? '')))));
+			foreach ($options as $i=>$op) $kb['inline_keyboard'][] = [['text'=>$op, 'callback_data'=>'order_custom_select_'.$i]];
+			$msg .= "\nیکی از گزینه‌ها را انتخاب کنید یا متن گزینه را بفرستید.";
+		} elseif ($type === 'checkbox') {
+			$kb['inline_keyboard'][] = [['text'=>'بله', 'callback_data'=>'order_custom_select_1'], ['text'=>'خیر', 'callback_data'=>'order_custom_select_0']];
+		} elseif ($type === 'file') {
+			$msg .= "\nفایل/عکس را ارسال کنید. بعد از اتمام روی «ادامه» بزنید.";
+			$kb['inline_keyboard'][] = [['text'=>'✅ ادامه', 'callback_data'=>'order_custom_file_done']];
+		} else {
+			$msg .= "\nپاسخ را در پیام بعدی ارسال کنید.";
+		}
+		$kb['inline_keyboard'][] = [['text'=>'✖ انصراف', 'callback_data'=>'order_cancel']];
+		$this->edit_or_send($chat_id, $msg_id, $msg, $kb);
+	}
+	private function order_custom_store_answer($d, $field, $value) {
+		$answers = isset($d['answers']) && is_array($d['answers']) ? $d['answers'] : [];
+		$answers[] = ['id'=>(string)($field['id'] ?? ''), 'type'=>(string)($field['type'] ?? 'text'), 'label'=>(string)($field['label'] ?? 'فیلد'), 'value'=>$value];
+		$d['answers'] = $answers; $d['idx'] = (int)($d['idx'] ?? 0) + 1; return $d;
+	}
+	private function order_custom_receive($chat_id, $msg_id, $user, $text, $file_id, $file_name) {
+		$state = $this->get_state($chat_id); $d = ($state && is_array($state['d'] ?? null)) ? $state['d'] : [];
+		$fields = $this->order_custom_fields($d); $idx=(int)($d['idx'] ?? 0); if (!isset($fields[$idx])) { $this->order_custom_confirm($chat_id, 0, $user, $d); return; }
+		$f=$fields[$idx]; $type=$f['type'] ?? 'text'; $req=!empty($f['required']);
+		if ($type === 'file') {
+			if ($file_id === '') { self::send_message($chat_id, $req ? 'لطفاً فایل/عکس ارسال کنید.' : 'اگر فایلی ندارید روی ادامه بزنید.'); return; }
+			$res = self::download_to_media($file_id, $file_name);
+			if (is_wp_error($res)) { self::send_message($chat_id, '❌ خطا در دریافت فایل: '.$res->get_error_message()); return; }
+			$d['files'][] = ['id'=>(int)$res['id'], 'url'=>(string)$res['url'], 'name'=>(string)$res['name']];
+			$d['_field_files'][$idx][] = (string)$res['name'];
+			$this->set_state($chat_id, 'order_custom_wait', $d);
+			self::send_message($chat_id, '✅ فایل دریافت شد. اگر فایل دیگری دارید ارسال کنید یا روی ادامه بزنید.', ['inline_keyboard'=>[[['text'=>'✅ ادامه','callback_data'=>'order_custom_file_done']],[['text'=>'✖ انصراف','callback_data'=>'order_cancel']]]]);
+			return;
+		}
+		$val = trim((string)$text);
+		if ($val === '' && $req) { self::send_message($chat_id, 'این فیلد اجباری است. لطفاً پاسخ را ارسال کنید.'); return; }
+		if ($type === 'number') $val = preg_replace('/[^0-9\.\-]/', '', $this->to_english_digits($val));
+		if ($type === 'checkbox') $val = in_array(mb_strtolower($val), ['بله','yes','1','آره'], true) ? 'بله' : 'خیر';
+		$d = $this->order_custom_store_answer($d, $f, $val);
+		$this->set_state($chat_id, 'order_custom_wait', $d); $this->order_custom_ask($chat_id, 0, $user);
+	}
+	private function order_custom_select($chat_id, $msg_id, $user, $choice) {
+		$state=$this->get_state($chat_id); $d=($state && is_array($state['d'] ?? null))?$state['d']:[]; $fields=$this->order_custom_fields($d); $idx=(int)($d['idx']??0); if(!isset($fields[$idx])) return;
+		$f=$fields[$idx]; $type=$f['type']??'select'; $val='';
+		if($type==='checkbox') $val=$choice ? 'بله' : 'خیر'; else { $opts=array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', (string)($f['options']??''))))); $val=$opts[$choice] ?? ''; }
+		$d=$this->order_custom_store_answer($d,$f,$val); $this->set_state($chat_id,'order_custom_wait',$d); $this->order_custom_ask($chat_id,$msg_id,$user);
+	}
+	private function order_custom_file_done($chat_id, $msg_id, $user) {
+		$state=$this->get_state($chat_id); $d=($state && is_array($state['d'] ?? null))?$state['d']:[]; $fields=$this->order_custom_fields($d); $idx=(int)($d['idx']??0); if(!isset($fields[$idx])) return; $f=$fields[$idx];
+		$names = isset($d['_field_files'][$idx]) && is_array($d['_field_files'][$idx]) ? $d['_field_files'][$idx] : [];
+		if(!empty($f['required']) && empty($names)){ self::send_message($chat_id,'این فیلد فایل اجباری است. لطفاً حداقل یک فایل ارسال کنید.'); return; }
+		$d=$this->order_custom_store_answer($d,$f, empty($names)?'بدون فایل':implode('، ',$names)); $this->set_state($chat_id,'order_custom_wait',$d); $this->order_custom_ask($chat_id,$msg_id,$user);
+	}
+	private function order_custom_payment_pick($chat_id, $msg_id, $user, $gid) {
+		$state=$this->get_state($chat_id); $d=($state && is_array($state['d'] ?? null))?$state['d']:[]; $fields=$this->order_custom_fields($d); $idx=(int)($d['idx']??0); $f=$fields[$idx]??['label'=>'پرداخت','type'=>'payment'];
+		if ($gid === 'later') { $d=$this->order_custom_store_answer($d,$f,'پرداخت بعداً'); $this->set_state($chat_id,'order_custom_wait',$d); $this->order_custom_ask($chat_id,$msg_id,$user); return; }
+		$gw = class_exists('CPTT_Payment') ? CPTT_Payment::find_gateway($gid) : null;
+		if (!$gw) { $this->edit_or_send($chat_id,$msg_id,'روش پرداخت پیدا نشد.', $this->kb_back()); return; }
+		$amount=(float)preg_replace('/[^0-9\.]/','',(string)($f['amount'] ?? 0));
+		if (($gw['type'] ?? '') === 'card') {
+			$msg="💳 *".esc_html($gw['name'])."*\n\n".esc_html($gw['note'] ?? 'پس از واریز رسید را ارسال کنید.')."\n";
+			foreach (($gw['cards'] ?? []) as $c) $msg .= "\n`".($c['number']??'')."`\n".esc_html(($c['owner']??'').' '.($c['bank']??''))."\n";
+			$d['_pay_field']=$f; $d['_pay_gateway']=$gid; $d['_pay_amount']=$amount; $this->set_state($chat_id,'order_custom_pay_receipt',$d);
+			$this->edit_or_send($chat_id,$msg_id,$msg."\n📎 تصویر رسید یا شماره پیگیری را ارسال کنید.", ['inline_keyboard'=>[[['text'=>'✖ انصراف','callback_data'=>'order_cancel']]]]); return;
+		}
+		$url = class_exists('CPTT_Payment') ? CPTT_Payment::payment_url(0, $amount) : home_url('/');
+		$rows = [[['text'=>'پرداخت آنلاین','url'=>$url]]]; if (!empty($f['allow_later'])) $rows[] = [['text'=>'✅ ادامه ثبت سفارش','callback_data'=>'order_custom_pay_later']]; $rows[] = [['text'=>'↩ بازگشت','callback_data'=>'order_cancel']];
+		$this->edit_or_send($chat_id,$msg_id,"🌐 برای پرداخت آنلاین روی دکمه زیر بزنید. پس از پرداخت موفق سفارش ثبت/پیگیری می‌شود.", ['inline_keyboard'=>$rows]);
+	}
+	private function order_custom_payment_receipt($chat_id,$msg_id,$user,$text,$file_id,$file_name){
+		$state=$this->get_state($chat_id); $d=($state && is_array($state['d'] ?? null))?$state['d']:[]; $f=$d['_pay_field']??['label'=>'پرداخت','type'=>'payment'];
+		$val='رسید متنی: '.sanitize_text_field($text);
+		if($file_id!==''){ $res=self::download_to_media($file_id,$file_name); if(!is_wp_error($res)){ $d['files'][]=['id'=>(int)$res['id'],'url'=>(string)$res['url'],'name'=>(string)$res['name']]; $val='رسید آپلود شد: '.$res['name']; } }
+		$d=$this->order_custom_store_answer($d,$f,$val.' (در انتظار تأیید مدیر)'); unset($d['_pay_field'],$d['_pay_gateway'],$d['_pay_amount']); $this->set_state($chat_id,'order_custom_wait',$d); self::send_message($chat_id,'✅ رسید دریافت شد و برای مدیر ارسال می‌شود.'); $this->order_custom_ask($chat_id,0,$user);
+	}
+
+	private function order_custom_answers_text($d) {
+		$out=[]; foreach (($d['answers'] ?? []) as $a) { if(!is_array($a)) continue; $v=$a['value'] ?? ''; if(is_array($v)) $v=implode('، ',$v); $out[] = ($a['label'] ?? 'فیلد') . ': ' . $v; } return implode("\n", $out);
+	}
+	private function order_custom_confirm($chat_id, $msg_id, $user, $d) {
+		$this->set_state($chat_id, 'order_wait_confirm', $d);
+		$msg = "🧾 *تأیید نهایی سفارش*\n\n" . $this->order_custom_answers_text($d) . "\n\nدر صورت تأیید، سفارش ثبت می‌شود.";
+		$this->edit_or_send($chat_id, $msg_id, $msg, ['inline_keyboard'=>[[['text'=>'✅ ثبت و تأیید نهایی سفارش','callback_data'=>'order_confirm']],[['text'=>'✖ انصراف','callback_data'=>'order_cancel']]]]);
+	}
+
 	/** انصراف کلی */
 	private function order_cancel($chat_id, $msg_id, $user) {
 		$this->clear_state($chat_id);
@@ -2050,9 +2251,10 @@ class CPTT_Bale {
 			return;
 		}
 		$d = $state['d'];
-		$type = ($d['type'] ?? 'onsite') === 'ship' ? 'ship' : 'onsite';
-		$desc = (string)($d['description'] ?? '');
-		$addr = (string)($d['address'] ?? '');
+		$is_custom = !empty($d['custom']);
+		$type = $is_custom ? 'custom' : (($d['type'] ?? 'onsite') === 'ship' ? 'ship' : 'onsite');
+		$desc = $is_custom ? $this->order_custom_answers_text($d) : (string)($d['description'] ?? '');
+		$addr = $is_custom ? '' : (string)($d['address'] ?? '');
 		$files = isset($d['files']) && is_array($d['files']) ? $d['files'] : [];
 
 		// ساخت پست cptt_order
@@ -2076,6 +2278,11 @@ class CPTT_Bale {
 		update_post_meta($order_id, '_cptt_order_files', $files);
 		update_post_meta($order_id, '_cptt_order_status', 'pending');
 		update_post_meta($order_id, '_cptt_order_created_at_fa', $created_at_fa);
+		if (!empty($is_custom)) {
+			update_post_meta($order_id, '_cptt_order_form_id', (int)($d['form_id'] ?? 0));
+			update_post_meta($order_id, '_cptt_order_form_title', sanitize_text_field((string)($d['form_title'] ?? '')));
+			update_post_meta($order_id, '_cptt_order_form_data', isset($d['answers']) && is_array($d['answers']) ? $d['answers'] : []);
+		}
 
 		$this->clear_state($chat_id);
 
@@ -2172,7 +2379,7 @@ class CPTT_Bale {
 		if ($phone === '') $phone = $client_user->user_login;
 		$bale_chat = (string) get_user_meta($client_user->ID, '_cptt_bale_chat_id', true);
 
-		$type_label = $type === 'ship' ? '🚚 ارسال به آدرس' : '🏬 حضوری';
+		$type_label = $type === 'product' ? '🛍 سفارش محصول' : ($type === 'custom' ? '📋 فرم اختصاصی' : ($type === 'ship' ? '🚚 ارسال به آدرس' : '🏬 حضوری'));
 		$status_label = $this->order_status_label($status);
 
 		$header = $for_admin ? "🆕 *سفارش جدید* — نیازمند تخصیص کارشناس" : "🆕 *سفارش جدید* — به شما ارجاع شد";
@@ -2193,6 +2400,18 @@ class CPTT_Bale {
 
 		$msg .= "📝 *توضیحات سفارش:*\n";
 		$msg .= ($desc !== '' ? "_" . $this->shorten($desc, 600) . "_" : "_توضیحی ثبت نشده است._") . "\n\n";
+		$form_data = get_post_meta($order_id, '_cptt_order_form_data', true);
+		if (is_array($form_data) && !empty($form_data)) {
+			$msg .= "📋 *فرم سفارش:*\n";
+			foreach ($form_data as $_a) {
+				if (!is_array($_a)) continue;
+				$_label = sanitize_text_field($_a['label'] ?? 'فیلد');
+				$_val = $_a['value'] ?? '';
+				if (is_array($_val)) $_val = implode('، ', array_map('sanitize_text_field', $_val));
+				$msg .= "• " . esc_html($_label) . ": " . esc_html($this->shorten((string)$_val, 180)) . "\n";
+			}
+			$msg .= "\n";
+		}
 
 		if ($type === 'ship') {
 			$msg .= "🏠 *آدرس ارسال:*\n";

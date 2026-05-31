@@ -1,0 +1,94 @@
+/* HAM Admin Glass/Skeuomorphic Soft UI v5.4.32 */
+body.ham-admin-glass #wpcontent{background:radial-gradient(circle at 28% 0,#f8fbff 0,#e8f2fc 38%,#d7e7f6 100%);min-height:100vh}
+body.ham-admin-glass .wrap,
+body.ham-admin-glass .cptt-dashboard,
+body.ham-admin-glass .cptt-accounting,
+body.ham-admin-glass .cptt-customers-admin,
+body.ham-admin-glass .cptt-settings-wrap,
+body.ham-admin-glass .cptt-sms-wrap,
+body.ham-admin-glass .cptt-pay-wrap,
+body.ham-admin-glass .cptt-experts-settings,
+body.ham-admin-glass .cptt-adminExperts{color:#244061}
+body.ham-admin-glass h1,body.ham-admin-glass h2,body.ham-admin-glass h3{color:#244061;font-weight:950;letter-spacing:-.2px}
+body.ham-admin-glass .cptt-dashboard__hero,
+body.ham-admin-glass .cptt-acct-hero,
+body.ham-admin-glass .cptt-cust-hero,
+body.ham-admin-glass .cptt-set-header,
+body.ham-admin-glass .cptt-pay-hero,
+body.ham-admin-glass .cptt-sms-hero,
+body.ham-admin-glass .cptt-adminExperts__hero,
+body.ham-admin-glass .postbox-header,
+body.ham-admin-glass #poststuff .postbox .postbox-header{background:linear-gradient(145deg,rgba(255,255,255,.86),rgba(226,240,253,.74))!important;border:1px solid rgba(255,255,255,.95)!important;border-radius:28px!important;box-shadow:0 24px 55px rgba(98,130,164,.23),inset 0 1px 0 rgba(255,255,255,.96),inset 0 -20px 45px rgba(172,204,235,.14)!important;color:#244061!important;overflow:hidden}
+body.ham-admin-glass .postbox{border:0!important;background:transparent!important;box-shadow:none!important}
+body.ham-admin-glass .postbox .inside,
+body.ham-admin-glass .cptt-dashboard__filters,
+body.ham-admin-glass .cptt-project-card,
+body.ham-admin-glass .cptt-acct-kpi,
+body.ham-admin-glass .cptt-acct-table-wrap,
+body.ham-admin-glass .cptt-cust-card,
+body.ham-admin-glass .cptt-set-main,
+body.ham-admin-glass .cptt-set-sidebar,
+body.ham-admin-glass .cptt-pay-card,
+body.ham-admin-glass .cptt-pay-gw,
+body.ham-admin-glass .cptt-pay-add-wrap,
+body.ham-admin-glass .cptt-pay-tabs,
+body.ham-admin-glass .cptt-adminExperts__panel,
+body.ham-admin-glass .cptt-adminExperts__list,
+body.ham-admin-glass .cptt-expert-public-settings,
+body.ham-admin-glass .cptt-labels-admin table,
+body.ham-admin-glass .widefat,
+body.ham-admin-glass table.wp-list-table{background:linear-gradient(145deg,rgba(255,255,255,.76),rgba(231,243,255,.66))!important;border:1px solid rgba(255,255,255,.92)!important;border-radius:26px!important;box-shadow:16px 16px 38px rgba(125,154,184,.18),-10px -10px 28px rgba(255,255,255,.68),inset 0 1px 0 rgba(255,255,255,.96)!important;overflow:hidden}
+body.ham-admin-glass table.wp-list-table{border-collapse:separate!important;border-spacing:0!important}
+body.ham-admin-glass .wp-list-table thead th,
+body.ham-admin-glass .widefat thead th{background:rgba(255,255,255,.48)!important;color:#345270!important;font-weight:950!important;border-bottom:1px solid rgba(190,211,232,.55)!important}
+body.ham-admin-glass .wp-list-table tbody tr,
+body.ham-admin-glass .widefat tbody tr{background:rgba(255,255,255,.18)!important}
+body.ham-admin-glass .wp-list-table tbody tr:hover,
+body.ham-admin-glass .widefat tbody tr:hover{background:rgba(255,255,255,.46)!important}
+body.ham-admin-glass input[type=text],body.ham-admin-glass input[type=search],body.ham-admin-glass input[type=email],body.ham-admin-glass input[type=url],body.ham-admin-glass input[type=number],body.ham-admin-glass input[type=password],body.ham-admin-glass select,body.ham-admin-glass textarea,
+body.ham-admin-glass .regular-text,body.ham-admin-glass .large-text,
+body.ham-admin-glass .cptt-pay-input{border:1px solid rgba(190,211,232,.95)!important;border-radius:16px!important;background:linear-gradient(145deg,#fafdff,#e9f4ff)!important;color:#284763!important;box-shadow:inset 3px 3px 8px rgba(119,150,180,.13),inset -3px -3px 8px rgba(255,255,255,.95),0 1px 0 rgba(255,255,255,.75)!important;padding:9px 12px!important;box-sizing:border-box!important}
+body.ham-admin-glass input:focus,body.ham-admin-glass select:focus,body.ham-admin-glass textarea:focus{outline:none!important;border-color:#7cafdf!important;box-shadow:0 0 0 4px rgba(124,175,223,.18),inset 3px 3px 8px rgba(119,150,180,.13)!important}
+body.ham-admin-glass .button,body.ham-admin-glass .button-secondary,body.ham-admin-glass .cptt-btn,body.ham-admin-glass .cptt-pay-btn,body.ham-admin-glass .cptt-btn-primary{border:1px solid rgba(255,255,255,.92)!important;border-radius:16px!important;background:linear-gradient(145deg,#f9fcff,#dfeefc)!important;box-shadow:7px 7px 16px rgba(124,154,184,.18),-6px -6px 14px rgba(255,255,255,.78),inset 0 1px 0 #fff!important;color:#345270!important;font-weight:900!important;text-shadow:none!important;transition:.16s ease!important}
+body.ham-admin-glass .button-primary,body.ham-admin-glass .cptt-btn--primary,body.ham-admin-glass .cptt-pay-btn--primary,body.ham-admin-glass .cptt-pay-btn--save{background:linear-gradient(145deg,#8fc3ff,#5b91d2)!important;color:#fff!important;border-color:rgba(255,255,255,.72)!important;box-shadow:0 14px 24px rgba(84,133,190,.30),inset 0 1px 0 rgba(255,255,255,.75)!important}
+body.ham-admin-glass .button:hover,body.ham-admin-glass .cptt-btn:hover,body.ham-admin-glass .cptt-pay-btn:hover{transform:translateY(-1px)!important;filter:saturate(1.04)}
+body.ham-admin-glass .button-link-delete,body.ham-admin-glass .cptt-pay-gw__remove,body.ham-admin-glass .cptt-pay-card-del{background:linear-gradient(145deg,#fff5f4,#ffd7d2)!important;color:#b53b32!important;border-color:rgba(181,59,50,.18)!important}
+body.ham-admin-glass .cptt-set-sidebar a{border-radius:18px!important;background:linear-gradient(145deg,rgba(255,255,255,.70),rgba(229,241,253,.68))!important;box-shadow:7px 7px 18px rgba(124,154,184,.15),-6px -6px 16px rgba(255,255,255,.72)!important;color:#345270!important;margin-bottom:10px!important;border:1px solid rgba(255,255,255,.88)!important}
+body.ham-admin-glass .cptt-set-sidebar a.is-active{background:linear-gradient(145deg,#f7fbff,#d7ebff)!important;outline:2px solid rgba(93,145,210,.25)!important;color:#244061!important}
+body.ham-admin-glass .cptt-stepCard,body.ham-admin-glass .cptt-stepCard__summary{border-radius:22px!important;background:linear-gradient(145deg,rgba(255,255,255,.72),rgba(231,243,255,.64))!important;border:1px solid rgba(255,255,255,.9)!important;box-shadow:10px 10px 24px rgba(125,154,184,.16),-8px -8px 20px rgba(255,255,255,.64)!important}
+body.ham-admin-glass .notice{border-radius:16px!important;box-shadow:0 10px 24px rgba(98,130,164,.13)!important}
+/* Form builder action buttons: medium size */
+#cptt-fb-set-active,#cptt-fb-deactivate{font-size:13px!important;padding:10px 14px!important;min-height:38px!important;border-radius:16px!important}
+
+/* v5.4.33 readability + safe layout refinements */
+body.ham-admin-glass :where(.wrap,.cptt-dashboard,.cptt-accounting,.cptt-customers-admin,.cptt-settings-wrap,.cptt-sms-wrap,.cptt-pay-wrap,.cptt-adminExperts,.cptt-experts-settings,.postbox,.widefat,.wp-list-table,.cptt-project-card,.cptt-acct-kpi,.cptt-cust-card,.cptt-set-main,.cptt-pay-card,.cptt-pay-gw) :where(p,span,small,label,td,th,div,li,strong,b,h1,h2,h3,h4,h5,h6){color:#244061!important;text-shadow:none!important}
+body.ham-admin-glass :where(.description,.cptt-pay-hero__desc,.cptt-acct-hero p,.cptt-dashboard__hero p,.cptt-cust-hero p,.cptt-set-header p,.cptt-adminExperts__hero p,small,.subsubsub a){color:#6f86a0!important}
+body.ham-admin-glass :where(.button-primary,.cptt-btn--primary,.cptt-btn-primary,.cptt-pay-btn--primary,.cptt-pay-btn--save,.cptt-pay-btn--ok,.cptt-pay-btn--no,.button-link-delete,.cptt-pay-gw__remove,.cptt-pay-card-del,.cptt-chip--completed,.cptt-chip--in_progress,.cptt-status,.cptt-badge,.cptt-fb-primary,.cptt-newProjectCta),
+body.ham-admin-glass :where(.button-primary,.cptt-btn--primary,.cptt-btn-primary,.cptt-pay-btn--primary,.cptt-pay-btn--save,.cptt-pay-btn--ok,.cptt-pay-btn--no,.button-link-delete,.cptt-pay-gw__remove,.cptt-pay-card-del,.cptt-chip--completed,.cptt-chip--in_progress,.cptt-status,.cptt-badge,.cptt-fb-primary,.cptt-newProjectCta) :where(span,b,strong,small){color:inherit!important}
+body.ham-admin-glass .button-primary,body.ham-admin-glass .cptt-btn--primary,body.ham-admin-glass .cptt-btn-primary,body.ham-admin-glass .cptt-pay-btn--primary,body.ham-admin-glass .cptt-pay-btn--save{color:#fff!important}
+body.ham-admin-glass .button-link-delete,body.ham-admin-glass .cptt-pay-gw__remove,body.ham-admin-glass .cptt-pay-card-del{color:#b53b32!important}
+body.ham-admin-glass a:not(.button):not(.cptt-btn):not(.cptt-pay-btn){color:#2d6fb3!important;font-weight:800}
+body.ham-admin-glass .row-actions a{font-weight:700!important}
+body.ham-admin-glass .cptt-dashboard__hero *,body.ham-admin-glass .cptt-acct-hero *,body.ham-admin-glass .cptt-cust-hero *,body.ham-admin-glass .cptt-pay-hero *,body.ham-admin-glass .cptt-set-header *,body.ham-admin-glass .cptt-adminExperts__hero *{color:#244061!important;text-shadow:none!important}
+body.ham-admin-glass .cptt-pay-hero__icon,body.ham-admin-glass .dashicons{color:#5b91d2!important}
+
+body.ham-admin-glass .button,body.ham-admin-glass .cptt-btn,body.ham-admin-glass .cptt-pay-btn{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;line-height:1.4!important;min-height:34px!important;white-space:nowrap!important;vertical-align:middle!important}
+body.ham-admin-glass .tablenav .actions,body.ham-admin-glass .alignleft.actions{display:flex!important;align-items:center!important;gap:8px!important;flex-wrap:wrap!important}
+body.ham-admin-glass .tablenav .actions select,body.ham-admin-glass .tablenav .actions input{margin:0!important;max-width:220px!important}
+body.ham-admin-glass .cptt-dashboard__filters,body.ham-admin-glass .cptt-acct-filters,body.ham-admin-glass .cptt-set-grid,body.ham-admin-glass .cptt-pay-grid,body.ham-admin-glass .cptt-cust-form{gap:12px!important;align-items:end!important}
+body.ham-admin-glass .cptt-pay-actions,body.ham-admin-glass .cptt-cust-actions,body.ham-admin-glass .cptt-adminExperts__actions,body.ham-admin-glass .submit{display:flex!important;gap:10px!important;align-items:center!important;justify-content:flex-start!important;flex-wrap:wrap!important}
+body.ham-admin-glass .wp-list-table td,body.ham-admin-glass .widefat td{vertical-align:middle!important}
+body.ham-admin-glass .wp-list-table td.column-title strong,body.ham-admin-glass .widefat td strong{color:#244061!important}
+body.ham-admin-glass .notice p,body.ham-admin-glass .updated p,body.ham-admin-glass .error p{color:#244061!important}
+body.ham-admin-glass code,body.ham-admin-glass pre{background:rgba(255,255,255,.68)!important;color:#244061!important;border:1px solid rgba(190,211,232,.75)!important;border-radius:10px!important;padding:3px 7px!important}
+body.ham-admin-glass .cptt-chip,body.ham-admin-glass .cptt-pay-rcpt__badge{border-radius:999px!important;font-weight:900!important}
+body.ham-admin-glass .cptt-pay-rcpt__badge{color:inherit!important}
+@media(max-width:782px){body.ham-admin-glass .tablenav .actions,body.ham-admin-glass .cptt-pay-actions,body.ham-admin-glass .submit{align-items:stretch!important}body.ham-admin-glass .button,body.ham-admin-glass .cptt-btn,body.ham-admin-glass .cptt-pay-btn{width:auto!important}body.ham-admin-glass .cptt-dashboard__filters,body.ham-admin-glass .cptt-acct-filters{grid-template-columns:1fr!important}}
+
+/* v5.4.37 isolate WordPress admin chrome from plugin glass theme */
+body.ham-admin-glass #adminmenuback,body.ham-admin-glass #adminmenuwrap,body.ham-admin-glass #adminmenu,body.ham-admin-glass #wpadminbar{filter:none!important;backdrop-filter:none!important;box-shadow:none!important;text-shadow:none!important}
+body.ham-admin-glass #adminmenu a,body.ham-admin-glass #adminmenu div.wp-menu-name,body.ham-admin-glass #adminmenu .wp-submenu a{color:#c3c4c7!important;font-weight:400!important;text-shadow:none!important;background:transparent!important;box-shadow:none!important;border:0!important}
+body.ham-admin-glass #adminmenu li.current a.menu-top,body.ham-admin-glass #adminmenu li.wp-has-current-submenu a.wp-has-current-submenu,body.ham-admin-glass #adminmenu .wp-submenu li.current a{color:#fff!important;font-weight:600!important}
+body.ham-admin-glass #adminmenu a:hover,body.ham-admin-glass #adminmenu li.menu-top:hover>a{color:#72aee6!important;background:#1d2327!important}
+body.ham-admin-glass #adminmenu .wp-submenu{background:#2c3338!important;box-shadow:none!important;border-radius:0!important;border:0!important}
+body.ham-admin-glass #wpadminbar a,body.ham-admin-glass #wpadminbar span,body.ham-admin-glass #wpadminbar div{color:inherit!important;background:transparent!important;box-shadow:none!important;border:0!important;text-shadow:none!important}

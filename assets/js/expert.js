@@ -162,6 +162,54 @@
     });
   }
 
+
+
+  /* =========================================================
+     DASHBOARD THEME MANAGER
+     ========================================================= */
+  function initThemeManager() {
+    if (!document.body.classList.contains('cptt-expert-dashboard-page')) return;
+    var allowed = ['classic','skeuo','three-d','glass','neumorph','minimal','dark'];
+    function normalize(t){ return allowed.indexOf(t) !== -1 ? t : 'classic'; }
+    function applyTheme(t) {
+      t = normalize(t);
+      allowed.forEach(function(x){ document.body.classList.remove('cptt-theme-' + x); });
+      document.body.classList.add('cptt-theme-' + t);
+      document.body.setAttribute('data-theme', t);
+      var wrap = document.querySelector('.cptt-expertWrap');
+      if (wrap) wrap.setAttribute('data-theme', t);
+      if (t === 'dark') {
+        document.body.classList.add('cptt-dark');
+        localStorage.setItem('cptt_dark_mode', '1');
+      } else {
+        document.body.classList.remove('cptt-dark');
+        localStorage.setItem('cptt_dark_mode', '0');
+      }
+      document.querySelectorAll('.cptt-theme-select').forEach(function(sel){ sel.value = t; });
+      localStorage.setItem('cptt_expert_theme', t);
+    }
+    var initial = normalize((window.CPTT_EXPERT && CPTT_EXPERT.userTheme) || localStorage.getItem('cptt_expert_theme') || (localStorage.getItem('cptt_dark_mode') === '1' ? 'dark' : 'classic'));
+    applyTheme(initial);
+    document.querySelectorAll('.cptt-theme-select').forEach(function(sel){
+      if (sel.dataset.cpttThemeBound) return;
+      sel.dataset.cpttThemeBound = '1';
+      sel.value = initial;
+      sel.addEventListener('change', function(){
+        var theme = normalize(sel.value);
+        applyTheme(theme);
+        var ajax = (window.CPTT_EXPERT && CPTT_EXPERT.ajax) ? CPTT_EXPERT.ajax : '';
+        var nonce = (window.CPTT_EXPERT && CPTT_EXPERT.nonce) ? CPTT_EXPERT.nonce : '';
+        if (ajax) {
+          var fd = new FormData();
+          fd.append('action','cptt_expert_save_theme');
+          fd.append('nonce', nonce);
+          fd.append('theme', theme);
+          fetch(ajax, {method:'POST', credentials:'same-origin', body:fd}).catch(function(){});
+        }
+      });
+    });
+  }
+
   /* =========================================================
      JALALI DATE PICKER
      ========================================================= */
@@ -1065,6 +1113,7 @@
     initMobileUI();
     parseHashAction();
     initDarkMode();
+    initThemeManager();
     initKanban();
     updateVisibility();
     setInterval(pollNotifications, 30000);
@@ -1522,119 +1571,160 @@
 
   var _activeClientSelect = null;
 
+  function ensureNewCustomerModal() {
+    var modals = Array.prototype.slice.call(document.querySelectorAll('#cptt-new-customer-modal'));
+    var modal = modals[0] || null;
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'cptt-new-customer-modal';
+      modal.className = 'cptt-new-customer-modal-overlay';
+      modal.style.display = 'none';
+      modal.innerHTML = '<div class="cptt-new-customer-modal-dialog" role="dialog" aria-modal="true">'
+        + '<div class="cptt-ncm-header"><h3>👤 ثبت مشتری جدید</h3><button type="button" id="cptt-cust-close" onclick="window.cpttQuickCustomerClose&&window.cpttQuickCustomerClose(event)">×</button></div>'
+        + '<div class="cptt-ncm-body"><div class="cptt-ncm-field"><label for="cptt-cust-firstname">نام</label><input type="text" id="cptt-cust-firstname" autocomplete="given-name"></div>'
+        + '<div class="cptt-ncm-field"><label for="cptt-cust-lastname">نام خانوادگی</label><input type="text" id="cptt-cust-lastname" autocomplete="family-name"></div>'
+        + '<div class="cptt-ncm-field"><label for="cptt-cust-phone">شماره موبایل</label><input type="tel" id="cptt-cust-phone" autocomplete="tel"></div></div>'
+        + '<div id="cptt-cust-msg"></div><div class="cptt-ncm-footer"><button type="button" id="cptt-cust-submit" onclick="window.cpttQuickCustomerSubmit&&window.cpttQuickCustomerSubmit(event)" class="cptt-btn cptt-btn--primary">✔ ثبت مشتری</button></div></div>';
+    }
+    // Remove duplicated copies to avoid getElementById / event target confusion.
+    modals.slice(1).forEach(function(m){ if (m && m.parentNode) m.parentNode.removeChild(m); });
+    if (modal.parentNode !== document.body) document.body.appendChild(modal);
+    return modal;
+  }
+
   function openNewCustomerModal(triggerSelect) {
     _activeClientSelect = triggerSelect;
-    var modal = document.getElementById('cptt-new-customer-modal');
+    var modal = ensureNewCustomerModal();
     if (modal) {
+      // If this modal was rendered inside the create-project modal, move it to <body>
+      // before blurring the parent; otherwise the customer popup itself becomes blurred.
+      if (modal.parentNode !== document.body) document.body.appendChild(modal);
       modal.style.display = 'flex';
       modal.style.zIndex = '2147483647';
-      // Blur the project modal if it exists
+      modal.removeAttribute('aria-hidden');
+      // Blur ONLY the create-project popup behind the customer modal.
       var parentModal = document.getElementById('cptt-new-project-modal');
-      if (parentModal) parentModal.style.filter = 'blur(5px)';
+      if (parentModal) {
+        parentModal.classList.add('cptt-modal-blurred-behind');
+        parentModal.style.filter = 'blur(5px)';
+      }
+      var sb = document.getElementById('cptt-cust-submit');
+      if (sb) sb.disabled = false;
+      var msg = document.getElementById('cptt-cust-msg');
+      if (msg) msg.textContent = '';
       var fnInput = document.getElementById('cptt-cust-firstname');
-      if (fnInput) fnInput.focus();
+      if (fnInput) setTimeout(function(){ fnInput.focus(); }, 30);
     }
   }
 
-  function bindNewCustomerSubmit() {
-    var custModal = document.getElementById('cptt-new-customer-modal');
-    if (!custModal) return;
-
-    // Use global document delegation for reliable close/submit handling
-    if (!custModal.dataset.delegated) {
-      custModal.dataset.delegated = '1';
-
-      document.addEventListener('click', function(e) {
-        var closeBtn = e.target.closest('#cptt-cust-close');
-        if (closeBtn) {
-          custModal.style.display = 'none';
-          var parentModal = document.getElementById('cptt-new-project-modal');
-          if (parentModal) parentModal.style.filter = '';
-          _activeClientSelect = null;
-          return;
-        }
-
-        var submitBtn = e.target.closest('#cptt-cust-submit');
-        if (submitBtn) {
-          var firstName = (document.getElementById('cptt-cust-firstname') || {}).value;
-          var lastName = (document.getElementById('cptt-cust-lastname') || {}).value;
-          var phone = (document.getElementById('cptt-cust-phone') || {}).value;
-          var msg = document.getElementById('cptt-cust-msg');
-          if (firstName) firstName = firstName.trim();
-          if (lastName) lastName = lastName.trim();
-          if (phone) phone = phone.trim();
-
-          if (!firstName || !lastName || !phone) {
-            if (msg) { msg.textContent = 'وارد کردن نام، نام خانوادگی و شماره موبایل الزامی است.'; msg.style.color = '#ef4444'; }
-            return;
-          }
-          if (msg) { msg.textContent = 'در حال ثبت...'; msg.style.color = '#475569'; }
-
-          var ajax = (window.CPTT_EXPERT && CPTT_EXPERT.ajax) ? CPTT_EXPERT.ajax : '';
-          var nonce = (window.CPTT_EXPERT && CPTT_EXPERT.nonce) ? CPTT_EXPERT.nonce : '';
-
-          var fd = new FormData();
-          fd.append('action', 'cptt_expert_create_customer');
-          fd.append('nonce', nonce);
-          fd.append('first_name', firstName);
-          fd.append('last_name', lastName);
-          fd.append('phone', phone);
-
-          fetch(ajax, { method: 'POST', body: fd })
-            .then(function(r) { return r.json(); })
-            .then(function(res) {
-              if (res.success) {
-                if (msg) { msg.textContent = 'مشتری با موفقیت ثبت شد!'; msg.style.color = '#047857'; }
-
-                // Add to ALL client selects on page
-                document.querySelectorAll('select[name="client_user_id"]').forEach(function(sel) {
-                  var existing = sel.querySelector('option[value="' + res.data.ID + '"]');
-                  if (!existing) {
-                    var opt = document.createElement('option');
-                    opt.value = res.data.ID;
-                    opt.textContent = res.data.display_name;
-                    sel.appendChild(opt);
-                  }
-                });
-
-                // Select in triggering select
-                if (_activeClientSelect) {
-                  _activeClientSelect.value = res.data.ID;
-                }
-
-                setTimeout(function() {
-                  custModal.style.display = 'none';
-                  var parentModal = document.getElementById('cptt-new-project-modal');
-                  if (parentModal) parentModal.style.filter = '';
-                  var fn = document.getElementById('cptt-cust-firstname');
-                  var ln = document.getElementById('cptt-cust-lastname');
-                  var ph = document.getElementById('cptt-cust-phone');
-                  if (fn) fn.value = '';
-                  if (ln) ln.value = '';
-                  if (ph) ph.value = '';
-                  if (msg) msg.textContent = '';
-                  _activeClientSelect = null;
-                }, 1200);
-              } else {
-                if (msg) { msg.textContent = (res.data || 'خطا در ثبت مشتری'); msg.style.color = '#ef4444'; }
-              }
-            })
-            .catch(function() {
-              if (msg) { msg.textContent = 'خطای شبکه'; msg.style.color = '#ef4444'; }
-            });
-        }
-      });
-
-      // Close on backdrop click
-      custModal.addEventListener('click', function(e) {
-        if (e.target === custModal) {
-          custModal.style.display = 'none';
-          var parentModal = document.getElementById('cptt-new-project-modal');
-          if (parentModal) parentModal.style.filter = '';
-          _activeClientSelect = null;
-        }
-      });
+  function closeNewCustomerModal() {
+    var custModal = ensureNewCustomerModal();
+    if (custModal) {
+      custModal.style.display = 'none';
+      custModal.setAttribute('aria-hidden', 'true');
     }
+    var parentModal = document.getElementById('cptt-new-project-modal');
+    if (parentModal) {
+      parentModal.classList.remove('cptt-modal-blurred-behind');
+      parentModal.style.filter = '';
+      parentModal.style.pointerEvents = '';
+    }
+    _activeClientSelect = null;
+  }
+
+  window.cpttQuickCustomerClose = window.cpttQuickCustomerClose || function(ev){ if(ev){ev.preventDefault();ev.stopPropagation();} closeNewCustomerModal(); };
+  window.cpttQuickCustomerSubmit = window.cpttQuickCustomerSubmit || function(ev){
+    if(ev){ ev.preventDefault(); ev.stopPropagation(); }
+    var btn = document.getElementById('cptt-cust-submit');
+    if (btn) btn.click();
+  };
+
+  function bindNewCustomerSubmit() {
+    // Bind once globally. The modal may be injected later with the create-project form,
+    // so never return just because it is not in DOM yet.
+    if (document.documentElement.dataset.cpttNewCustomerDelegated === '1') return;
+    document.documentElement.dataset.cpttNewCustomerDelegated = '1';
+
+    document.addEventListener('click', function(e) {
+      var closeBtn = e.target.closest && e.target.closest('#cptt-cust-close');
+      if (closeBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeNewCustomerModal();
+        return;
+      }
+
+      var custModal = document.getElementById('cptt-new-customer-modal');
+      if (custModal && e.target === custModal) {
+        e.preventDefault();
+        closeNewCustomerModal();
+        return;
+      }
+
+      var submitBtn = e.target.closest && e.target.closest('#cptt-cust-submit');
+      if (!submitBtn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (submitBtn.disabled) return;
+
+      var firstName = (document.getElementById('cptt-cust-firstname') || {}).value;
+      var lastName = (document.getElementById('cptt-cust-lastname') || {}).value;
+      var phone = (document.getElementById('cptt-cust-phone') || {}).value;
+      var msg = document.getElementById('cptt-cust-msg');
+      if (firstName) firstName = firstName.trim();
+      if (lastName) lastName = lastName.trim();
+      if (phone) phone = phone.trim();
+
+      if (!firstName || !lastName || !phone) {
+        if (msg) { msg.textContent = 'وارد کردن نام، نام خانوادگی و شماره موبایل الزامی است.'; msg.style.color = '#ef4444'; }
+        return;
+      }
+      if (msg) { msg.textContent = 'در حال ثبت...'; msg.style.color = '#475569'; }
+      submitBtn.disabled = true;
+
+      var ajax = (window.CPTT_EXPERT && CPTT_EXPERT.ajax) ? CPTT_EXPERT.ajax : '';
+      var nonce = (window.CPTT_EXPERT && CPTT_EXPERT.nonce) ? CPTT_EXPERT.nonce : '';
+      var fd = new FormData();
+      fd.append('action', 'cptt_expert_create_customer');
+      fd.append('nonce', nonce);
+      fd.append('first_name', firstName);
+      fd.append('last_name', lastName);
+      fd.append('phone', phone);
+
+      fetch(ajax, { method: 'POST', credentials: 'same-origin', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+          submitBtn.disabled = false;
+          if (res && res.success) {
+            if (msg) { msg.textContent = (res.data && res.data.message) ? res.data.message : 'مشتری با موفقیت ثبت شد!'; msg.style.color = (res.data && res.data.existing) ? '#b45309' : '#047857'; }
+            document.querySelectorAll('select[name="client_user_id"]').forEach(function(sel) {
+              var existing = sel.querySelector('option[value="' + res.data.ID + '"]');
+              if (!existing) {
+                var opt = document.createElement('option');
+                opt.value = res.data.ID;
+                opt.textContent = res.data.display_name;
+                opt.dataset.search = [res.data.display_name || '', phone || ''].join(' ');
+                sel.appendChild(opt);
+              }
+            });
+            if (_activeClientSelect) {
+              _activeClientSelect.value = String(res.data.ID);
+              _activeClientSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            setTimeout(function() {
+              closeNewCustomerModal();
+              ['cptt-cust-firstname','cptt-cust-lastname','cptt-cust-phone'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+              if (msg) msg.textContent = '';
+            }, 650);
+          } else {
+            if (msg) { msg.textContent = (res && res.data) ? res.data : 'خطا در ثبت مشتری'; msg.style.color = '#ef4444'; }
+          }
+        })
+        .catch(function() {
+          submitBtn.disabled = false;
+          if (msg) { msg.textContent = 'خطای شبکه'; msg.style.color = '#ef4444'; }
+        });
+    }, true);
   }
 
   /* =========================================================
@@ -1689,6 +1779,7 @@
             // Re-init new customer triggers
             if (node.querySelector && node.querySelector('select[name="client_user_id"]')) {
               initNewCustomerModals();
+              bindNewCustomerSubmit();
               initClientSearchPickers();
             }
           });
@@ -1852,14 +1943,15 @@
 
           html += '<div class="cptt-hubModal__step cptt-hubModal__step--'+escH(st)+'">';
           html += '<div class="cptt-hubModal__stepHead">';
-          html += '<strong>'+escH(s.index||'')+'&nbsp;'+escH(s.title||'')+'</strong>';
+          html += '<strong>'+escH(s.index||'')+'&nbsp;'+escH(s.title||'');
           if (s.experts && s.experts.length) {
-              html += '<div class="cptt-hubModal__stepExperts">';
+              html += '<span class="cptt-step-toggle-avatars cptt-hubModal__stepExperts">';
               s.experts.forEach(function(ex){
-                  html += '<img src="'+escH(ex.avatar)+'" title="'+escH(ex.name)+'" alt="'+escH(ex.name)+'" style="width:24px;height:24px;border-radius:50%;border:1.5px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);margin-right:-8px;">';
+                  html += '<img src="'+escH(ex.avatar)+'" title="'+escH(ex.name)+'" alt="'+escH(ex.name)+'">';
               });
-              html += '</div>';
+              html += '</span>';
           }
+          html += '</strong>';
           html += '<span class="cptt-expertStatusBadge cptt-expertStatusBadge--'+escH(st)+'">'+escH(stLabel)+'</span>';
           html += '</div>';
 
@@ -2732,3 +2824,120 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindClientSearch); else bindClientSearch();
   document.addEventListener('click', function(e){ if(e.target.closest('[data-cptt-open-newproject], .cptt-newProjectCta, .cptt-expert-toggleProject')) setTimeout(bindClientSearch, 100); });
 })();
+
+/* v5.4.24 Daily Mood Tracker - smooth snapping UI */
+(function(){
+  'use strict';
+  function ready(fn){ if(document.readyState !== 'loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
+  ready(function(){
+    var modal = document.getElementById('cptt-mood-modal');
+    if(!modal || modal.dataset.v5424 === '1') return;
+    modal.dataset.v5424 = '1';
+    var card = modal.querySelector('.cptt-moodCard');
+    var range = document.getElementById('cptt-mood-range');
+    var text = document.getElementById('cptt-mood-text');
+    var emoji = document.getElementById('cptt-mood-emoji');
+    var note = document.getElementById('cptt-mood-note');
+    var submit = document.getElementById('cptt-mood-submit');
+    var noteToggle = document.getElementById('cptt-mood-note-toggle');
+    var msg = document.getElementById('cptt-mood-msg');
+    var mouth = document.getElementById('cptt-mood-mouth');
+    var eyeL = document.getElementById('cptt-mood-eye-l');
+    var eyeR = document.getElementById('cptt-mood-eye-r');
+    var wrap = modal.querySelector('.cptt-moodSliderWrap');
+    var states = {
+      1: { cls:'is-bad', label:'اصلاً خوب نیستم', mouth:'M78 112 Q110 82 142 112', eyeR:15, eyeY:62, emoji: modal.dataset.em1 || '😟', pct:0 },
+      2: { cls:'is-mid', label:'بد نیستم/معمولی', mouth:'M82 105 Q110 105 138 105', eyeR:16, eyeY:58, emoji: modal.dataset.em2 || '😐', pct:50 },
+      3: { cls:'is-good', label:'عالی و پرانرژی', mouth:'M76 92 Q110 128 146 92', eyeR:24, eyeY:56, emoji: modal.dataset.em3 || '😄', pct:100 }
+    };
+    var currentMood = 2;
+    var raf = 0;
+
+    var visual = document.createElement('div');
+    visual.className = 'cptt-moodSnapSlider';
+    visual.innerHTML = '<div class="cptt-moodSnapSlider__track"><span class="cptt-moodSnapSlider__fill"></span><i class="cptt-moodSnapSlider__thumb"></i></div>';
+    if (wrap && range) wrap.insertBefore(visual, range.nextSibling);
+    var fill = visual.querySelector('.cptt-moodSnapSlider__fill');
+    var thumb = visual.querySelector('.cptt-moodSnapSlider__thumb');
+
+    function nearestMoodFromClientX(x){
+      var rect = visual.getBoundingClientRect();
+      var ratio = rect.width ? Math.max(0, Math.min(1, (x - rect.left) / rect.width)) : .5;
+      if (ratio < .25) return 1;
+      if (ratio > .75) return 3;
+      return 2;
+    }
+    function setVisual(v){
+      var pct = states[v].pct;
+      if(fill) fill.style.width = pct + '%';
+      if(thumb) thumb.style.transform = 'translate(-50%,-50%)';
+      if(thumb) thumb.style.left = pct + '%';
+      if(range) range.value = String(v);
+    }
+    function animateSwap(el, value){
+      if(!el || el.textContent === value) return;
+      el.classList.remove('is-animating');
+      el.textContent = value;
+      requestAnimationFrame(function(){ el.classList.add('is-animating'); });
+    }
+    function applyMood(v){
+      v = Math.max(1, Math.min(3, parseInt(v || 2, 10)));
+      if(!states[v]) v = 2;
+      if (v === currentMood && card.dataset.mood === String(v)) { setVisual(v); return; }
+      currentMood = v;
+      if(raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(function(){
+        card.dataset.mood = String(v);
+        card.classList.remove('is-bad','is-mid','is-good');
+        card.classList.add(states[v].cls);
+        animateSwap(text, states[v].label);
+        animateSwap(emoji, states[v].emoji);
+        if(mouth) mouth.setAttribute('d', states[v].mouth);
+        if(eyeL && eyeR){
+          eyeL.setAttribute('r', states[v].eyeR); eyeR.setAttribute('r', states[v].eyeR);
+          eyeL.setAttribute('cy', states[v].eyeY); eyeR.setAttribute('cy', states[v].eyeY);
+        }
+        setVisual(v);
+      });
+    }
+    function choose(v){ applyMood(v); }
+    function handlePoint(ev){
+      var x = ev.touches && ev.touches[0] ? ev.touches[0].clientX : ev.clientX;
+      choose(nearestMoodFromClientX(x));
+    }
+    var dragging = false;
+    visual.addEventListener('pointerdown', function(e){ dragging = true; visual.setPointerCapture && visual.setPointerCapture(e.pointerId); handlePoint(e); });
+    visual.addEventListener('pointermove', function(e){ if(dragging) handlePoint(e); });
+    visual.addEventListener('pointerup', function(e){ dragging = false; handlePoint(e); });
+    visual.addEventListener('pointercancel', function(){ dragging = false; });
+    visual.addEventListener('click', handlePoint);
+    if(range) {
+      range.addEventListener('input', function(){ choose(Math.round(parseFloat(range.value || '2'))); });
+      range.addEventListener('change', function(){ choose(Math.round(parseFloat(range.value || '2'))); });
+    }
+    function hide(){ modal.classList.add('is-closing'); setTimeout(function(){ modal.remove(); document.body.classList.remove('cptt-mood-open'); }, 260); }
+    function save(){
+      if(submit) submit.disabled = true;
+      if(msg) { msg.textContent = 'در حال ثبت...'; msg.style.color = 'currentColor'; }
+      var fd = new FormData();
+      fd.append('action','cptt_expert_save_mood');
+      fd.append('nonce',(window.CPTT_EXPERT && CPTT_EXPERT.nonce) ? CPTT_EXPERT.nonce : '');
+      fd.append('mood', String(currentMood));
+      fd.append('note', note ? note.value : '');
+      fd.append('closed', '0');
+      fetch((window.CPTT_EXPERT && CPTT_EXPERT.ajax) ? CPTT_EXPERT.ajax : '', {method:'POST', credentials:'same-origin', body:fd})
+        .then(function(r){return r.json();})
+        .then(function(res){ if(res && res.success){ hide(); } else { if(submit) submit.disabled=false; if(msg){msg.textContent=(res&&res.data)?res.data:'خطا در ثبت'; msg.style.color='#b91c1c';} } })
+        .catch(function(){ if(submit) submit.disabled=false; if(msg){msg.textContent='خطای شبکه'; msg.style.color='#b91c1c';} });
+    }
+    document.body.classList.add('cptt-mood-open');
+    applyMood(2);
+    if(noteToggle && note) noteToggle.addEventListener('click', function(){
+      var isHidden = note.hasAttribute('hidden');
+      if(isHidden){ note.removeAttribute('hidden'); setTimeout(function(){note.focus();},30); }
+      else { note.setAttribute('hidden',''); }
+    });
+    if(submit) submit.addEventListener('click', save);
+  });
+})();
+
