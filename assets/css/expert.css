@@ -5325,3 +5325,464 @@ body.cptt-theme-glass .cptt-expert-card-item{background:rgba(255,255,255,.12)!im
 /* Modern dark fields/buttons: clean single layer */
 body.cptt-theme-dark :is(input[type="text"],input[type="number"],input[type="search"],input[type="email"],input[type="url"],input[type="password"],input[type="tel"],select,textarea,.cptt-jalali-datetime,.cptt-currency-input,.cptt-num-format){background:#0b1220!important;border:1px solid #263244!important;color:#f8fafc!important;box-shadow:inset 0 2px 10px rgba(0,0,0,.34)!important;}
 body.cptt-theme-dark :is(.cptt-createProjectGrid label,.cptt-expert-step__metaGrid label,.cptt-bf,.cptt-ncm-field){background:transparent!important;border:0!important;box-shadow:none!important;}
+/* =====================================================================
+   v5.5.3 — Theme Redesign, Modal Fixes, Floating Button Fixes, Select Styling
+   ===================================================================== */
+
+/* ---------- 1. CONTAINING-BLOCK FIX — expanded cards & modals ---------- */
+/* Ancestors with backdrop-filter/transform/filter create a containing block
+   for fixed descendants and break centering. We remove those from expanded
+   card structural ancestors so modals/save buttons stay viewport-relative. */
+body.cptt-expert-dashboard-page[data-theme] .cptt-expertCard.is-expanded,
+body.cptt-expert-dashboard-page[data-theme] .cptt-expertCard.is-expanded .cptt-expertCard__details,
+body.cptt-expert-dashboard-page[data-theme] .cptt-expertCard.is-expanded .cptt-expertCard__sidePanel,
+body.cptt-expert-dashboard-page[data-theme] .cptt-expertCard.is-expanded .cptt-expertCard__mainPanel,
+body.cptt-expert-dashboard-page[data-theme] .cptt-expertCard.is-expanded .cptt-expertCard__panels,
+body.cptt-expert-dashboard-page[data-theme] .cptt-expertCard.is-expanded .cptt-expert-project-form,
+body.cptt-expert-dashboard-page[data-theme] .cptt-expertCard.is-expanded .cptt-expert-step__body {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transform: none !important;
+    filter: none !important;
+    perspective: none !important;
+}
+
+/* Force all modals to be viewport-locked with vw/vh so containing blocks
+   cannot offset them. Dialogs use absolute + vh/vw + translate to stay dead-centre. */
+.cptt-expert-chatModal,
+.cptt-direct-chat-modal,
+.cptt-all-notifs-modal,
+.cptt-newProjectModal,
+.cptt-editProfileModal,
+.cptt-stepExpertModal,
+.cptt-debtors-modal,
+.cptt-new-customer-modal-overlay,
+.cptt-experts-mobile-modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transform: none !important;
+    filter: none !important;
+    z-index: 2147483647 !important;
+}
+.cptt-expert-chatModal__backdrop,
+.cptt-direct-chat-modal__backdrop,
+.cptt-all-notifs-modal__backdrop,
+.cptt-newProjectModal__backdrop,
+.cptt-editProfileModal__backdrop,
+.cptt-stepExpertModal__backdrop,
+.cptt-debtors-modal__backdrop,
+.cptt-experts-mobile-modal__backdrop {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+}
+.cptt-expert-chatModal__dialog,
+.cptt-direct-chat-modal__dialog,
+.cptt-all-notifs-modal__dialog,
+.cptt-newProjectModal__dialog,
+.cptt-editProfileModal__dialog,
+.cptt-stepExpertModal__dialog,
+.cptt-debtors-modal__dialog,
+.cptt-new-customer-modal-dialog {
+    position: absolute !important;
+    top: 50vh !important;
+    left: 50vw !important;
+    transform: translate(-50%, -50%) !important;
+    max-height: 90vh !important;
+    margin: 0 !important;
+}
+
+/* ---------- 2. FLOATING SAVE BUTTON — viewport-relative positioning ---------- */
+.cptt-expertCard.is-expanded .cptt-expert-save-floating {
+    position: fixed !important;
+    bottom: 24px !important;
+    right: auto !important;
+    left: calc(280px + 22px + 22px + 16px) !important; /* sidebar + gaps + padding */
+    z-index: 999 !important;
+    padding: 14px 28px !important;
+    font-size: 14px !important;
+    font-weight: 950 !important;
+    background: linear-gradient(135deg, #059669, #10b981) !important;
+    color: #fff !important;
+    border-radius: 50px !important;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4) !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transform: none !important;
+    backdrop-filter: none !important;
+}
+.cptt-expertCard.is-expanded .cptt-expert-save-floating:hover {
+    transform: translateY(-2px) scale(1.05) !important;
+    box-shadow: 0 14px 30px rgba(16, 185, 129, 0.5) !important;
+    background: linear-gradient(135deg, #047857, #059669) !important;
+}
+@media (max-width: 1180px) and (min-width: 821px) {
+    .cptt-expertCard.is-expanded .cptt-expert-save-floating {
+        left: calc(240px + 16px + 16px + 12px) !important;
+    }
+}
+@media (max-width: 820px) {
+    .cptt-expertCard.is-expanded .cptt-expert-save-floating {
+        bottom: 20px !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        padding: 10px 18px !important;
+        font-size: 13px !important;
+        min-height: 50px !important;
+    }
+    .cptt-expertCard.is-expanded .cptt-expert-save-floating:hover {
+        transform: translateX(-50%) translateY(-2px) scale(1.05) !important;
+    }
+}
+
+/* ---------- 3. DROPDOWN / SELECT THEME STYLING ---------- */
+body.cptt-expert-dashboard-page[data-theme] select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-repeat: no-repeat !important;
+    background-position: left 12px center !important;
+    padding-left: 38px !important;
+    cursor: pointer !important;
+}
+body.cptt-expert-dashboard-page[data-theme="classic"] select,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] select,
+body.cptt-expert-dashboard-page[data-theme="neumorph"] select,
+body.cptt-expert-dashboard-page[data-theme="minimal"] select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+}
+body.cptt-expert-dashboard-page[data-theme="glass"] select,
+body.cptt-expert-dashboard-page[data-theme="three-d"] select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.7)' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+}
+body.cptt-expert-dashboard-page[data-theme="dark"] select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a4b2c5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+}
+body.cptt-expert-dashboard-page[data-theme] select option,
+body.cptt-expert-dashboard-page[data-theme] select optgroup {
+    background: var(--bg-input) !important;
+    color: var(--text-main) !important;
+}
+
+/* =====================================================================
+   4. SKEUOMORPHISM THEME REDESIGN (Neo-Skeuomorphism — soft iOS-like)
+   ===================================================================== */
+body.cptt-expert-dashboard-page[data-theme="skeuo"],
+body.cptt-theme-skeuo.cptt-expert-dashboard-page {
+    --bg-main: radial-gradient(circle at 30% -8%, #ffffff 0%, #f4f4f6 42%, #e2e2e8 100%);
+    --bg-card: linear-gradient(145deg, #f4f4f6, #ffffff);
+    --bg-input: #ffffff;
+    --border-color: rgba(255,255,255,0.96);
+    --text-main: #2c3e50;
+    --text-muted: #5d6d7e;
+    --shadow-main: 10px 10px 24px rgba(0,0,0,0.08), -10px -10px 24px rgba(255,255,255,0.9);
+    --blur-effect: none;
+    --accent: #4a7fc1;
+    --accent-2: #8fc3ff;
+    --accent-text: #ffffff;
+    --danger: #e74c3c;
+    --success: #27ae60;
+    --warning: #f39c12;
+    --radius-xl: 26px;
+    --radius-md: 20px;
+}
+/* Skeuo: visual cards — soft dual-shadow extrusion, no hard borders */
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-expertCard,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-sideBox,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-kpiCard,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-insightBox,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-expertFilters,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-expert-step,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-expert-list-item,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-expert-noteItem,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-newProjectModal__dialog,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-expert-chatModal__dialog,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-direct-chat-modal__dialog,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-editProfileModal__dialog,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-new-customer-modal-dialog,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-debtors-modal__dialog,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-stepExpertModal__dialog,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-all-notifs-modal__dialog,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-kanban__col,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-kanban__card {
+    background: var(--bg-card) !important;
+    border: 1px solid rgba(255,255,255,0.95) !important;
+    border-radius: var(--radius-xl) !important;
+    box-shadow: var(--shadow-main) !important;
+    color: var(--text-main) !important;
+}
+/* Skeuo: inputs with subtle inset shadows (pressed / tactile) */
+body.cptt-expert-dashboard-page[data-theme="skeuo"] input[type="text"],
+body.cptt-expert-dashboard-page[data-theme="skeuo"] input[type="number"],
+body.cptt-expert-dashboard-page[data-theme="skeuo"] input[type="search"],
+body.cptt-expert-dashboard-page[data-theme="skeuo"] input[type="email"],
+body.cptt-expert-dashboard-page[data-theme="skeuo"] input[type="url"],
+body.cptt-expert-dashboard-page[data-theme="skeuo"] input[type="password"],
+body.cptt-expert-dashboard-page[data-theme="skeuo"] input[type="tel"],
+body.cptt-expert-dashboard-page[data-theme="skeuo"] select,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] textarea,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-jalali-datetime {
+    background: var(--bg-input) !important;
+    color: var(--text-main) !important;
+    border: 1px solid rgba(255,255,255,0.85) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: inset 3px 3px 8px rgba(0,0,0,0.06), inset -3px -3px 8px rgba(255,255,255,0.92) !important;
+}
+body.cptt-expert-dashboard-page[data-theme="skeuo"] input:focus,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] select:focus,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] textarea:focus {
+    box-shadow: inset 4px 4px 10px rgba(0,0,0,0.08), inset -4px -4px 10px rgba(255,255,255,0.95), 0 0 0 3px rgba(74,127,193,0.12) !important;
+}
+/* Skeuo: buttons — extruded dual shadow */
+body.cptt-expert-dashboard-page[data-theme="skeuo"] :is(.cptt-btn,.button,.cptt-clientSearchCreate__btn,.cptt-step-expert-btn) {
+    background: linear-gradient(145deg, #f9fcff, #dfeefc) !important;
+    color: var(--text-main) !important;
+    border: 1px solid rgba(255,255,255,0.92) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: 8px 8px 18px rgba(0,0,0,0.08), -6px -6px 16px rgba(255,255,255,0.92), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+}
+body.cptt-expert-dashboard-page[data-theme="skeuo"] :is(.cptt-btn--primary,.cptt-newProjectCta,button[type="submit"]) {
+    background: linear-gradient(145deg, #8fc3ff, #4a7fc1) !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 8px 8px 22px rgba(74,127,193,0.28), -6px -6px 18px rgba(255,255,255,0.72) !important;
+}
+/* Skeuo: hero — soft pastel gradient */
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-proHero--expert {
+    background: linear-gradient(135deg, #8fc3ff 0%, #a5d8ff 55%, #dbeafe 110%) !important;
+    border: 1px solid rgba(255,255,255,0.75) !important;
+    border-radius: var(--radius-xl) !important;
+    box-shadow: var(--shadow-main) !important;
+}
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-proHero--expert * {
+    color: #1e3a5f !important;
+}
+/* Skeuo: status badges — accent glow only for statuses */
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-expert-status--done,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-expertStatusBadge--done {
+    background: rgba(39,174,96,0.10) !important;
+    color: #27ae60 !important;
+    border-color: rgba(39,174,96,0.30) !important;
+    box-shadow: 0 2px 8px rgba(39,174,96,0.08) !important;
+}
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-expert-status--current,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] .cptt-expertStatusBadge--current {
+    background: rgba(243,156,18,0.10) !important;
+    color: #f39c12 !important;
+    border-color: rgba(243,156,18,0.30) !important;
+    box-shadow: 0 2px 8px rgba(243,156,18,0.08) !important;
+}
+/* Skeuo: typography weight hierarchy */
+body.cptt-expert-dashboard-page[data-theme="skeuo"] :is(h1,h2,h3,h4,h5,h6,strong,.cptt-expertCard__top h3,.cptt-sideBox__title,.cptt-kpiCard__value,.cptt-expert-sectionTitle) {
+    font-weight: 600 !important;
+    letter-spacing: -0.01em !important;
+}
+body.cptt-expert-dashboard-page[data-theme="skeuo"] :is(.cptt-expertCard__meta,.cptt-expert-step__toggleMain span,.cptt-expertFilters label,.cptt-expert-emptyMini) {
+    font-weight: 500 !important;
+}
+body.cptt-expert-dashboard-page[data-theme="skeuo"] body,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] p,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] span,
+body.cptt-expert-dashboard-page[data-theme="skeuo"] div {
+    font-weight: 400 !important;
+}
+
+/* =====================================================================
+   5. GLASSMORPHISM THEME REDESIGN (Liquid Glass / iOS VisionOS style)
+   ===================================================================== */
+body.cptt-expert-dashboard-page[data-theme="glass"],
+body.cptt-theme-glass.cptt-expert-dashboard-page {
+    --bg-main:
+        radial-gradient(circle at 20% 0%, rgba(56,189,248,0.55), transparent 30%),
+        radial-gradient(circle at 85% 10%, rgba(168,85,247,0.48), transparent 35%),
+        radial-gradient(circle at 50% 100%, rgba(34,211,238,0.30), transparent 42%),
+        linear-gradient(135deg, #020312 0%, #0a1a3a 28%, #0c2d57 50%, #0f172a 100%);
+    --bg-card: rgba(255,255,255,0.12);
+    --bg-input: rgba(255,255,255,0.08);
+    --border-color: rgba(255,255,255,0.18);
+    --text-main: #ffffff;
+    --text-muted: rgba(255,255,255,0.82);
+    --shadow-main: 0 8px 32px rgba(0,0,0,0.12), inset 0 1px 1px rgba(255,255,255,0.18);
+    --blur-effect: blur(30px) saturate(200%);
+    --accent: rgba(255,255,255,0.92);
+    --accent-2: rgba(186,230,253,0.90);
+    --accent-text: #0f172a;
+    --danger: #ff6b6b;
+    --success: #51cf66;
+    --warning: #fcc419;
+    --radius-xl: 34px;
+    --radius-md: 20px;
+}
+/* Glass: ONLY visual/user-facing elements receive glass treatment */
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-expertCard,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-sideBox,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-kpiCard,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-insightBox,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-expertFilters,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-expert-step,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-expert-list-item,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-expert-noteItem,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-newProjectModal__dialog,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-expert-chatModal__dialog,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-direct-chat-modal__dialog,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-editProfileModal__dialog,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-new-customer-modal-dialog,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-debtors-modal__dialog,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-stepExpertModal__dialog,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-all-notifs-modal__dialog,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-kanban__col,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-kanban__card {
+    background: rgba(255,255,255,0.14) !important;
+    backdrop-filter: blur(30px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+    border: 1px solid rgba(255,255,255,0.22) !important;
+    border-radius: var(--radius-xl) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12), inset 0 1px 1px rgba(255,255,255,0.20) !important;
+    color: var(--text-main) !important;
+}
+/* Glass: structural wrappers MUST remain transparent & borderless */
+body.cptt-expert-dashboard-page[data-theme="glass"] :is(
+    .cptt-expertCard__panels,
+    .cptt-expertCard__sidePanel,
+    .cptt-expertCard__mainPanel,
+    .cptt-expertCard__details,
+    .cptt-expert-project-form,
+    .cptt-createProjectGrid,
+    .cptt-expert-step__metaGrid,
+    .cptt-expert-step__body,
+    .cptt-expert-formActions,
+    .cptt-expert-formFooter,
+    .cptt-expert-message-form,
+    .cptt-direct-chat-form,
+    .cptt-expert-messagesWrap,
+    .cptt-expert-checklist-items,
+    .cptt-expert-usertasks-items,
+    .cptt-experts-card-list,
+    .cptt-clientSearchCreate,
+    .cptt-clientSearchCreate__field,
+    .cptt-clientSearchCreate__search,
+    .cptt-ncm-body,
+    .cptt-ncm-footer,
+    .cptt-editProfile__grid label,
+    .cptt-expert-step__metaGrid label,
+    .cptt-expert-noteField,
+    .cptt-bf,
+    .cptt-product-pair-row,
+    .cptt-createProjectCheck,
+    .cptt-step-expert-wrap,
+    .cptt-delivery-section label,
+    .cptt-manage-finance-summary,
+    .cptt-manage-finance-summary label,
+    .cptt-manage-fin-box,
+    .cptt-expert-analytics-section
+) {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+/* Glass: inputs / selects / textareas — glass surface with subtle border */
+body.cptt-expert-dashboard-page[data-theme="glass"] input[type="text"],
+body.cptt-expert-dashboard-page[data-theme="glass"] input[type="number"],
+body.cptt-expert-dashboard-page[data-theme="glass"] input[type="search"],
+body.cptt-expert-dashboard-page[data-theme="glass"] input[type="email"],
+body.cptt-expert-dashboard-page[data-theme="glass"] input[type="url"],
+body.cptt-expert-dashboard-page[data-theme="glass"] input[type="password"],
+body.cptt-expert-dashboard-page[data-theme="glass"] input[type="tel"],
+body.cptt-expert-dashboard-page[data-theme="glass"] select,
+body.cptt-expert-dashboard-page[data-theme="glass"] textarea,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-jalali-datetime {
+    background: rgba(255,255,255,0.10) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,0.24) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 12px 30px rgba(0,0,0,0.10) !important;
+}
+body.cptt-expert-dashboard-page[data-theme="glass"] input:focus,
+body.cptt-expert-dashboard-page[data-theme="glass"] select:focus,
+body.cptt-expert-dashboard-page[data-theme="glass"] textarea:focus {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), 0 0 0 3px rgba(103,232,249,0.14) !important;
+    border-color: rgba(255,255,255,0.40) !important;
+}
+/* Glass: primary button — bright highlight on glass */
+body.cptt-expert-dashboard-page[data-theme="glass"] :is(.cptt-btn--primary,.cptt-newProjectCta,button[type="submit"]) {
+    background: linear-gradient(135deg, rgba(255,255,255,0.92), rgba(186,230,253,0.90)) !important;
+    color: #0f172a !important;
+    border: 1px solid rgba(255,255,255,0.55) !important;
+    box-shadow: 0 18px 38px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.55) !important;
+}
+/* Glass: secondary buttons */
+body.cptt-expert-dashboard-page[data-theme="glass"] :is(.cptt-btn,.button,.cptt-clientSearchCreate__btn,.cptt-step-expert-btn) {
+    background: rgba(255,255,255,0.14) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,0.24) !important;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.14) !important;
+}
+/* Glass: hero — frosted glass bar with light bloom */
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-proHero--expert {
+    background: linear-gradient(135deg, rgba(34,211,238,0.18), rgba(139,92,246,0.18), rgba(236,72,153,0.12)) !important;
+    border: 1px solid rgba(255,255,255,0.28) !important;
+    border-radius: var(--radius-xl) !important;
+    backdrop-filter: blur(28px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.25), inset 0 1px 1px rgba(255,255,255,0.25) !important;
+}
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-proHero--expert * {
+    color: #fff !important;
+    text-shadow: 0 1px 12px rgba(0,30,80,0.24) !important;
+}
+/* Glass: status badges — colored glass chips */
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-expert-status--done,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-expertStatusBadge--done {
+    background: rgba(81,207,102,0.18) !important;
+    color: #51cf66 !important;
+    border-color: rgba(81,207,102,0.35) !important;
+    backdrop-filter: blur(8px) !important;
+}
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-expert-status--current,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-expertStatusBadge--current {
+    background: rgba(252,196,25,0.18) !important;
+    color: #fcc419 !important;
+    border-color: rgba(252,196,25,0.35) !important;
+    backdrop-filter: blur(8px) !important;
+}
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-expert-status--todo,
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-expertStatusBadge--todo {
+    background: rgba(255,255,255,0.10) !important;
+    color: rgba(255,255,255,0.75) !important;
+    border-color: rgba(255,255,255,0.22) !important;
+    backdrop-filter: blur(8px) !important;
+}
+/* Glass: chat bubbles */
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-chat-bubble--me {
+    background: linear-gradient(135deg, rgba(34,211,238,0.35), rgba(139,92,246,0.30)) !important;
+    border: 1px solid rgba(255,255,255,0.20) !important;
+    color: #fff !important;
+}
+body.cptt-expert-dashboard-page[data-theme="glass"] .cptt-chat-bubble--other {
+    background: rgba(255,255,255,0.10) !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    color: #fff !important;
+}
+/* Glass: select option backgrounds must be opaque enough for readability */
+body.cptt-expert-dashboard-page[data-theme="glass"] select option {
+    background: #0c2d57 !important;
+    color: #fff !important;
+}
