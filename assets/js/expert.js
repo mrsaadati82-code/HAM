@@ -210,6 +210,67 @@
     });
   }
 
+
+
+  /* =========================================================
+     GLASS BACKGROUND CONTROLS (local, per expert browser)
+     ========================================================= */
+  function initGlassBackgroundControls() {
+    if (!document.body.classList.contains('cptt-expert-dashboard-page')) return;
+    var storageKey = 'cptt_glass_background_css';
+    var presets = {
+      mesh: "radial-gradient(circle at 16% 8%, rgba(255,255,255,.92) 0 10%, transparent 28%), radial-gradient(circle at 76% 10%, rgba(186,230,253,.72) 0, transparent 34%), radial-gradient(circle at 14% 78%, rgba(125,211,252,.58) 0, transparent 38%), radial-gradient(circle at 86% 82%, rgba(196,181,253,.46) 0, transparent 34%), linear-gradient(135deg,#f8fcff 0%,#dff5ff 34%,#c8ecff 62%,#eee7ff 100%)",
+      aurora: "radial-gradient(circle at 18% 14%, rgba(255,255,255,.88) 0 9%, transparent 30%), radial-gradient(circle at 80% 18%, rgba(34,211,238,.48), transparent 36%), radial-gradient(circle at 32% 88%, rgba(147,197,253,.60), transparent 38%), radial-gradient(circle at 84% 75%, rgba(216,180,254,.46), transparent 34%), linear-gradient(135deg,#ffffff 0%,#e0f7ff 42%,#d8eafe 72%,#f4eaff 100%)",
+      blue: "radial-gradient(circle at 22% 0%, rgba(255,255,255,.92), transparent 28%), radial-gradient(circle at 80% 22%, rgba(125,211,252,.72), transparent 36%), radial-gradient(circle at 30% 86%, rgba(56,189,248,.42), transparent 40%), linear-gradient(135deg,#f8fbff 0%,#dff3ff 42%,#c7e8ff 100%)"
+    };
+    function safeCss(value) {
+      value = (value || '').trim();
+      if (!value) return '';
+      if (/javascript:|expression\s*\(|<\/?script/i.test(value)) return '';
+      if (/^https?:\/\//i.test(value) || /^data:image\//i.test(value)) {
+        return 'linear-gradient(rgba(246,252,255,.18),rgba(226,245,255,.18)), url("' + value.replace(/"/g, '%22') + '") center/cover fixed no-repeat';
+      }
+      return value;
+    }
+    function apply(value) {
+      var css = safeCss(value) || presets.mesh;
+      document.documentElement.style.setProperty('--cptt-glass-bg', css);
+      document.body.style.setProperty('--cptt-glass-bg', css);
+    }
+    apply(localStorage.getItem(storageKey) || presets.mesh);
+
+    var controls = document.querySelector('.cptt-sidebar-controls');
+    if (!controls || document.querySelector('.cptt-glass-bg-controls')) return;
+    var wrap = document.createElement('div');
+    wrap.className = 'cptt-glass-bg-controls';
+    wrap.setAttribute('dir', 'rtl');
+    wrap.innerHTML = '<button type="button" class="cptt-glass-bg-toggle" title="پس‌زمینه گلس">پس‌زمینه</button>' +
+      '<div class="cptt-glass-bg-panel" hidden>' +
+      '<strong>پس‌زمینه گلس</strong>' +
+      '<select class="cptt-glass-bg-preset" aria-label="پریست پس‌زمینه گلس">' +
+      '<option value="mesh">مش روشن</option><option value="aurora">آرورا</option><option value="blue">آبی نرم</option><option value="custom">سفارشی / عکس</option>' +
+      '</select>' +
+      '<textarea class="cptt-glass-bg-custom" rows="3" placeholder="آدرس عکس یا CSS gradient"></textarea>' +
+      '<div class="cptt-glass-bg-actions"><button type="button" class="cptt-glass-bg-apply">اعمال</button><button type="button" class="cptt-glass-bg-reset">بازنشانی</button></div>' +
+      '</div>';
+    controls.appendChild(wrap);
+    var toggle = wrap.querySelector('.cptt-glass-bg-toggle');
+    var panel = wrap.querySelector('.cptt-glass-bg-panel');
+    var preset = wrap.querySelector('.cptt-glass-bg-preset');
+    var custom = wrap.querySelector('.cptt-glass-bg-custom');
+    var applyBtn = wrap.querySelector('.cptt-glass-bg-apply');
+    var resetBtn = wrap.querySelector('.cptt-glass-bg-reset');
+    custom.value = localStorage.getItem(storageKey) || '';
+    function refreshVisibility(){ wrap.style.display = document.body.getAttribute('data-theme') === 'glass' ? '' : 'none'; }
+    refreshVisibility();
+    document.addEventListener('change', function(e){ if (e.target && e.target.classList && e.target.classList.contains('cptt-theme-select')) setTimeout(refreshVisibility, 50); });
+    toggle.addEventListener('click', function(){ panel.hidden = !panel.hidden; });
+    preset.addEventListener('change', function(){ if (preset.value !== 'custom') { custom.value = presets[preset.value]; apply(custom.value); localStorage.setItem(storageKey, custom.value); } });
+    applyBtn.addEventListener('click', function(){ var v = custom.value || presets.mesh; apply(v); localStorage.setItem(storageKey, v); });
+    resetBtn.addEventListener('click', function(){ custom.value = presets.mesh; preset.value = 'mesh'; apply(presets.mesh); localStorage.setItem(storageKey, presets.mesh); });
+    document.addEventListener('click', function(e){ if (!wrap.contains(e.target)) panel.hidden = true; });
+  }
+
   /* =========================================================
      JALALI DATE PICKER
      ========================================================= */
@@ -851,8 +912,8 @@
       var backdrop = qs('.cptt-expert-chatModal__backdrop', modal);
       var form = qs('.cptt-expert-message-form', modal);
       var timer = null;
-      function close() { modal.hidden = true; if (timer) { window.clearInterval(timer); timer = null; } }
-      async function open() { modal.hidden = false; await refreshMessages(form); if (timer) window.clearInterval(timer); timer = window.setInterval(function () { refreshMessages(form); }, 8000); }
+      function close() { modal.hidden = true; document.body.classList.remove('cptt-chat-modal-open'); if (timer) { window.clearInterval(timer); timer = null; } }
+      async function open() { modal.hidden = false; document.body.classList.add('cptt-chat-modal-open'); await refreshMessages(form); if (timer) window.clearInterval(timer); timer = window.setInterval(function () { refreshMessages(form); }, 8000); }
       if (openBtn) openBtn.addEventListener('click', open);
       if (closeBtn) closeBtn.addEventListener('click', close);
       if (backdrop) backdrop.addEventListener('click', close);
@@ -1114,6 +1175,7 @@
     parseHashAction();
     initDarkMode();
     initThemeManager();
+    initGlassBackgroundControls();
     initKanban();
     updateVisibility();
     setInterval(pollNotifications, 30000);

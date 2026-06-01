@@ -5786,3 +5786,93 @@ body.cptt-expert-dashboard-page[data-theme="glass"] select option {
     background: #0c2d57 !important;
     color: #fff !important;
 }
+
+/* =====================================================================
+   HAM v5.5.4 — Expert dashboard theme fixes
+   - project chat modal centering / blur isolation
+   - floating save button back to lower-right beside sidebar
+   - VisionOS bright glassmorphism rewrite with optional background CSS var
+   - modern dark (former 3D) select readability
+   ===================================================================== */
+
+/* Modal isolation: all open modals must cover the sidebar and stay centered. */
+body.cptt-expert-dashboard-page .cptt-expert-chatModal:not([hidden]),
+body.cptt-expert-dashboard-page .cptt-direct-chat-modal:not([hidden]),
+body.cptt-expert-dashboard-page .cptt-newProjectModal.is-open,
+body.cptt-expert-dashboard-page .cptt-editProfileModal:not([hidden]),
+body.cptt-expert-dashboard-page .cptt-stepExpertModal:not([hidden]),
+body.cptt-expert-dashboard-page .cptt-debtors-modal:not([hidden]),
+body.cptt-expert-dashboard-page .cptt-all-notifs-modal:not([hidden]){
+    position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;margin:0!important;padding:0!important;z-index:2147483647!important;background:transparent!important;transform:none!important;filter:none!important;isolation:isolate!important;display:block!important;
+}
+body.cptt-expert-dashboard-page :is(.cptt-expert-chatModal__backdrop,.cptt-direct-chat-modal__backdrop,.cptt-newProjectModal__backdrop,.cptt-editProfileModal__backdrop,.cptt-stepExpertModal__backdrop,.cptt-debtors-modal__backdrop,.cptt-all-notifs-modal__backdrop){
+    position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;background:rgba(15,23,42,.42)!important;-webkit-backdrop-filter:blur(16px) saturate(1.08)!important;backdrop-filter:blur(16px) saturate(1.08)!important;z-index:0!important;
+}
+body.cptt-expert-dashboard-page :is(.cptt-expert-chatModal__dialog,.cptt-direct-chat-modal__dialog,.cptt-newProjectModal__dialog,.cptt-editProfileModal__dialog,.cptt-stepExpertModal__dialog,.cptt-debtors-modal__dialog,.cptt-all-notifs-modal__dialog){
+    position:fixed!important;top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;transform:translate(-50%,-50%)!important;margin:0!important;z-index:2!important;max-height:min(90vh,760px)!important;max-width:calc(100vw - 28px)!important;overflow:auto!important;
+}
+body.cptt-chat-modal-open .cptt-expertSidebar{filter:blur(2px)!important;pointer-events:none!important;z-index:1!important;}
+body.cptt-chat-modal-open .cptt-notifications-dropdown{display:none!important;}
+
+/* Floating save button: desktop lower-right, beside the right sidebar; mobile stays centered but above floating elements. */
+.cptt-expertCard.is-expanded .cptt-expert-save-floating{
+    position:fixed!important;right:340px!important;left:auto!important;bottom:24px!important;z-index:999995!important;transform:none!important;
+}
+.cptt-expertCard.is-expanded .cptt-expert-save-floating:hover{transform:translateY(-2px) scale(1.04)!important;}
+@media (max-width:1180px) and (min-width:821px){.cptt-expertCard.is-expanded .cptt-expert-save-floating{right:290px!important;left:auto!important;}}
+@media (max-width:820px){
+    .cptt-expertCard.is-expanded .cptt-expert-save-floating{right:50%!important;left:auto!important;bottom:84px!important;z-index:999997!important;transform:translateX(50%)!important;}
+    .cptt-expertCard.is-expanded .cptt-expert-save-floating:hover{transform:translateX(50%) translateY(-2px) scale(1.04)!important;}
+}
+
+/* Former 3D theme is now Modern Dark: readable selects/dropdowns. */
+body.cptt-expert-dashboard-page[data-theme="three-d"] :is(select,.cptt-theme-select),
+body.cptt-theme-three-d .cptt-expertWrap :is(select,.cptt-theme-select){
+    background-color:#111827!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23bae6fd' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"),linear-gradient(155deg,#1b2540,#0b1020)!important;background-repeat:no-repeat!important;background-position:left 12px center,center!important;color:#f8fafc!important;border:1px solid rgba(125,211,252,.38)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 10px 24px rgba(0,0,0,.22)!important;
+}
+body.cptt-expert-dashboard-page[data-theme="three-d"] select option,
+body.cptt-theme-three-d select option{background:#101827!important;color:#f8fafc!important;}
+
+/* ---------------- VisionOS bright glassmorphism rewrite ---------------- */
+body.cptt-expert-dashboard-page[data-theme="glass"],
+body.cptt-theme-glass.cptt-expert-dashboard-page{
+    --cptt-glass-fallback:radial-gradient(circle at 16% 8%,rgba(255,255,255,.92) 0 10%,transparent 28%),radial-gradient(circle at 76% 10%,rgba(186,230,253,.72) 0,transparent 34%),radial-gradient(circle at 14% 78%,rgba(125,211,252,.58) 0,transparent 38%),radial-gradient(circle at 86% 82%,rgba(196,181,253,.46) 0,transparent 34%),linear-gradient(135deg,#f8fcff 0%,#dff5ff 34%,#c8ecff 62%,#eee7ff 100%);
+    --bg-main:var(--cptt-glass-bg,var(--cptt-glass-fallback))!important;--th-bg:var(--cptt-glass-bg,var(--cptt-glass-fallback))!important;
+    --bg-card:rgba(255,255,255,.56)!important;--bg-input:rgba(255,255,255,.50)!important;--border-color:rgba(255,255,255,.40)!important;--text-main:#1f3b57!important;--text-muted:#55708a!important;--accent:#1e3a8a!important;--accent-2:#60a5fa!important;--accent-text:#1e3a8a!important;--shadow-main:0 8px 32px 0 rgba(31,38,135,.05)!important;--blur-effect:blur(25px) saturate(1.18)!important;--radius-xl:30px!important;--radius-md:18px!important;
+}
+body.cptt-theme-glass,body.cptt-theme-glass .cptt-shell-page,body.cptt-theme-glass.cptt-expert-dashboard-page{background:var(--cptt-glass-bg,var(--cptt-glass-fallback))!important;background-attachment:fixed!important;color:#1f3b57!important;}
+body.cptt-theme-glass::before{content:"";position:fixed;inset:-12%;z-index:-1;pointer-events:none;background:radial-gradient(circle at 45% 18%,rgba(255,255,255,.52),transparent 22%),radial-gradient(circle at 72% 68%,rgba(255,255,255,.28),transparent 26%);filter:blur(28px);}
+
+/* Absolute isolation of structural wrappers in glass theme. */
+body.cptt-theme-glass :is(.cptt-wrap,.cptt-expertWrap,.cptt-expertLayout,.cptt-expertMain,.cptt-expertCard__panels,.cptt-expertCard__details,.cptt-expertCard__sidePanel,.cptt-expertCard__mainPanel,.cptt-expert-project-form,.cptt-createProjectGrid,.cptt-expert-step__body,.cptt-expert-step__metaGrid,.cptt-expert-formFooter,.cptt-expert-formActions,.cptt-expert-message-form,.cptt-direct-chat-form,.cptt-expert-messagesWrap,.cptt-expert-checklist-items,.cptt-expert-usertasks-items,.cptt-createProjectGrid label,.cptt-expert-step__metaGrid label,.cptt-bf,.cptt-product-pair-row,.cptt-expert-noteField,.cptt-manage-finance-summary,.cptt-manage-fin-box,.cptt-expert-analytics-section,.cptt-expert-analytics-section>div){background:transparent!important;border:none!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;}
+
+/* Only standalone visual elements receive the glass surface. */
+body.cptt-theme-glass :is(.cptt-expertSidebar,.cptt-sideBox,.cptt-sidebar-controls,.cptt-kpiCard,.cptt-insightBox,.cptt-expertFilters,.cptt-expertCard,.cptt-expert-step,.cptt-expert-projectMeta,.cptt-expert-checklist,.cptt-expert-userTasks,.cptt-expert-userTask,.cptt-expertCard__stats>div,.cptt-expertCard__infoGrid>div,.cptt-sideList li,.cptt-expert-list-item,.cptt-expert-noteItem,.cptt-notification-item,.cptt-kanban__col,.cptt-kanban__card,.cptt-clientSearchCreate__results,.cptt-newProjectModal__dialog,.cptt-new-customer-modal-dialog,.cptt-expert-chatModal__dialog,.cptt-direct-chat-modal__dialog,.cptt-editProfileModal__dialog,.cptt-stepExpertModal__dialog,.cptt-debtors-modal__dialog,.cptt-all-notifs-modal__dialog,.cptt-mobile-menu__dialog,.cptt-chat-bubble){background:rgba(255,255,255,.56)!important;-webkit-backdrop-filter:blur(25px) saturate(1.18)!important;backdrop-filter:blur(25px) saturate(1.18)!important;border:1px solid rgba(255,255,255,.40)!important;box-shadow:0 8px 32px 0 rgba(31,38,135,.05)!important;color:#1f3b57!important;text-shadow:none!important;}
+body.cptt-theme-glass :is(.cptt-expertCard,.cptt-expertSidebar,.cptt-newProjectModal__dialog,.cptt-expert-chatModal__dialog,.cptt-direct-chat-modal__dialog){border-radius:30px!important;}
+body.cptt-theme-glass :is(.cptt-sideBox,.cptt-kpiCard,.cptt-insightBox,.cptt-expertFilters,.cptt-expert-step){border-radius:24px!important;}
+
+body.cptt-theme-glass .cptt-expertWrap :is(h1,h2,h3,h4,h5,h6,strong,b,.cptt-sideBox__title,.cptt-kpiCard__value,.cptt-expertCard__top h3,.cptt-expert-sectionTitle){color:#173654!important;text-shadow:none!important;}
+body.cptt-theme-glass .cptt-expertWrap :is(p,span,small,label,div,li,.cptt-expertCard__meta,.cptt-expert-step__toggleMain span,.cptt-sideList li span,.cptt-expertFilters label){color:#55708a!important;text-shadow:none!important;}
+body.cptt-theme-glass .cptt-expertWrap :is(.cptt-btn--primary,.button-primary,.cptt-newProjectCta,button[type="submit"]),
+body.cptt-theme-glass .cptt-expert-save-floating{background:#fff!important;color:#1e3a8a!important;border:1px solid rgba(255,255,255,.78)!important;box-shadow:0 14px 32px rgba(30,58,138,.10)!important;text-shadow:none!important;}
+body.cptt-theme-glass .cptt-expertWrap :is(.cptt-btn,.button,.cptt-clientSearchCreate__btn,.cptt-step-expert-btn,.cptt-bell-btn,.cptt-theme-select,.cptt-mobile-fab):not(.cptt-btn--primary):not(.cptt-newProjectCta){background:rgba(255,255,255,.64)!important;color:#1e3a8a!important;border:1px solid rgba(255,255,255,.48)!important;box-shadow:0 8px 24px rgba(31,38,135,.06)!important;text-shadow:none!important;}
+body.cptt-theme-glass :is(input[type="text"],input[type="number"],input[type="search"],input[type="email"],input[type="url"],input[type="password"],input[type="tel"],select,textarea,.cptt-jalali-datetime,.cptt-currency-input,.cptt-num-format,.cptt-clientSearchCreate__input,.cptt-direct-chat-messages){background:rgba(255,255,255,.50)!important;color:#253b53!important;border:1px solid rgba(255,255,255,.42)!important;border-radius:18px!important;box-shadow:0 6px 20px rgba(31,38,135,.04)!important;-webkit-backdrop-filter:blur(14px)!important;backdrop-filter:blur(14px)!important;}
+body.cptt-theme-glass :is(input,textarea)::placeholder{color:#6f86a0!important;opacity:.88!important;}
+body.cptt-theme-glass :is(input,select,textarea):focus{border-color:rgba(96,165,250,.52)!important;box-shadow:0 0 0 4px rgba(96,165,250,.14),0 8px 24px rgba(31,38,135,.05)!important;outline:none!important;}
+body.cptt-theme-glass select option{background:#f8fcff!important;color:#1f3b57!important;}
+body.cptt-theme-glass .cptt-proHero--expert{background:rgba(255,255,255,.50)!important;border:1px solid rgba(255,255,255,.45)!important;box-shadow:0 8px 32px rgba(31,38,135,.06)!important;-webkit-backdrop-filter:blur(25px) saturate(1.18)!important;backdrop-filter:blur(25px) saturate(1.18)!important;}
+body.cptt-theme-glass .cptt-proHero--expert *{color:#173654!important;text-shadow:none!important;}
+body.cptt-theme-glass .cptt-chat-bubble--me{background:rgba(255,255,255,.74)!important;color:#173654!important;border-color:rgba(255,255,255,.52)!important;}
+body.cptt-theme-glass .cptt-chat-bubble--other{background:rgba(255,255,255,.46)!important;color:#1f3b57!important;border-color:rgba(255,255,255,.38)!important;}
+
+/* Glass background chooser UI */
+.cptt-glass-bg-controls{position:relative;flex:0 0 auto;display:none;}
+body.cptt-theme-glass .cptt-glass-bg-controls{display:block;}
+.cptt-glass-bg-toggle{height:40px!important;padding:0 12px!important;border-radius:14px!important;font-size:11px!important;font-weight:900!important;white-space:nowrap!important;}
+.cptt-glass-bg-panel{position:absolute;top:calc(100% + 10px);left:0;width:270px;padding:12px;border-radius:18px;background:rgba(255,255,255,.86);border:1px solid rgba(255,255,255,.65);box-shadow:0 18px 44px rgba(31,38,135,.14);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);z-index:2147480000;color:#173654;display:grid;gap:8px;}
+.cptt-glass-bg-panel[hidden]{display:none!important;}
+.cptt-glass-bg-panel strong{color:#173654!important;}
+.cptt-glass-bg-panel select,.cptt-glass-bg-panel textarea{width:100%!important;background:#fff!important;color:#253b53!important;border:1px solid rgba(148,163,184,.32)!important;border-radius:12px!important;box-shadow:none!important;}
+.cptt-glass-bg-actions{display:flex;gap:8px;background:transparent!important;border:0!important;box-shadow:none!important;}
+.cptt-glass-bg-actions button{flex:1;background:#fff!important;color:#1e3a8a!important;border:1px solid rgba(148,163,184,.25)!important;border-radius:12px!important;padding:8px!important;font-weight:900!important;}
+@media (max-width:820px){.cptt-glass-bg-controls{display:none!important;}}

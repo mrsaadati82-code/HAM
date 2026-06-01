@@ -3453,11 +3453,11 @@ class CPTT_Expert {
 						<select class="cptt-theme-select" title="انتخاب تم داشبورد" aria-label="انتخاب تم داشبورد">
 							<option value="classic">پیش‌فرض</option>
 							<option value="skeuo">اسکئومورفیسم</option>
-							<option value="three-d">سه‌بعدی</option>
 							<option value="glass">گلس مورفیسم</option>
 							<option value="neumorph">نئومورفیک</option>
 							<option value="minimal">مینیمال</option>
 							<option value="dark">تاریک</option>
+							<option value="three-d">تاریک مدرن</option>
 						</select>
 						<div class="cptt-notification-bell" style="margin-bottom:0;">
 							<?php
